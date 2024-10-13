@@ -1,12 +1,13 @@
 #include <iostream>
-#include "../include/types.hpp"
-#include "../include/util.hpp"
+#include "types.hpp"
 
 using namespace std;
 
 int main () {
 
     DirectedGraph G;
+
+    cout << "Hello World!\n";
 
     return 0;
 }

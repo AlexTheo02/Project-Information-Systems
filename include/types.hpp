@@ -1,5 +1,4 @@
 #pragma once
-#include "util.hpp"
 
 #include <iostream>
 #include <iterator>
@@ -11,15 +10,39 @@
 
 using namespace std;
 
+// Graph Documentation Here
+
+
+
+
+
+
+
+
+
+
+
+// end
+
+
 class Node{
 /* Each node will contain the vector (value) and a unique identifier*/
 
     private:
-        int id;
-        vector<float> value;
-        set<Node> Nout;
+        int id;                 // node identifier (used for order among nodes - sorted containers)
+        vector<float> value;    // the feature vector of an entry
+        set<Node> Nout;         // Self-referencing container for out-neighbors of each node
 
     public:
+
+        // Operator overloading for equality and comparator functions (required for stl set container - std::less = '<')
+        bool operator==(const Node& n){
+            return this->getId() == n.getId();
+        }
+
+        bool operator<(const Node& n) const{
+            return this->getId() < n.getId();
+        }
 
         // Constructor
         Node(vector<float> v, int id){
@@ -29,7 +52,7 @@ class Node{
         }
 
         // Value get/set functions
-        vector<float> getValue(){
+        vector<float> getValue() const{     // const or not?
             return this->value;
         }
 
@@ -37,40 +60,31 @@ class Node{
             this->value = v;
         }
 
-        set<Node> getOutNeighbors(){
+        set<Node> getOutNeighbors() const{        // const or not?
             return this->Nout;
         }
 
+        // inserts 'out' as an out-neighbor of this Node Object
         void insertNeighbor(Node out){
             this->Nout.insert(out);
         }
 
         // Id get/set funcitons
-        int getId(){
-            return this->id;
+        int getId() const{      // getters are const as they do not modify the object. 
+            return this->id;    // Required for type matching during overloaded comparison (less <) of Node Objects
         }
 
+        // Sets the Node's identifier
         void setId(int id){
             this->id = id;
         }
-
-        // Operator overloading
-        bool operator==(Node n){
-            return this->getId() == n.getId();
-        }
-
-        bool operator!=(Node n){
-            return this->getId() != n.getId();
-        }
 };
-
-// class G = (V,E) : V = Nodes, E = Edges, edges are directed => tuple(=struct) (v1,v2)
 
 class DirectedGraph{
 
     private:
-        int lastId;
-        set<Node> nodes;
+        int lastId;         // id of the last added node
+        set<Node> nodes;    // a set of all the nodes in the graph
 
     public:
 
@@ -95,33 +109,9 @@ class DirectedGraph{
         }
 
         // Greedy search algorithm
-        vector<set<Node>> greedySearch(Node s, vector<float> xq, int k, int L){
-            // Create empty sets
-            set<Node> Lc,V;
+        vector<set<Node>> greedySearch(Node s, vector<float> xq, int k, int L);
 
-            // Initialize Lc with s
-            Lc.insert(s);
-            
-            set<Node> diff;
-            while(!empty(diff = setSubtraction(Lc,V))){
-                Node pmin = myArgMin(diff, xq, euclideanDistance);
+        // Robust Prune algorithm
 
-                // Error checking 
-                if (pmin.getId() < 0) { break; }
-
-                Lc = setUnion(Lc, pmin.getOutNeighbors());
-                V.insert(pmin);
-            }
-
-            if (Lc.size() > L){
-                Lc = closestN(L, Lc, xq, euclideanDistance);    // function: find N closest points from a specific Xq from given set and return them
-            }
-
-            vector<set<Node>> ret;
-            
-            ret.insert(ret.begin(), closestN(k, Lc, xq, euclideanDistance));
-            ret.insert(ret.end(), V);
-
-            return ret;
-        }
+        // Vamana Graph creation algorithm
 };

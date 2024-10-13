@@ -4,6 +4,8 @@
         "cmath": "cpp",
         "unordered_map": "cpp",
         "limits": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "set": "cpp",
+        "vector": "cpp"
     }
 }
