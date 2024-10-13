@@ -76,11 +76,15 @@ DEPENDENCIES_MAIN = $(SRC_MAIN) $(SRC_GS) $(SRC_RP) $(SRC_VG) $(INCLUDE_MAIN)
 EX_MAIN = $(BIN_DIR)/$(MAIN)
 
 # Default target
-all: $(EX_MAIN)
+default: $(EX_MAIN)
 
-run: clean $(EX_MAIN) 
+run:
+	$(EX_MAIN)
+
+all: clean $(EX_MAIN) 
 	@echo "Executing $(EX_MAIN):"
 	$(EX_MAIN)
+
 
 
 # Rules to build the executables
