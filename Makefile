@@ -126,5 +126,7 @@ clean:
 	@echo "Cleaning up $(BUILD_DIR) and $(BIN_DIR) directories . . . "
 # Clean build, bin directories
 	rm -f $(BUILD_DIR)/* $(BIN_DIR)/*
+	touch ./bin/dummy.txt
+	touch ./build/dummy.txt
 
 .PHONY: clean
