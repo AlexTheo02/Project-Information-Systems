@@ -4,8 +4,15 @@
 float euclideanDistance(vector<float> v1, vector<float> v2){
     int dim1 = v1.size();
     int dim2 = v2.size();
+
     if (dim1!=dim2){
         cout<<"Dimension mismatch, dim1 is: "<<dim1 <<" dim2 is: "<<dim2 << endl;
+        return -1;
+    }
+
+    if (v1.empty()){
+        cout << "Both vectors are empty" << endl;
+        return -1;
     }
     
     float sum = 0;
