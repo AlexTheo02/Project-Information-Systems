@@ -35,8 +35,13 @@ class Node{
 
     public:
 
+        // Constructor
+        Node(){
+            this->id = -1;
+        }
+
         // Operator overloading for equality and comparator functions (required for stl set container - std::less = '<')
-        bool operator==(const Node& n){
+        bool operator==(const Node& n) const {
             return this->getId() == n.getId();
         }
 
