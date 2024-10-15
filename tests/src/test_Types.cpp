@@ -10,3 +10,9 @@
 
 //     return 0;
 // }
+
+
+TEST_LIST = {
+    // { "test_euclideanDistance", test_euclideanDistance },
+    { NULL, NULL }     // zeroed record marking the end of the list
+};

@@ -46,12 +46,12 @@ EX_t_TYPES = $(BIN_DIR)/$(t_TYPES)
 EX_t_UTIL = $(BIN_DIR)/$(t_UTIL)
 
 # Default target
-default: $(EX_t_UTIL) # $(EX_t_TYPES)
+default: $(EX_t_UTIL) $(EX_t_TYPES)
 
 run_u:
 	$(EX_t_UTIL)
 
-run t:
+run_t:
 	$(EX_t_TYPES)
 
 # Build executables

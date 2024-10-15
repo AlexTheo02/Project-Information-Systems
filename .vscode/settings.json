@@ -6,6 +6,7 @@
         "limits": "cpp",
         "algorithm": "cpp",
         "set": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "ostream": "cpp"
     }
 }
