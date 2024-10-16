@@ -38,6 +38,11 @@ class Node{
     public:
 
         // Constructor
+        Node(){
+            this->id = -1;
+        }
+
+        // Constructor
         Node(vector<float> v, int id){
             this->value = v;
             this->id = id;
