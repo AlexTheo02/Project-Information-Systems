@@ -15,6 +15,7 @@ SRC_DIR = ./src
 BUILD_DIR = ./build
 BIN_DIR = ./bin
 INCLUDE_DIR = ./include
+PARENT_DIR = ..
 
 # File Names
 TYPES = types
@@ -48,9 +49,18 @@ OBJ_t_UT = $(BUILD_DIR)/$(t_UT).o
 EX_t_TYPES = $(BIN_DIR)/$(t_TYPES)
 EX_t_UTIL = $(BIN_DIR)/$(t_UTIL)
 EX_t_UT = $(BIN_DIR)/$(t_UT)
+EX_ALL = $(EX_t_TYPES) $(EX_t_UTIL) $(EX_t_UT)
 
 # Default target
-default: $(EX_t_UTIL) $(EX_t_TYPES) $(EX_t_UT)
+default: $(EX_ALL)
+
+
+# Rebuild the main code and the test code
+rebuild: 
+	make -C $(PARENT_DIR) clean
+	make -C $(PARENT_DIR)
+	make clean
+	make
 
 run_u:
 	$(EX_t_UTIL)
@@ -61,8 +71,21 @@ run_t:
 run_ut:
 	$(EX_t_UT)
 
+# rebuild and run specific test
+rebuild_u:
+	make rebuild
+	make run_u
+
+rebuild_t:
+	make rebuild
+	make run_t
+
+rebuild_ut:
+	make rebuild
+	make run_ut
+
 # Build Executable test_Types
-$(EX_t_TYPES): $(OBJ_t_TYPES)
+$(EX_t_TYPES): $(OBJ_t_TYPES) $(OBJ_UTIL)
 	@echo "Linking Object Files to Create Executable $(EX_t_TYPES) . . ."
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 

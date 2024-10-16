@@ -1,22 +1,6 @@
 #include "util_types.hpp"
 using namespace std;
 
-// Subtract set2 from set1
-// https://stackoverflow.com/questions/283977/c-stl-set-difference
-set<Node> setSubtraction(set<Node> set1, set<Node> set2){
-    set<Node> result;
-    set_difference(set1.begin(), set1.end(), set2.begin(), set2.end(), inserter(result, result.end()));
-    return result;
-}
-
-// Joins set1 with set1
-// source corresponding to setSubtraction
-set<Node> setUnion(set<Node> set1, set<Node> set2){
-    set<Node> result;
-    set_union(set1.begin(), set1.end(), set2.begin(), set2.end(), inserter(result, result.end()));
-    return result;
-}
-
 // Returns the node witht the minimum distance from a specific node
 Node myArgMin(set<Node> nodeSet, vector<float> vec, function<float(vector<float>,vector<float>)> d){
 

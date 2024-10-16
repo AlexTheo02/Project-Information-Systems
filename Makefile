@@ -84,7 +84,7 @@ run:
 all: clean $(EX_MAIN) 
 	@echo "Executing $(EX_MAIN):"
 	$(EX_MAIN)
-
+	
 
 
 # Rules to build the executables
