@@ -81,7 +81,17 @@ void test_euclideanDistance(){
     }
 }
 
+// test template functions
+
+void test_setIn(){
+
+}
+
+
+
 TEST_LIST = {
     { "test_euclideanDistance", test_euclideanDistance },
+    { "test_setIn", test_setIn },
+    // 
     { NULL, NULL }     // zeroed record marking the end of the list
 };
