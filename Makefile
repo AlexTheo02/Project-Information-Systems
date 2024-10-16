@@ -76,12 +76,17 @@ DEPENDENCIES_MAIN = $(SRC_MAIN) $(SRC_GS) $(SRC_RP) $(SRC_VG) $(INCLUDE_MAIN)
 EX_MAIN = $(BIN_DIR)/$(MAIN)
 
 # Default target
-default: $(EX_MAIN)
+default: dirs $(EX_MAIN)
+
+dirs:
+	@mkdir -p bin
+	@mkdir -p build
 
 run:
+	dirs
 	$(EX_MAIN)
 
-all: clean $(EX_MAIN) 
+all: clean dirs $(EX_MAIN)
 	@echo "Executing $(EX_MAIN):"
 	$(EX_MAIN)
 	
@@ -125,8 +130,6 @@ $(OBJ_MAIN): $(DEPENDENCIES_MAIN)
 clean:
 	@echo "Cleaning up $(BUILD_DIR) and $(BIN_DIR) directories . . . "
 # Clean build, bin directories
-	rm -f $(BUILD_DIR)/* $(BIN_DIR)/*
-	touch ./bin/dummy.txt
-	touch ./build/dummy.txt
+	rm -rf $(BUILD_DIR) $(BIN_DIR)
 
 .PHONY: clean

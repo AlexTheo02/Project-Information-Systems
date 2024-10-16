@@ -52,23 +52,30 @@ EX_t_UT = $(BIN_DIR)/$(t_UT)
 EX_ALL = $(EX_t_TYPES) $(EX_t_UTIL) $(EX_t_UT)
 
 # Default target
-default: $(EX_ALL)
+default: dirs $(EX_ALL)
 
+dirs:
+	@mkdir -p bin
+	@mkdir -p build
 
 # Rebuild the main code and the test code
-rebuild: 
+rebuild:
 	make -C $(PARENT_DIR) clean
 	make -C $(PARENT_DIR)
 	make clean
+	dirs
 	make
 
 run_u:
+	dirs
 	$(EX_t_UTIL)
 
 run_t:
+	dirs
 	$(EX_t_TYPES)
 
 run_ut:
+	dirs
 	$(EX_t_UT)
 
 # rebuild and run specific test
@@ -118,8 +125,6 @@ $(OBJ_t_UT): $(SRC_t_UT) $(INCLUDE_DIR)/acutest.h
 clean:
 	@echo "Cleaning up $(BUILD_DIR) and $(BIN_DIR) directories . . . "
 	# Clean build, bin directories
-	rm -f $(BUILD_DIR)/* $(BIN_DIR)/*
-	touch ./bin/dummy.txt
-	touch ./build/dummy.txt
+	rm -rf $(BUILD_DIR) $(BIN_DIR)
 
 .PHONY: clean
