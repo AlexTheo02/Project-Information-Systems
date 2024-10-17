@@ -277,11 +277,16 @@ void test_setUnion(){
 
 }
 
+void test_sampleFromSet(){
+    return;
+}
+
 TEST_LIST = {
     { "test_euclideanDistance", test_euclideanDistance },
     { "test_setIn", test_setIn },
     { "test_setSubtraction", test_setSubtraction },
     { "test_setUnion", test_setUnion },
+    { "test_sampleFromSet", test_sampleFromSet },
     // 
     { NULL, NULL }     // zeroed record marking the end of the list
 };
