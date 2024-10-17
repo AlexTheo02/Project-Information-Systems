@@ -29,11 +29,11 @@ void test_node(){
     TEST_CHECK(n1->getValue() == v1);
 
     // test operator overloading for class Node
-    TEST_CHECK(n1 < n2);
-    TEST_CHECK(n2 > n1);
-    TEST_CHECK(n1 != n2);
+    TEST_CHECK(*n1 < *n2);
+    TEST_CHECK(*n2 > *n1);
+    TEST_CHECK(*n1 != *n2);
     n2->setId(1);
-    TEST_CHECK(n1 == n2);
+    TEST_CHECK(*n1 == *n2);
     n2->setId(2);
 
     // test adding neighbors and neighbor getter
@@ -41,23 +41,24 @@ void test_node(){
     TEST_CHECK(n1->insertNeighbor(n2));  // also check for uniqueness in the get set
     set<Node*> out = n1->getOutNeighbors();
     set<Node*> known_out; known_out.insert(n2);
+
     TEST_CHECK(out.size() == 1);
     TEST_CHECK(out == known_out);
 
-    // insert n2, change n2, is neighbor set changed?
+    // insert n2, change n2, is neighbor set changed? -> because n2 is a pointer if we change an attribute of n2, it stays as a neighbor with a changed attribute
     n2->setId(3);
     n1->insertNeighbor(n2);
     known_out.insert(n2);
     out = n1->getOutNeighbors();     // refresh neighbors
-    TEST_CHECK(out.size() == 2);
+    TEST_CHECK(out.size() == 1);
     TEST_CHECK(out == known_out);
 
 
     // inserting invalid node as neighbor
-    n2->setId(-1);
-    n1->insertNeighbor(n2);
+    Node* n3 = new Node(v,-1);
+    n1->insertNeighbor(n3);
     out = n1->getOutNeighbors();     // refresh neighbors
-    TEST_CHECK(out.size() == 2);
+    TEST_CHECK(out.size() == 1);
     TEST_CHECK(out == known_out);
 
     // ADD TESTS AFTER ADDING FUNCTIONALITY FOR:

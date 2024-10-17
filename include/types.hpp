@@ -79,7 +79,7 @@ class Node{
             }
             // add a warning: if out in thisNout warning: already exists
             if (setIn(out, this->Nout)){
-                cout << "WARNING: Node with ID " << out->getId() << "already exists as a neighbor to node " << this->getId() << "."; 
+                cout << "WARNING: Node with ID " << out->getId() << " already exists as a neighbor to node " << this->getId() << ".\n"; 
             }
             this->Nout.insert(out);
 
