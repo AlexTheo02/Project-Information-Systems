@@ -2,7 +2,7 @@
 using namespace std;
 
 // Returns the node with the minimum distance from a specific node
-Node myArgMin(set<Node> nodeSet, vector<float> vec, function<float(vector<float>,vector<float>)> d){
+Node myArgMin(set<Node> nodeSet, vector<float> vec, function<float(Node, Node)> d){
 
     if (nodeSet.empty()){
         cout << "ERROR: NodeSet is empty returning NULL" << endl;
@@ -13,9 +13,10 @@ Node myArgMin(set<Node> nodeSet, vector<float> vec, function<float(vector<float>
     Node minNode = NULL;
 
     for (Node n : nodeSet){
-
+        
         // Calculate distance
-        dist = d(*n, vec);
+        Node temp = &vec;
+        dist = d(n, temp);
 
         // New minimum distance found
         if (dist < minDist){
@@ -30,14 +31,15 @@ Node myArgMin(set<Node> nodeSet, vector<float> vec, function<float(vector<float>
 
 
 // Retains the N closest elements of S to X based on distance d
-set<Node> closestN(int N, set<Node> S, vector<float> X, function<float(vector<float>, vector<float>)> d){
+set<Node> closestN(int N, set<Node> S, vector<float> X, function<float(Node, Node)> d){
 
     // transform the set to a vector
     vector<Node> Svec(S.begin(), S.end());
 
     // sort the vector based on the distance from point X
+    Node temp = &X;
     sort(Svec.begin(), Svec.end(),
-        [X, d] (Node p1, Node p2) {return (d(X, *p1) < d(X, *p2));});
+        [temp, d] (Node p1, Node p2) {return (d(temp, p1) < d(temp, p2));});
         // lambda(p1,p2) = determines which of the two points is closest to X
 
     // keep N first

@@ -11,7 +11,7 @@ vector<set<Node>> DirectedGraph::greedySearch(Node s, vector<float> xq, int k, i
     
     set<Node> diff;
     while(!(diff = setSubtraction(Lc,V)).empty()){
-        Node pmin = myArgMin(diff, xq, euclideanDistance);
+        Node pmin = myArgMin(diff, xq, this->d);
 
         // Error checking 
         if (pmin == NULL) { 
@@ -26,12 +26,12 @@ vector<set<Node>> DirectedGraph::greedySearch(Node s, vector<float> xq, int k, i
     }
 
     if (Lc.size() > L){
-        Lc = closestN(L, Lc, xq, euclideanDistance);    // function: find N closest points from a specific Xq from given set and return them
+        Lc = closestN(L, Lc, xq, this->d);    // function: find N closest points from a specific Xq from given set and return them
     }
 
     vector<set<Node>> ret;
     
-    ret.insert(ret.begin(), closestN(k, Lc, xq, euclideanDistance));
+    ret.insert(ret.begin(), closestN(k, Lc, xq, this->d));
     ret.insert(ret.end(), V);
 
     return ret;

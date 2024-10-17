@@ -9,7 +9,7 @@
 using namespace std;
 
 // Returns the node with the minimum distance from a specific node
-Node myArgMin(set<Node>, vector<float>, function<float(vector<float>, vector<float>)>);
+Node myArgMin(set<Node>, vector<float>, function<float(Node, Node)>);
 
 // Retains the N closest elements of S to X based on distance d
-set<Node> closestN(int N, set<Node> S, vector<float> X, function<float(vector<float>, vector<float>)> d);
+set<Node> closestN(int N, set<Node> S, vector<float> X, function<float(Node, Node)> d);
