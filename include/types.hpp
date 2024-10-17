@@ -2,11 +2,13 @@
 
 #include <iostream>
 #include <iterator>
-
+#include <cstdlib>  // for rand()
+#include <ctime>    // for rand seed (not yet used DO IT)
 #include <list>
 #include <unordered_map>
 #include <vector>
 #include <set>
+#include <cmath>
 
 #include "util.hpp"
 
@@ -34,6 +36,7 @@ class Node{
         int id;                 // node identifier (used for order among nodes - sorted containers)
         vector<float> value;    // the feature vector of an entry
         set<Node> Nout;         // Self-referencing container for out-neighbors of each node
+        set<Node*> Nin;         // MAYBE TO BE USED
 
     public:
 
@@ -79,6 +82,10 @@ class Node{
                 cout << "WARNING: Node with ID " << out.getId() << "already exists as a neighbor to node " << this->getId() << "."; 
             }
             this->Nout.insert(out);
+
+            out.Nin.insert(this);       // UNIT TEST FOR THIS
+
+
             return true;
         }
 
@@ -88,10 +95,14 @@ class Node{
             return false;
         }
 
-        bool clearNeighbors(){
-            // remove all out neighbors (= clear outgoing edges) 
-            // return true on success
-            return false;
+        int clearNeighbors(){
+
+            int removed = 0;
+            for (Node n : this->Nout){
+                this->removeNeighbor(n);
+                removed++;
+            }
+            return removed;
         }
 
         // Id get/set funcitons
@@ -113,6 +124,7 @@ class DirectedGraph{
     private:
         int lastId;         // id of the last added node
         int n_edges;        // number of edges present in the graph
+        int n_nodes;
         set<Node> nodes;    // a set of all the nodes in the graph
 
     public:
@@ -121,6 +133,7 @@ class DirectedGraph{
         DirectedGraph() {
             this->lastId = 0;
             this->n_edges = 0;
+            this->n_nodes = 0;
             cout << "Graph created!" << endl;
         }
 
@@ -141,7 +154,11 @@ class DirectedGraph{
         void createNode(vector<float> value){
             Node newNode = Node(value, ++this->lastId);
             nodes.insert(newNode);
+            this->n_nodes++;
         }
+
+        // bool remove node (by id by value idk) - search and delete
+        // also remove node from any neighbor-lists!
 
         bool addEdge(Node& from, Node& to){
             if (!from.insertNeighbor(to))
@@ -159,21 +176,52 @@ class DirectedGraph{
 
         // clears all edges in the graph
         bool clearEdges(){
-            // for node in this->nodes
-            // if (node.clearNeighbors());
-            this->n_edges = 0;
+            for (Node n : this->nodes){
+                this->n_edges -= n.clearNeighbors();
+            }
+
+            if (this->n_edges == 0)
+                return true;
+            
+            cout << "ERROR: Edges not cleared successfully. Something went wrong.\n";
             return false;
         }
 
-        // creates a random R graph with the existing nodes, granted there exist no edges in the graph. Return TRUE if successful, FALSE otherwise
+        // creates a random R graph with the existing nodes. Return TRUE if successful, FALSE otherwise
         bool Rgraph(int R){
-            // if any edges exist in the graph
-            // if all(node.Nout.empty() for node in this->nodes)
-            if (false){
-                cout << "ERROR: Cannot create R random graph because edges already exist in the graph.\n";
+            
+            this->clearEdges();     // clear all edges in the graph to create an R random graph anew.
+
+            if (R <= log(this->n_nodes)){
+                cout << "WARNING: R <= logn and therefore the graph will not be well connected.\n";
+            }
+            if (R > this->n_nodes - 1){
+                cout << "ERROR: R cannot exceed N-1 (N = the total number of nodes in the Graph)";
                 return false;
             }
-            
+
+            int r;
+            for (Node n : this->getNodes()){
+                
+                set<Node> remaining = this->getNodes(); // MUST BE COPY!
+
+                for (int i = 0; i < min(R, this->n_nodes -1); i++){ // max_i = min(R, N-1) where N is the number of nodes - redundant check if check for false above ? (failsafe)
+                    
+                    Node nr;
+                    
+                    if (!remaining.empty()){
+                        do{ // CAREFUL: POSSIBLE INFINITE LOOP WHEN SET SIZE IS 1! (when sampling in a while loop)
+                            nr = sampleFromSet(remaining);
+                        }while(nr == n || setIn(nr, n.getOutNeighbors()));              // ensure the neighbor is not itself and not already in the set
+                    }
+                    
+                    n.insertNeighbor(nr);                                               // add the node as neighbor
+                    remaining.erase(nr);
+                }
+            }
+            return true;
+            // UPDATE to work with references instead of copies? MAYBE required change on n.neighbors to handle references of existing nodes instead of copies?
+            // can set hold references or should the elements be copy-able?
         }
 
         // Greedy search algorithm
