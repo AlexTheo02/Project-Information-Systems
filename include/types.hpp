@@ -35,7 +35,7 @@ class Node{
     private:
         int id;                 // node identifier (used for order among nodes - sorted containers)
         vector<float> value;    // the feature vector of an entry
-        set<Node> Nout;         // Self-referencing container for out-neighbors of each node
+        set<Node*> Nout;         // Self-referencing container for out-neighbors of each node
         set<Node*> Nin;         // MAYBE TO BE USED
 
     public:
@@ -67,29 +67,29 @@ class Node{
             this->value = v;
         }
 
-        set<Node> getOutNeighbors() const{
+        set<Node*> getOutNeighbors() const{
             return this->Nout;
         }
 
         // inserts 'out' as an out-neighbor of this Node Object
-        bool insertNeighbor(Node out){
-            if (out.getId() < 0) {
-                cout << "ERROR: Invalid Node. Node ID is " << out.getId() <<".\n";
+        bool insertNeighbor(Node* out){
+            if (out->getId() < 0) {
+                cout << "ERROR: Invalid Node. Node ID is " << out->getId() <<".\n";
                 return false;
             }
             // add a warning: if out in thisNout warning: already exists
             if (setIn(out, this->Nout)){
-                cout << "WARNING: Node with ID " << out.getId() << "already exists as a neighbor to node " << this->getId() << "."; 
+                cout << "WARNING: Node with ID " << out->getId() << "already exists as a neighbor to node " << this->getId() << "."; 
             }
             this->Nout.insert(out);
 
-            out.Nin.insert(this);       // UNIT TEST FOR THIS
+            out->Nin.insert(this);       // UNIT TEST FOR THIS
 
 
             return true;
         }
 
-        bool removeNeighbor(Node target){
+        bool removeNeighbor(Node* target){
             // find neighbor in out neighbors and delete it
             // return true on success
             return false;
@@ -98,7 +98,7 @@ class Node{
         int clearNeighbors(){
 
             int removed = 0;
-            for (Node n : this->Nout){
+            for (Node* n : this->Nout){
                 this->removeNeighbor(n);
                 removed++;
             }
@@ -125,7 +125,7 @@ class DirectedGraph{
         int lastId;         // id of the last added node
         int n_edges;        // number of edges present in the graph
         int n_nodes;
-        set<Node> nodes;    // a set of all the nodes in the graph
+        set<Node*> nodes;    // a set of all the nodes in the graph
 
     public:
 
@@ -146,13 +146,13 @@ class DirectedGraph{
             return this->lastId;
         }
 
-        set<Node> getNodes() const{
+        set<Node*> getNodes() const{
             return this->nodes;
         }
 
         // Creates a node and adds it in the graph
         void createNode(vector<float> value){
-            Node newNode = Node(value, ++this->lastId);
+            Node* newNode = new Node(value, ++this->lastId);
             nodes.insert(newNode);
             this->n_nodes++;
         }
@@ -160,8 +160,8 @@ class DirectedGraph{
         // bool remove node (by id by value idk) - search and delete
         // also remove node from any neighbor-lists!
 
-        bool addEdge(Node& from, Node& to){
-            if (!from.insertNeighbor(to))
+        bool addEdge(Node* from, Node* to){
+            if (!from->insertNeighbor(to))
                 return false; 
             this->n_edges++;
             return true;
@@ -176,8 +176,8 @@ class DirectedGraph{
 
         // clears all edges in the graph
         bool clearEdges(){
-            for (Node n : this->nodes){
-                this->n_edges -= n.clearNeighbors();
+            for (Node* n : this->nodes){
+                this->n_edges -= n->clearNeighbors();
             }
 
             if (this->n_edges == 0)
@@ -201,21 +201,21 @@ class DirectedGraph{
             }
 
             int r;
-            for (Node n : this->getNodes()){
+            for (Node* n : this->getNodes()){
                 
-                set<Node> remaining = this->getNodes(); // MUST BE COPY!
+                set<Node*> remaining = this->getNodes(); // MUST BE COPY!
 
                 for (int i = 0; i < min(R, this->n_nodes -1); i++){ // max_i = min(R, N-1) where N is the number of nodes - redundant check if check for false above ? (failsafe)
                     
-                    Node nr;
+                    Node* nr;
                     
                     if (!remaining.empty()){
                         do{ // CAREFUL: POSSIBLE INFINITE LOOP WHEN SET SIZE IS 1! (when sampling in a while loop)
                             nr = sampleFromSet(remaining);
-                        }while(nr == n || setIn(nr, n.getOutNeighbors()));              // ensure the neighbor is not itself and not already in the set
+                        }while(nr == n || setIn(nr, n->getOutNeighbors()));              // ensure the neighbor is not itself and not already in the set
                     }
                     
-                    n.insertNeighbor(nr);                                               // add the node as neighbor
+                    n->insertNeighbor(nr);                                               // add the node as neighbor
                     remaining.erase(nr);
                 }
             }
@@ -225,7 +225,7 @@ class DirectedGraph{
         }
 
         // Greedy search algorithm
-        vector<set<Node>> greedySearch(Node s, vector<float> xq, int k, int L);
+        vector<set<Node*>> greedySearch(Node* s, vector<float> xq, int k, int L);
 
         // Robust Prune algorithm
 
