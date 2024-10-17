@@ -1,6 +1,31 @@
 #include "util_types.hpp"
 using namespace std;
 
+// Calculates the euclidian distance between two Nodes (holding vectors)
+float euclideanDistance(Node n1, Node n2){
+    int dim1 = (*n1).size();
+    int dim2 = (*n2).size();
+
+    if (dim1!=dim2){
+        cout<<"Dimension mismatch, dim1 is: "<<dim1 <<" dim2 is: "<<dim2 << endl;
+        return -1;
+    }
+
+    if ((*n1).empty()){
+        cout << "Both vectors are empty" << endl;
+        return -1;
+    }
+    
+    float sum = 0;
+
+    for (int i = 0; i < dim1; i++)
+        sum += pow(((*n1)[i] - (*n2)[i]), 2);
+
+    return sqrt(sum);
+}
+
+
+
 // Returns the node with the minimum distance from a specific node
 Node myArgMin(set<Node> nodeSet, vector<float> vec, function<float(Node, Node)> d){
 

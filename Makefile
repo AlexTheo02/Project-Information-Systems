@@ -21,6 +21,8 @@ INCLUDE_DIR = ./include
 TYPES = types
 UTIL = util
 UTIL_T = util_types
+GMF = graph_main_functionality
+RG = rgraph
 GS = greedy_search
 RP = robust_prune
 VG = vamana_graph
@@ -30,6 +32,8 @@ MAIN = main
 # Source Files
 SRC_UTIL = $(SRC_DIR)/$(UTIL).cpp
 SRC_UTIL_T = $(SRC_DIR)/$(UTIL_T).cpp
+SRC_GMF = $(SRC_DIR)/$(GMF).cpp
+SRC_RG = $(SRC_DIR)/$(RG).cpp
 SRC_GS = $(SRC_DIR)/$(GS).cpp
 SRC_RP = $(SRC_DIR)/$(RP).cpp
 SRC_VG = $(SRC_DIR)/$(VG).cpp
@@ -39,13 +43,15 @@ SRC_MAIN = $(SRC_DIR)/$(MAIN).cpp
 # Object files (build directory)
 OBJ_UTIL = $(BUILD_DIR)/$(UTIL).o
 OBJ_UTIL_T = $(BUILD_DIR)/$(UTIL_T).o
+OBJ_GMF = $(BUILD_DIR)/$(GMF).o
+OBJ_RG = $(BUILD_DIR)/$(RG).o
 OBJ_GS = $(BUILD_DIR)/$(GS).o
 OBJ_RP = $(BUILD_DIR)/$(RP).o
 OBJ_VG = $(BUILD_DIR)/$(VG).o
 
 OBJ_MAIN = $(BUILD_DIR)/$(MAIN).o
 
-OBJS_ALL = $(OBJ_MAIN) $(OBJ_UTIL) $(OBJ_UTIL_T) $(OBJ_GS) $(OBJ_RP) $(OBJ_VG)
+OBJS_ALL = $(OBJ_MAIN) $(OBJ_UTIL) $(OBJ_UTIL_T) $(OBJ_GMF) $(OBJ_RG) $(OBJ_GS) $(OBJ_RP) $(OBJ_VG)
 
 # Header Files
 HEADER_UTIL = $(INCLUDE_DIR)/$(UTIL).hpp
@@ -55,6 +61,8 @@ HEADER_TYPES = $(INCLUDE_DIR)/$(TYPES).hpp
 # Include
 INCLUDE_UTIL = $(HEADER_UTIL)
 INCLUDE_UTIL_T = $(HEADER_UTIL_T) $(HEADER_TYPES)
+INCLUDE_GMF = $(HEADER_UTIL) $(HEADER_UTIL_T)
+INCLDE_RG = $(HEADER_UTIL) $(HEADER_UTIL_T)
 INCLUDE_GS = $(HEADER_UTIL) $(HEADER_UTIL_T)
 INCLUDE_RP = $(HEADER_UTIL) $(HEADER_UTIL_T) 
 INCLUDE_VG = $(HEADER_UTIL) $(HEADER_UTIL_T)
@@ -65,11 +73,13 @@ INCLUDE_MAIN = $(HEADER_UTIL) $(HEADER_UTIL_T) $(HEADER_TYPES)
 # Dependencies
 DEPENDENCIES_UTIL = $(SRC_UTIL) $(INCLUDE_UTIL)
 DEPENDENCIES_UTIL_T = $(SRC_UTIL_T) $(INCLUDE_UTIL_T)
+DEPENDENCIES_GMF = $(SRC_GMF) $(INCLUDE_GMF)
+DEPENDENCIES_RG = $(SRC_RG) $(INCLDE_RG)
 DEPENDENCIES_GS = $(SRC_GS) $(INCLUDE_GS)
 DEPENDENCIES_RP = $(SRC_RP) $(INCLUDE_RP)
 DEPENDENCIES_VG = $(SRC_VG) $(INCLUDE_VG)
 
-DEPENDENCIES_MAIN = $(SRC_MAIN) $(SRC_GS) $(SRC_RP) $(SRC_VG) $(INCLUDE_MAIN)
+DEPENDENCIES_MAIN = $(SRC_MAIN) $(SRC_GMF) $(SRC_RG) $(SRC_GS) $(SRC_RP) $(SRC_VG) $(INCLUDE_MAIN)
 
 
 # Executables (bin directory)
@@ -106,6 +116,16 @@ $(OBJ_UTIL): $(DEPENDENCIES_UTIL)
 $(OBJ_UTIL_T): $(DEPENDENCIES_UTIL_T)
 	@echo "Building $(UTIL_T) . . . "
 	$(CC) $(CFLAGS) $(LDFLAGS) -c $(SRC_UTIL_T) -o $(OBJ_UTIL_T)
+
+# Rule to build graph_main_functionality.o
+$(OBJ_GMF): $(DEPENDENCIES_GMF)
+	@echo "Building $(GS) . . . "
+	$(CC) $(CFLAGS) $(LDFLAGS) -c $(SRC_GMF) -o $(OBJ_GMF)
+
+# Rule to build rgraph.o
+$(OBJ_RG): $(DEPENDENCIES_RG)
+	@echo "Building $(RG) . . . "
+	$(CC) $(CFLAGS) $(LDFLAGS) -c $(SRC_RG) -o $(OBJ_RG)
 
 # Rule to build greedy_search.o
 $(OBJ_GS): $(DEPENDENCIES_GS)

@@ -37,6 +37,8 @@ SRC_t_UT = $(SRC_DIR)/$(t_UT).cpp
 # Object files (build directory)
 OBJ_UTIL = .$(BUILD_DIR)/$(UTIL).o
 OBJ_UTIL_T = .$(BUILD_DIR)/$(UTIL_T).o
+OBJ_GMF = .$(BUILD_DIR)/$(GMF).o
+OBJ_RG = .$(BUILD_DIR)/$(RG).o
 OBJ_GS = .$(BUILD_DIR)/$(GS).o
 OBJ_RP = .$(BUILD_DIR)/$(RP).o
 OBJ_VG = .$(BUILD_DIR)/$(VG).o

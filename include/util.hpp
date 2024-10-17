@@ -10,9 +10,6 @@
 
 using namespace std;
 
-// Calculates the euclidian distance between two vectors of the same size
-float euclideanDistance(vector<float>, vector<float>);
-
 // Checks for existence of element in the set
 template <typename T>
 bool setIn(T t, set<T> s){
