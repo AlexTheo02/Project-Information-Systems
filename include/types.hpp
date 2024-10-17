@@ -29,109 +29,111 @@ using namespace std;
 // end
 
 
-class Node{
-/* Each node will contain the vector (value) and a unique identifier*/
+// class Node{
+// /* Each node will contain the vector (value) and a unique identifier*/
 
-    private:
-        int id;                 // node identifier (used for order among nodes - sorted containers)
-        vector<float> value;    // the feature vector of an entry
-        set<Node*> Nout;         // Self-referencing container for out-neighbors of each node
-        set<Node*> Nin;         // MAYBE TO BE USED
+//     private:
+//         int id;                 // node identifier (used for order among nodes - sorted containers)
+//         vector<float> value;    // the feature vector of an entry
 
-    public:
+//     public:
 
-        // Constructor
-        Node(){
-            this->id = -1;
-        }
+//         // Constructor
+//         Node(){
+//             this->id = -1;
+//         }
 
-        // Constructor
-        Node(vector<float> v, int id){
-            this->value = v;
-            this->id = id;
-            cout<< "Node created with id: "<< this->id << endl;
-        }
+//         // Constructor
+//         Node(vector<float> v, int id){
+//             this->value = v;
+//             this->id = id;
+//             cout<< "Node created with id: "<< this->id << endl;
+//         }
 
-        // Operator overloading for equality and comparator functions (required for stl set container)
-        bool operator==(const Node& n) const { return this->getId() == n.getId(); }
-        bool operator!=(const Node& n) const { return this->getId() != n.getId(); }
-        bool operator<(const Node& n)  const { return this->getId() < n.getId();  }
-        bool operator>(const Node& n)  const { return this->getId() > n.getId();  }
+//         // Operator overloading for equality and comparator functions (required for stl set container)
+//         bool operator==(const Node& n) const { return this->getId() == n.getId(); }
+//         bool operator!=(const Node& n) const { return this->getId() != n.getId(); }
+//         bool operator<(const Node& n)  const { return this->getId() < n.getId();  }
+//         bool operator>(const Node& n)  const { return this->getId() > n.getId();  }
 
-        // Value get/set functions
-        vector<float> getValue() const{
-            return this->value;
-        }
+//         // Value get/set functions
+//         vector<float> getValue() const{
+//             return this->value;
+//         }
 
-        void setValue(vector<float> v){
-            this->value = v;
-        }
+//         void setValue(vector<float> v){
+//             this->value = v;
+//         }
 
-        set<Node*> getOutNeighbors() const{
-            return this->Nout;
-        }
+//         set<Node*> getOutNeighbors() const{
+//             return this->Nout;
+//         }
 
-        // inserts 'out' as an out-neighbor of this Node Object
-        bool insertNeighbor(Node* out){
-            if (out->getId() < 0) {
-                cout << "ERROR: Invalid Node. Node ID is " << out->getId() <<".\n";
-                return false;
-            }
-            // add a warning: if out in thisNout warning: already exists
-            if (setIn(out, this->Nout)){
-                cout << "WARNING: Node with ID " << out->getId() << " already exists as a neighbor to node " << this->getId() << ".\n"; 
-            }
-            this->Nout.insert(out);
+//         // inserts 'out' as an out-neighbor of this Node Object
+//         bool insertNeighbor(Node* out){
+//             if (out->getId() < 0) {
+//                 cout << "ERROR: Invalid Node. Node ID is " << out->getId() <<".\n";
+//                 return false;
+//             }
+//             // add a warning: if out in thisNout warning: already exists
+//             if (setIn(out, this->Nout)){
+//                 cout << "WARNING: Node with ID " << out->getId() << "already exists as a neighbor to node " << this->getId() << "."; 
+//             }
+//             this->Nout.insert(out);
 
-            out->Nin.insert(this);       // UNIT TEST FOR THIS
+//             out->Nin.insert(this);       // UNIT TEST FOR THIS
 
 
-            return true;
-        }
+//             return true;
+//         }
 
-        bool removeNeighbor(Node* target){
-            // find neighbor in out neighbors and delete it
-            // return true on success
-            return false;
-        }
+//         bool removeNeighbor(Node* target){
+//             // find neighbor in out neighbors and delete it
+//             // return true on success
+//             return false;
+//         }
 
-        int clearNeighbors(){
+//         int clearNeighbors(){
 
-            int removed = 0;
-            for (Node* n : this->Nout){
-                this->removeNeighbor(n);
-                removed++;
-            }
-            return removed;
-        }
+//             int removed = 0;
+//             for (Node* n : this->Nout){
+//                 this->removeNeighbor(n);
+//                 removed++;
+//             }
+//             return removed;
+//         }
 
-        // Id get/set funcitons
-        int getId() const{      // getters are const as they do not modify the object. 
-            return this->id;    // Required for type matching during overloaded comparison (less <) of Node Objects
-        }
+//         // Id get/set funcitons
+//         int getId() const{      // getters are const as they do not modify the object. 
+//             return this->id;    // Required for type matching during overloaded comparison (less <) of Node Objects
+//         }
 
-        // Set the Node's identifier
-        void setId(int id){
-            if (id < 0){
-                cout << "WARNING: You are setting the Node's ID to " << id << ". Node will become invalid.\n";
-            }
-            this->id = id;
-        }
-};
+//         // Set the Node's identifier
+//         void setId(int id){
+//             if (id < 0){
+//                 cout << "WARNING: You are setting the Node's ID to " << id << ". Node will become invalid.\n";
+//             }
+//             this->id = id;
+//         }
+// };
+
+// Handle for nodes
+typedef vector<float>* Node;
+// same vector = DUPLICATE??
 
 class DirectedGraph{
 
     private:
-        int lastId;         // id of the last added node
         int n_edges;        // number of edges present in the graph
         int n_nodes;
-        set<Node*> nodes;    // a set of all the nodes in the graph
+        set<Node> nodes;    // a set of all the nodes in the graph
+        unordered_map<Node, set<Node>> Nout; // key: node, value: set of outgoing neighbors 
+        unordered_map<Node, set<Node>> Nin;  // key: node, value: set of incoming neighbors
 
     public:
 
         // Constructor: Initialize an empty graph
         DirectedGraph() {
-            this->lastId = 0;
             this->n_edges = 0;
             this->n_nodes = 0;
             cout << "Graph created!" << endl;
@@ -141,56 +143,104 @@ class DirectedGraph{
             // empty
         }
 
-        // getters
-        int getLastId() const{
-            return this->lastId;
-        }
-
-        set<Node*> getNodes() const{
+        // Return a set of all Nodes in the graph
+        set<Node> getNodes() {
             return this->nodes;
         }
 
         // Creates a node and adds it in the graph
         void createNode(vector<float> value){
-            Node* newNode = new Node(value, ++this->lastId);
-            nodes.insert(newNode);
+            // Create new node
+            Node n = new vector<float>(value);
+
+            // Add it to graph's set of nodes
+            this->nodes.insert(n);
+
+            // Increment the number of nodes in graph
             this->n_nodes++;
         }
 
         // bool remove node (by id by value idk) - search and delete
         // also remove node from any neighbor-lists!
 
-        bool addEdge(Node* from, Node* to){
-            if (!from->insertNeighbor(to))
-                return false; 
+        void addEdge(Node from, Node to){
+            this->Nout[from].insert(to);
+            this->Nin[to].insert(from);
             this->n_edges++;
-            return true;
         }
 
         // remove edge
-        bool removeEdge(Node& from, Node& to){
-            // check if exists. Return True if exists and successfully removed
-            // false otherwise
+        bool removeEdge(Node from, Node to){
+            // Check if key exists before accessing it (and removing it)
+            if (mapKeyExists(from, this->Nout) && mapKeyExists(to, this->Nin)) {
+                // Key exists, access the value, if successfully removed, return true
+                if (this->Nout[from].erase(to) && this->Nin[to].erase(from)){
+                    
+                    // Check if outgoing neighbors are empty, if so, remove entry from unordered map
+                    if (this->Nout[from].empty())
+                        this->Nout.erase(from);
+
+                    // Check if incoming neighbors are empty, if so, remove entry from unordered map
+                    if (this->Nin[to].empty())
+                        this->Nin.erase(to);
+                    
+                    // Decrement the number of edges in graph
+                    this->n_edges--;
+                    return true;
+                }
+            }
             return false;
+        }
+
+        // clears all neighbors for a specific node
+        bool clearNeighbors(Node node){
+
+            // Check if node exists before trying to access it
+            if (setIn(node,this->nodes)){
+                cout << "ERROR: Node does not exist" << endl;
+                return false;
+            }
+
+            // Node has outgoing neighbors
+            if (mapKeyExists(node, this->Nout)){
+                for (Node n : this->Nout[node]){
+                    if (!this->removeEdge(node,n)){
+                        cout << "ERROR: Failed to remove edge, something went wrong" << endl;
+                        return false;
+                    }
+                }
+                // Check if node has been removed from neighbors map
+                if (mapKeyExists(node, this->Nout)){
+                    cout << "ERROR: Something went wrong when clearing neighbors" << endl;
+                    return false;
+                }
+            }
+            return true;
         }
 
         // clears all edges in the graph
         bool clearEdges(){
-            for (Node* n : this->nodes){
-                this->n_edges -= n->clearNeighbors();
+            for (Node n : this->nodes){
+                if (!this->clearNeighbors(n)){
+                    cout << "ERROR: Failed to clear neighbors for node" << endl;
+                    return false;
+                }
             }
 
-            if (this->n_edges == 0)
-                return true;
+            if (this->n_edges != 0 || !this->Nout.empty() || !this->Nin.empty()){
+                cout << "ERROR: Failed to clear edges in graph" << endl;
+                return false;
+            }
             
-            cout << "ERROR: Edges not cleared successfully. Something went wrong.\n";
-            return false;
+            return true;
         }
 
         // creates a random R graph with the existing nodes. Return TRUE if successful, FALSE otherwise
         bool Rgraph(int R){
             
-            this->clearEdges();     // clear all edges in the graph to create an R random graph anew.
+            // clear all edges in the graph to create an R random graph anew.
+            if (!this->clearEdges())
+                return false;
 
             if (R <= log(this->n_nodes)){
                 cout << "WARNING: R <= logn and therefore the graph will not be well connected.\n";
@@ -201,31 +251,31 @@ class DirectedGraph{
             }
 
             int r;
-            for (Node* n : this->getNodes()){
+            for (Node n : this->getNodes()){
                 
-                set<Node*> remaining = this->getNodes(); // MUST BE COPY!
+                // Copy of nodes in the graph
+                set<Node> remaining = this->getNodes();
+                // Remove self from remaining nodes
+                if (remaining.erase(n) <= 0){
+                    cout << "ERROR: Failed to remove self from remaining nodes" << endl;
+                    return false;
+                }
 
-                for (int i = 0; i < min(R, this->n_nodes -1); i++){ // max_i = min(R, N-1) where N is the number of nodes - redundant check if check for false above ? (failsafe)
+                for (int i = 0; i < R; i++){
                     
-                    Node* nr;
+                    Node nr;
+
+                    nr = sampleFromSet(remaining);
                     
-                    if (!remaining.empty()){
-                        do{ // CAREFUL: POSSIBLE INFINITE LOOP WHEN SET SIZE IS 1! (when sampling in a while loop)
-                            nr = sampleFromSet(remaining);
-                        }while(nr == n || setIn(nr, n->getOutNeighbors()));              // ensure the neighbor is not itself and not already in the set
-                    }
-                    
-                    n->insertNeighbor(nr);                                               // add the node as neighbor
+                    this->addEdge(n,nr); // add the node as neighbor
                     remaining.erase(nr);
                 }
             }
             return true;
-            // UPDATE to work with references instead of copies? MAYBE required change on n.neighbors to handle references of existing nodes instead of copies?
-            // can set hold references or should the elements be copy-able?
         }
 
         // Greedy search algorithm
-        vector<set<Node*>> greedySearch(Node* s, vector<float> xq, int k, int L);
+        vector<set<Node>> greedySearch(Node s, vector<float> xq, int k, int L);
 
         // Robust Prune algorithm
 

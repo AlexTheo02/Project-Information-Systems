@@ -19,6 +19,12 @@ bool setIn(T t, set<T> s){
     return (s.find(t) != s.end());
 }
 
+// Checks for existence as key in an unordered map
+template <typename T1, typename T2>
+bool mapKeyExists(T1 key, unordered_map<T1, T2> map){
+    return (map.find(key) != map.end());
+}
+
 // Subtract set2 from set1
 // https://stackoverflow.com/questions/283977/c-stl-set-difference
 template <typename T>
