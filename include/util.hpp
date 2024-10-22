@@ -1,12 +1,15 @@
 #pragma once
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <cmath>
 #include <algorithm>
 #include <functional>
 #include <set>
 #include <cstdlib>
+#include <string>
+#include <cstring>
 
 using namespace std;
 
@@ -55,4 +58,65 @@ T sampleFromSet(set<T> s){
     advance(it, rand() % s.size()); // iterator moves to a random position between 0 and set_size
 
     return *it;                     // dereferencing the iterator will return the pointed element
+}
+
+// Returns a vector of vectors from specified .fvecs file
+template <typename T>
+vector<vector<T>> read_vecs(string file_path, int n_vec, T){
+
+    // Open file in binary mode
+    ifstream file(file_path, ios::binary);
+
+    // To be returned
+    vector<vector<T>> vectors;
+
+    if (!file.is_open()) {
+        cerr << "Error opening file: " << file_path << endl;
+        return vectors; // empty
+    }
+
+    int dim,cnt=0, vec_size;
+    char *dim_buffer, *vec_buffer;
+    // Read file
+    for (int i = 0; i<n_vec && !file.eof(); i++) {
+
+        dim_buffer = (char*) malloc(sizeof(T));
+
+        // Read dimension (4 - int)
+        file.read(dim_buffer, 4);
+        
+        memcpy(&dim, dim_buffer, 4);
+
+        if (dim > 0){
+            cnt++;
+            vec_size = dim * sizeof(T);
+            // Allocate memory for vec_buffer
+            vec_buffer = (char*) malloc(vec_size);
+
+            // Create vector with correct dimension
+            vector<T> vec(dim);
+
+            // Read vector and assign values to it (d*sizeof(T) - 4 | 4 | 1 for T: float | int | char)
+            file.read(vec_buffer, vec_size);
+
+            memcpy(vec.data(), vec_buffer, vec_size);
+
+            // Add vector to vectors
+            vectors.push_back(vec);
+
+        }
+        if (dim_buffer != NULL)
+            free(dim_buffer);
+        if (vec_buffer != NULL)
+            free(vec_buffer);
+        dim = 0;
+    }
+
+    cout << "Total vectors read: " << cnt << endl;
+
+    // Close the file
+    file.close();
+
+    cout << file_path << " read successfully, returning vectors." << endl;
+    return vectors;
 }
