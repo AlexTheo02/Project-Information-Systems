@@ -2,7 +2,12 @@
 // #include "types.hpp"
 #include "util_types.hpp"
 
-void DirectedGraph::robustPrune(Node p, set<Node> V, int a, int R){
+bool DirectedGraph::robustPrune(Node p, set<Node> V, float a, int R){
+
+    if (a < 1 || R <= 0){
+        cout << "ERROR: Invalid Parameters in robustPrune.\n";
+        return false;
+    }
 
     if (mapKeyExists(p, this->Nout))
         V = setUnion(V, this->Nout[p]);
@@ -25,5 +30,5 @@ void DirectedGraph::robustPrune(Node p, set<Node> V, int a, int R){
             }
         }
     }
-    return;
+    return true;
 }
