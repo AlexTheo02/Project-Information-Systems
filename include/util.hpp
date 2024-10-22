@@ -6,10 +6,13 @@
 #include <cmath>
 #include <algorithm>
 #include <functional>
+#include <unordered_map>
 #include <set>
 #include <cstdlib>
 #include <string>
 #include <cstring>
+#include <random>
+
 
 using namespace std;
 
@@ -119,4 +122,41 @@ vector<vector<T>> read_vecs(string file_path, int n_vec, T){
 
     cout << file_path << " read successfully, returning vectors." << endl;
     return vectors;
+
+// Returns the medoid of the set s according to distance d
+template<typename T>
+T medoid(const set<T>& s, function<float(T, T)> d){
+    T med;
+    float dmin = numeric_limits<float>::max();
+
+    for (const T& t : s){
+        float dsum = 0;
+
+        for (const T& t_other : s)
+            dsum += d(t, t_other);  // we don't need to check if the other element is the same, because one's distance to itself is zero
+
+        // updating best medoid if current total distance is smaller than the minimum total distance yet
+        if (dsum < dmin){
+            dmin = dsum;
+            med = t;
+        }
+    }
+    return med;
+}
+
+// returns a vector of a random permutation of the elements beloning in the set s
+template<typename T>
+vector<T> permutation(const set<T>& s){
+
+    // https://stackoverflow.com/questions/6926433/how-to-shuffle-a-stdvector
+
+    // transforming the set into a vector
+    vector<T> vec(s.begin(), s.end());
+
+    // shuffling the vector
+    auto rd = random_device {};
+    auto rng = default_random_engine { rd() };
+    shuffle(vec.begin(), vec.end(), rng);
+
+    return vec;
 }
