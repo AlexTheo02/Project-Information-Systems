@@ -122,6 +122,7 @@ vector<vector<T>> read_vecs(string file_path, int n_vec, T){
 
     cout << file_path << " read successfully, returning vectors." << endl;
     return vectors;
+}
 
 // Returns the medoid of the set s according to distance d
 template<typename T>
