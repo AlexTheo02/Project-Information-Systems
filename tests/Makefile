@@ -21,13 +21,15 @@ PARENT_DIR = ..
 TYPES = types
 UTIL = util
 UTIL_T = util_types
+GMF = graph_main_functionality
+RG = rgraph
 GS = greedy_search
 RP = robust_prune
 VG = vamana_graph
 
-t_TYPES = test_Types
-t_UTIL = test_Util
-t_UT = test_UtilTypes
+t_TYPES = test_types
+t_UTIL = test_util
+t_UT = test_util_types
 
 # Source Files
 SRC_t_TYPES = $(SRC_DIR)/$(t_TYPES).cpp
@@ -42,6 +44,9 @@ OBJ_RG = .$(BUILD_DIR)/$(RG).o
 OBJ_GS = .$(BUILD_DIR)/$(GS).o
 OBJ_RP = .$(BUILD_DIR)/$(RP).o
 OBJ_VG = .$(BUILD_DIR)/$(VG).o
+
+# Graph object files
+OBJ_GRAPH = $(OBJ_UTIL_T) $(OBJ_GS) $(OBJ_RP) $(OBJ_VG)
 
 OBJ_t_TYPES = $(BUILD_DIR)/$(t_TYPES).o
 OBJ_t_UTIL = $(BUILD_DIR)/$(t_UTIL).o
@@ -94,7 +99,7 @@ rebuild_ut:
 	make run_ut
 
 # Build Executable test_Types
-$(EX_t_TYPES): $(OBJ_t_TYPES) $(OBJ_UTIL)
+$(EX_t_TYPES): $(OBJ_t_TYPES) $(OBJ_GR)
 	@echo "Linking Object Files to Create Executable $(EX_t_TYPES) . . ."
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 

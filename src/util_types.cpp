@@ -26,7 +26,7 @@ float euclideanDistance(Node n1, Node n2){
 
 
 
-// Returns the node with the minimum distance from a specific node
+// Returns the node from given nodeSet with the minimum distance from a specific vector
 Node myArgMin(set<Node> nodeSet, vector<float> vec, function<float(Node, Node)> d){
 
     if (nodeSet.empty()){
