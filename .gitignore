@@ -1,1 +1,5 @@
-.vscode
+.vscode/
+build
+bin
+/tests/build
+/tests/bin
