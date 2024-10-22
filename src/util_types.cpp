@@ -34,6 +34,11 @@ Node myArgMin(set<Node> nodeSet, vector<float> vec, function<float(Node, Node)> 
         return NULL;
     }
 
+    if (vec.empty()){
+        cout << "ERROR: Vector(q) is empty returning NULL" << endl;
+        return NULL;
+    }
+
     float minDist = numeric_limits<float>::max(), dist;
     Node minNode = NULL;
 
@@ -42,6 +47,11 @@ Node myArgMin(set<Node> nodeSet, vector<float> vec, function<float(Node, Node)> 
         // Calculate distance
         Node temp = &vec;
         dist = d(n, temp);
+
+        // If the distance is -1, that means that there is a dimension mismatch
+        if(dist == -1.0){
+            return NULL;
+        }
 
         // New minimum distance found
         if (dist < minDist){
@@ -61,14 +71,41 @@ set<Node> closestN(int N, set<Node> S, vector<float> X, function<float(Node, Nod
     // transform the set to a vector
     vector<Node> Svec(S.begin(), S.end());
 
+    // keep N first
+    set<Node> closest_nodes;    
+
+    // check if N is a valid number (size of set > N > 0)
+    if (N <= 0 )
+        return {};
+    
+    if(S.size() < N)
+        return S;
+    
+    // check if the set is empty
+    if (S.empty())
+        return closest_nodes;
+
+    // check if the vector is empty
+    if (X.empty())
+        return closest_nodes;
+
+    // Check if all nodes in the set have the same dimension as X
+    size_t targetDim = X.size();
+
+    for (Node node : S) {
+        if (node->size() != targetDim) {
+
+            return {};
+        }
+    }
+
     // sort the vector based on the distance from point X
     Node temp = &X;
     sort(Svec.begin(), Svec.end(),
         [temp, d] (Node p1, Node p2) {return (d(temp, p1) < d(temp, p2));});
         // lambda(p1,p2) = determines which of the two points is closest to X
 
-    // keep N first
-    set<Node> closest_nodes;    // unit test if N > size set return whole set ktl
+    
     for (int i = 0; i < N && i < Svec.size(); i++){
         closest_nodes.insert(Svec[i]);
     }

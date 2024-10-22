@@ -5,6 +5,7 @@
 #include <cmath>
 #include <algorithm>
 #include <functional>
+#include <unordered_map>
 #include <set>
 #include <cstdlib>
 #include <random>
