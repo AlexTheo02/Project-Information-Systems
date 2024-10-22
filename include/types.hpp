@@ -80,7 +80,8 @@ class DirectedGraph{
         vector<set<Node>> greedySearch(Node s, vector<float> xq, int k, int L);
 
         // Robust Prune algorithm
-        void robustPrune(Node p, set<Node> V, int a, int R);
+        bool robustPrune(Node p, set<Node> V, float a, int R);
 
         // Vamana Graph creation algorithm
+        bool vamanaAlgorithm(int L, int R);
 };
