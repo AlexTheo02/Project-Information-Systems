@@ -5,6 +5,7 @@
 #include <functional>
 #include <algorithm>
 #include <limits>
+#include <stdexcept>
 
 using namespace std;
 

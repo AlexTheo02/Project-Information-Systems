@@ -7,13 +7,15 @@ float euclideanDistance(Node n1, Node n2){
     int dim2 = (*n2).size();
 
     if (dim1!=dim2){
-        cout<<"Dimension mismatch, dim1 is: "<<dim1 <<" dim2 is: "<<dim2 << endl;
-        return -1;
+        // cout<<"ERROR: Dimension mismatch, dim1 is: "<<dim1 <<" dim2 is: "<<dim2 << endl;
+        // exit(EXIT_FAILURE);
+        throw invalid_argument("Dimension Mismatch between Vectors");
     }
 
     if ((*n1).empty()){
-        cout << "Both vectors are empty" << endl;
-        return -1;
+        // cout << "ERROR: Both vectors are empty" << endl;
+        // exit(EXIT_FAILURE);
+        throw invalid_argument("Both Vectors are empty");
     }
     
     float sum = 0;
@@ -30,13 +32,15 @@ float euclideanDistance(Node n1, Node n2){
 Node myArgMin(set<Node> nodeSet, vector<float> vec, function<float(Node, Node)> d){
 
     if (nodeSet.empty()){
-        cout << "ERROR: NodeSet is empty returning NULL" << endl;
-        return NULL;
+        throw invalid_argument("NodeSet is Empty");
+        // cout << "ERROR: NodeSet is empty returning NULL" << endl;
+        // return NULL;
     }
 
     if (vec.empty()){
-        cout << "ERROR: Vector(q) is empty returning NULL" << endl;
-        return NULL;
+        throw invalid_argument("Query vector is empty");
+        // cout << "ERROR: Vector(q) is empty returning NULL" << endl;
+        // return NULL;
     }
 
     float minDist = numeric_limits<float>::max(), dist;
@@ -46,10 +50,12 @@ Node myArgMin(set<Node> nodeSet, vector<float> vec, function<float(Node, Node)> 
         
         // Calculate distance
         Node temp = &vec;
-        dist = d(n, temp);
 
-        // If the distance is -1, that means that there is a dimension mismatch
-        if(dist == -1.0){
+        try {
+            dist = d(n, temp);
+        }
+        catch (exception& exc) {
+            cout << "ERROR: Exception caught on distance function. Returning NULL\n";
             return NULL;
         }
 

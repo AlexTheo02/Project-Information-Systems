@@ -12,20 +12,33 @@ void test_eudcileanDistance(){
     // ------------------------------------------------------------------------------------------- Empty values check
     Node n1 = new vector<float>;
     Node n2 = new vector<float>;
-    TEST_CHECK(euclideanDistance(n1,n2) == -1);
-    TEST_MSG("Empty values check (empty,empty)");
-
+    try{
+        float res = euclideanDistance(n1,n2);
+        TEST_CHECK(false); // control should not reach here
+    }catch(const invalid_argument& ia) {
+        TEST_CHECK(string(ia.what()) == "Both Vectors are empty");
+    };
     delete n1;
     delete n2;
 
     // ------------------------------------------------------------------------------------------- Different dimensions check
     n1 = new vector<float>{0.23f, 1.01f, 33.0f};
     n2 = new vector<float>{0.232f, 1.02f};
-    TEST_CHECK(euclideanDistance(n1,n2) == -1);
+    
     TEST_MSG("Different dimensions check, (3,2)");
+    try{
+        float res = euclideanDistance(n1,n2);
+        TEST_CHECK(false); // control should not reach here
+    }catch(const invalid_argument& ia) {
+        TEST_CHECK(string(ia.what()) == "Dimension Mismatch between Vectors");
+    };
 
-    TEST_CHECK(euclideanDistance(n2,n1) == -1);
-    TEST_MSG("Different dimensions check, (2,3)");
+    try{
+        float res = euclideanDistance(n2,n1);
+        TEST_CHECK(false); // control should not reach here
+    }catch(const invalid_argument& ia) {
+        TEST_CHECK(string(ia.what()) == "Dimension Mismatch between Vectors");
+    };
 
     delete n1;
     delete n2;
@@ -70,9 +83,14 @@ void test_myArgMin(){
 
     // ------------------------------------------------------------------------------------------- Both empty check
     expected = NULL;
-    result = myArgMin(nodeSet, q, euclideanDistance);
+    try {
+        result = myArgMin(nodeSet, q, euclideanDistance);
+        TEST_CHECK(false); // control should not reach here
+    }
+    catch(invalid_argument& ia) {
+        TEST_CHECK(string(ia.what()) == "NodeSet is Empty");
+    }
 
-    TEST_CHECK(result == expected);
     TEST_MSG("Empty Set and Empty q");
     reset_myArgMin(q, nodeSet, result, expected);
 
@@ -82,10 +100,14 @@ void test_myArgMin(){
     for (int i=0; i<10; i++)
         q.push_back((1.24f * i) /(0.32 + (i* 0.5)));
 
-    expected = NULL;
-    result = myArgMin(nodeSet, q, euclideanDistance);
-
-    TEST_CHECK(result == expected);
+    try {
+        result = myArgMin(nodeSet, q, euclideanDistance);
+        TEST_CHECK(false); // control should not reach here
+    }
+    catch(invalid_argument& ia) {
+        TEST_CHECK(string(ia.what()) == "NodeSet is Empty");
+    }
+    
     TEST_MSG("Empty Set");
     reset_myArgMin(q, nodeSet, result, expected);
 
@@ -97,10 +119,14 @@ void test_myArgMin(){
         nodeSet.insert(n);
     }
 
-    expected = NULL;
-    result = myArgMin(nodeSet, q, euclideanDistance);
+    try {
+        result = myArgMin(nodeSet, q, euclideanDistance);
+        TEST_CHECK(false); // control should not reach here
+    }
+    catch(invalid_argument& ia) {
+        TEST_CHECK(string(ia.what()) == "Query vector is empty");
+    }
 
-    TEST_CHECK(result == expected);
     TEST_MSG("Empty q");
     reset_myArgMin(q, nodeSet, result, expected);
 
@@ -115,6 +141,9 @@ void test_myArgMin(){
         }
         nodeSet.insert(n);
     }
+
+    for (int i = 0; i < 10; i++)
+        q.push_back(i);
 
     expected = NULL;
     result = myArgMin(nodeSet, q, euclideanDistance);
