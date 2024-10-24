@@ -46,7 +46,7 @@ OBJ_RP = .$(BUILD_DIR)/$(RP).o
 OBJ_VG = .$(BUILD_DIR)/$(VG).o
 
 # Graph object files
-OBJ_GRAPH = $(OBJ_UTIL_T) $(OBJ_GS) $(OBJ_RP) $(OBJ_VG)
+OBJ_GRAPH = $(OBJ_UTIL_T) $(OBJ_GMF) $(OBJ_RG) $(OBJ_GS) $(OBJ_RP) $(OBJ_VG)
 
 OBJ_t_TYPES = $(BUILD_DIR)/$(t_TYPES).o
 OBJ_t_UTIL = $(BUILD_DIR)/$(t_UTIL).o
@@ -99,7 +99,7 @@ rebuild_ut:
 	make run_ut
 
 # Build Executable test_Types
-$(EX_t_TYPES): $(OBJ_t_TYPES) $(OBJ_GR)
+$(EX_t_TYPES): $(OBJ_t_TYPES) $(OBJ_GRAPH)
 	@echo "Linking Object Files to Create Executable $(EX_t_TYPES) . . ."
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 

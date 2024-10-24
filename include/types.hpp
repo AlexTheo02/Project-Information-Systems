@@ -42,8 +42,8 @@ class DirectedGraph{
         DirectedGraph(function<float(Node, Node)> distance_function) {
             this->n_edges = 0;
             this->n_nodes = 0;
-            cout << "Graph created!" << endl;
             this->d = distance_function;
+            cout << "Graph created!" << endl;
         }
 
         void display(){
@@ -55,14 +55,34 @@ class DirectedGraph{
             return this->nodes;
         }
 
-        // Creates a node and adds it in the graph
-        void createNode(vector<float> value);
+        // Return the number of edges in the graph
+        int get_n_edges(){
+            return this->n_edges;
+        }
+
+        // Return the number of nodes in the graph
+        int get_n_nodes(){
+            return this->n_nodes;
+        }
+
+        // Return Nout map
+        unordered_map<Node, set<Node>> get_Nout(){
+            return this->Nout;
+        }
+
+        // Return Nin map
+        unordered_map<Node, set<Node>> get_Nin(){
+            return this->Nin;
+        }
+
+        // Creates a node, adds it in the graph and returns it
+        Node createNode(vector<float> value);
 
         // bool remove node (by id by value idk) - search and delete    //TODO!
         // also remove node from any neighbor-lists!
 
         // Adds an directed edge (from->to). Updates outNeighbors(from) and inNeighbors(to)
-        void addEdge(Node from, Node to);
+        bool addEdge(Node from, Node to);
 
         // remove edge
         bool removeEdge(Node from, Node to);
