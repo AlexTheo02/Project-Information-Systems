@@ -1,8 +1,8 @@
 #include "util.hpp"
 #include "util_types.hpp"
 
-// Creates a node and adds it in the graph
-void DirectedGraph::createNode(vector<float> value){
+// Creates a node, adds it in the graph and returns it
+Node DirectedGraph::createNode(vector<float> value){
     // Create new node
     Node n = new vector<float>(value);
 
@@ -11,13 +11,18 @@ void DirectedGraph::createNode(vector<float> value){
 
     // Increment the number of nodes in graph
     this->n_nodes++;
+    
+    return n;
 }
 
 // Adds an directed edge (from->to). Updates outNeighbors(from) and inNeighbors(to)
-void DirectedGraph::addEdge(Node from, Node to){
+bool DirectedGraph::addEdge(Node from, Node to){\
+    if (from == to)
+        return false;
     this->Nout[from].insert(to);
     this->Nin[to].insert(from);
     this->n_edges++;
+    return true;
 }
 
 // remove edge
@@ -46,10 +51,10 @@ bool DirectedGraph::removeEdge(Node from, Node to){
 
 // clears all neighbors for a specific node
 bool DirectedGraph::clearNeighbors(Node node){
-
+    
     // Check if node exists before trying to access it
-    if (setIn(node,this->nodes)){
-        cout << "ERROR: Node does not exist" << endl;
+    if (!setIn(node,this->nodes)){
+        cout << "ERROR: Node does not exist in set" << endl;
         return false;
     }
 
