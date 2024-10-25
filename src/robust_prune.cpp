@@ -1,8 +1,8 @@
 #include "util.hpp"
-// #include "types.hpp"
-#include "util_types.hpp"
+#include "types.hpp"
 
-bool DirectedGraph::robustPrune(Node p, set<Node> V, float a, int R){
+template <typename T>
+bool DirectedGraph<T>::robustPrune(T p, set<T> V, float a, int R){
 
     if (a < 1 || R <= 0){
         cout << "ERROR: Invalid Parameters in robustPrune.\n";
@@ -13,7 +13,7 @@ bool DirectedGraph::robustPrune(Node p, set<Node> V, float a, int R){
         V = setUnion(V, this->Nout[p]);
     
     V.erase(p);
-    Node p_opt;
+    T p_opt;
 
     while (!V.empty()){
         p_opt = myArgMin(V, *p, this->d);
@@ -24,7 +24,7 @@ bool DirectedGraph::robustPrune(Node p, set<Node> V, float a, int R){
             break;
         
         // n = p', p_opt = p*
-        for (Node n : V){   
+        for (T n : V){   
             if ( (a * this->d(p_opt, n)) <= this->d(p, n)){
                 V.erase(n);
             }

@@ -9,13 +9,17 @@
 #include <vector>
 #include <set>
 #include <cmath>
+#include <functional>
+#include <algorithm>
+#include <limits>
+#include <stdexcept>
 
 #include "util.hpp"
 
 using namespace std;
 
 // Handle for nodes
-typedef vector<float>* Node;
+// typedef vector<float> Node;
 // same vector = DUPLICATE??
 
 // Graph Documentation Here
@@ -26,69 +30,54 @@ typedef vector<float>* Node;
 // + Dictionary{node : OutNeighbors}
 // + Dictionary{node : InNeighbors}
 // + *Distance Function: Node x Node -> float
+// IMPORTANT: T must be hashable. If T is not hashable by default, user is required to specialize std::hash function for the desired data type.
+template <typename T>
 class DirectedGraph{
 
     private:
-        int n_edges;        // number of edges present in the graph
-        int n_nodes;
-        set<Node> nodes;    // a set of all the nodes in the graph
-        unordered_map<Node, set<Node>> Nout;// key: node, value: set of outgoing neighbors 
-        unordered_map<Node, set<Node>> Nin; // key: node, value: set of incoming neighbors
-        function<float(Node, Node)> d;      // Graph's distance function
-
+    int n_edges;                        // number of edges present in the graph
+    int n_nodes;                        // number of nodes present in the graph
+    set<T> nodes;                       // a set containing all the nodes in the graph
+    unordered_map<T, set<T>> Nout;      // key: node, value: set of outgoing neighbors 
+        unordered_map<T, set<T>> Nin;   // key: node, value: set of incoming neighbors
+        function<float(T, T)> d;        // Graph's distance function
+    
     public:
 
         // Constructor: Initialize an empty graph
-        DirectedGraph(function<float(Node, Node)> distance_function) {
+        DirectedGraph(function<float(T, T)> distance_function) {
             this->n_edges = 0;
             this->n_nodes = 0;
             this->d = distance_function;
             cout << "Graph created!" << endl;
         }
 
-        void display(){
-            // empty
-        }
-
         // Return a set of all Nodes in the graph
-        set<Node> getNodes() {
-            return this->nodes;
-        }
+        const set<T>& getNodes() const { return this->nodes; }
 
         // Return the number of edges in the graph
-        int get_n_edges(){
-            return this->n_edges;
-        }
+        const int& get_n_edges() const { return this->n_edges; }
 
         // Return the number of nodes in the graph
-        int get_n_nodes(){
-            return this->n_nodes;
-        }
+        const int& get_n_nodes() const { return this->n_nodes; }
 
         // Return Nout map
-        unordered_map<Node, set<Node>> get_Nout(){
-            return this->Nout;
-        }
+        const unordered_map<T, set<T>>& get_Nout() const { return this->Nout; }
 
         // Return Nin map
-        unordered_map<Node, set<Node>> get_Nin(){
-            return this->Nin;
-        }
+        const unordered_map<T, set<T>>& get_Nin() const { return this->Nin; }
 
         // Creates a node, adds it in the graph and returns it
-        Node createNode(vector<float> value);
-
-        // bool remove node (by id by value idk) - search and delete    //TODO!
-        // also remove node from any neighbor-lists!
+        typename set<T>::iterator createNode(const T& value);
 
         // Adds an directed edge (from->to). Updates outNeighbors(from) and inNeighbors(to)
-        bool addEdge(Node from, Node to);
+        bool addEdge(const T& from, const T& to);
 
         // remove edge
-        bool removeEdge(Node from, Node to);
+        bool removeEdge(const T& from, const T& to);
 
         // clears all neighbors for a specific node
-        bool clearNeighbors(Node node);
+        bool clearNeighbors(const T& node);
 
         // clears all edges in the graph
         bool clearEdges();
@@ -97,10 +86,10 @@ class DirectedGraph{
         bool Rgraph(int R);
 
         // Greedy search algorithm
-        vector<set<Node>> greedySearch(Node s, vector<float> xq, int k, int L);
+        const vector<set<T>> greedySearch(const T& s, T xq, int k, int L);
 
         // Robust Prune algorithm
-        bool robustPrune(Node p, set<Node> V, float a, int R);
+        bool robustPrune(T p, set<T> V, float a, int R);
 
         // Vamana Graph creation algorithm
         bool vamanaAlgorithm(int L, int R);

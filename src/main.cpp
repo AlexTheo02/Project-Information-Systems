@@ -1,12 +1,15 @@
 #include <iostream>
-#include "types.hpp"
+
 #include "util.hpp"
-#include "util_types.hpp"
+#include "types.hpp"
+
 
 using namespace std;
 
 int main () {
 
-    DirectedGraph G(euclideanDistance);
+    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
+
     return 0;
+
 }

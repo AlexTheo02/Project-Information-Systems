@@ -1,22 +1,27 @@
 #include "util.hpp"
-#include "util_types.hpp"
+#include "types.hpp"
 
 // Creates a node, adds it in the graph and returns it
-Node DirectedGraph::createNode(vector<float> value){
-    // Create new node
-    Node n = new vector<float>(value);
+template<typename T>
+typename set<T>::iterator DirectedGraph<T>::createNode(const T& value){
+    // https://cplusplus.com/reference/set/set/insert/
 
-    // Add it to graph's set of nodes
-    this->nodes.insert(n);
+    // Add the value to graph's set of nodes
+    pair<typename set<T>::iterator, bool> ret;
+    ret = this->nodes.insert(value);
 
-    // Increment the number of nodes in graph
-    this->n_nodes++;
+    // Increment the number of nodes in graph (if insertion was successful)
+    if (ret.second)
+        this->n_nodes++;
     
-    return n;
+    // return an iterator to the inserted element (or the already existing one)
+    return ret.first;
 }
 
 // Adds an directed edge (from->to). Updates outNeighbors(from) and inNeighbors(to)
-bool DirectedGraph::addEdge(Node from, Node to){\
+template <typename T>
+bool DirectedGraph<T>::addEdge(const T& from, const T& to){
+    
     if (from == to)
         return false;
     this->Nout[from].insert(to);
@@ -26,7 +31,8 @@ bool DirectedGraph::addEdge(Node from, Node to){\
 }
 
 // remove edge
-bool DirectedGraph::removeEdge(Node from, Node to){
+template <typename T>
+bool DirectedGraph<T>::removeEdge(const T& from, const T& to){
     // Check if key exists before accessing it (and removing it)
     if (mapKeyExists(from, this->Nout) && mapKeyExists(to, this->Nin)) {
         // Key exists, access the value, if successfully removed, return true
@@ -48,9 +54,9 @@ bool DirectedGraph::removeEdge(Node from, Node to){
     return false;
 }
 
-
 // clears all neighbors for a specific node
-bool DirectedGraph::clearNeighbors(Node node){
+template <typename T>
+bool DirectedGraph<T>::clearNeighbors(const T& node){
     
     // Check if node exists before trying to access it
     if (!setIn(node,this->nodes)){
@@ -60,7 +66,7 @@ bool DirectedGraph::clearNeighbors(Node node){
 
     // Node has outgoing neighbors
     if (mapKeyExists(node, this->Nout)){
-        for (Node n : this->Nout[node]){
+        for (T n : this->Nout[node]){
             if (!this->removeEdge(node,n)){
                 cout << "ERROR: Failed to remove edge, something went wrong" << endl;
                 return false;
@@ -76,8 +82,9 @@ bool DirectedGraph::clearNeighbors(Node node){
 }
 
 // clears all edges in the graph
-bool DirectedGraph::clearEdges(){
-    for (Node n : this->nodes){
+template <typename T>
+bool DirectedGraph<T>::clearEdges(){
+    for (T n : this->nodes){
         if (!this->clearNeighbors(n)){
             cout << "ERROR: Failed to clear neighbors for node" << endl;
             return false;
