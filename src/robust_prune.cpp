@@ -14,7 +14,7 @@ bool DirectedGraph<T>::robustPrune(T p, set<T> V, float a, int R){
         V = setUnion(V, this->Nout[p]);
     
     V.erase(p);
-    Node p_opt;
+    T p_opt;
 
     while (!V.empty()){
         p_opt = myArgMin(V, *p, this->d);
@@ -25,7 +25,7 @@ bool DirectedGraph<T>::robustPrune(T p, set<T> V, float a, int R){
             break;
         
         // n = p', p_opt = p*
-        for (Node n : V){   
+        for (T n : V){   
             if ( (a * this->d(p_opt, n)) <= this->d(p, n)){
                 V.erase(n);
             }

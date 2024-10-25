@@ -3,7 +3,7 @@
 
 // Creates a node, adds it in the graph and returns it
 template<typename T>
-typename set<T>::iterator DirectedGraph<T>::createNode(T value){
+typename set<T>::iterator DirectedGraph<T>::createNode(const T& value){
     // https://cplusplus.com/reference/set/set/insert/
 
     // Add the value to graph's set of nodes
@@ -20,7 +20,8 @@ typename set<T>::iterator DirectedGraph<T>::createNode(T value){
 
 // Adds an directed edge (from->to). Updates outNeighbors(from) and inNeighbors(to)
 template <typename T>
-bool DirectedGraph<T>::addEdge(T from, T to){\
+bool DirectedGraph<T>::addEdge(const T& from, const T& to){
+    
     if (from == to)
         return false;
     this->Nout[from].insert(to);
@@ -31,7 +32,7 @@ bool DirectedGraph<T>::addEdge(T from, T to){\
 
 // remove edge
 template <typename T>
-bool DirectedGraph<T>::removeEdge(T from, T to){
+bool DirectedGraph<T>::removeEdge(const T& from, const T& to){
     // Check if key exists before accessing it (and removing it)
     if (mapKeyExists(from, this->Nout) && mapKeyExists(to, this->Nin)) {
         // Key exists, access the value, if successfully removed, return true
@@ -53,10 +54,9 @@ bool DirectedGraph<T>::removeEdge(T from, T to){
     return false;
 }
 
-
 // clears all neighbors for a specific node
 template <typename T>
-bool DirectedGraph<T>::clearNeighbors(T node){
+bool DirectedGraph<T>::clearNeighbors(const T& node){
     
     // Check if node exists before trying to access it
     if (!setIn(node,this->nodes)){
@@ -84,7 +84,7 @@ bool DirectedGraph<T>::clearNeighbors(T node){
 // clears all edges in the graph
 template <typename T>
 bool DirectedGraph<T>::clearEdges(){
-    for (Node n : this->nodes){
+    for (T n : this->nodes){
         if (!this->clearNeighbors(n)){
             cout << "ERROR: Failed to clear neighbors for node" << endl;
             return false;

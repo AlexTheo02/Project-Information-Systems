@@ -31,7 +31,7 @@ bool DirectedGraph<T>::Rgraph(int R){
     for (T n : this->getNodes()){
         
         // Copy of nodes in the graph
-        set<T> remaining = this->getNodes();
+        set<T> remaining(this->getNodes().begin(), this->getNodes().end());
         // Remove self from remaining nodes
         if (remaining.erase(n) <= 0){
             cout << "ERROR: Failed to remove self from remaining nodes\n" << endl;

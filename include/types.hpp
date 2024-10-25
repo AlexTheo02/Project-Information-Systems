@@ -30,12 +30,12 @@ template <typename T>
 class DirectedGraph{
 
     private:
-        int n_edges;        // number of edges present in the graph
-        int n_nodes;
-        set<T> nodes;    // a set of all the nodes in the graph
-        unordered_map<T, set<T>> Nout;// key: node, value: set of outgoing neighbors 
-        unordered_map<T, set<T>> Nin; // key: node, value: set of incoming neighbors
-        function<float(T, T)> d;      // Graph's distance function
+        int n_edges;                    // number of edges present in the graph
+        int n_nodes;                    // number of nodes present in the graph
+        set<T> nodes;                   // a set containing all the nodes in the graph
+        unordered_map<T, set<T>> Nout;  // key: node, value: set of outgoing neighbors 
+        unordered_map<T, set<T>> Nin;   // key: node, value: set of incoming neighbors
+        function<float(T, T)> d;        // Graph's distance function
 
     public:
 
@@ -47,49 +47,32 @@ class DirectedGraph{
             cout << "Graph created!" << endl;
         }
 
-        void display(){
-            // empty
-        }
-
         // Return a set of all Nodes in the graph
-        set<Node> getNodes() {
-            return this->nodes;
-        }
+        const set<T>& getNodes() const { return this->nodes; }
 
         // Return the number of edges in the graph
-        int get_n_edges(){
-            return this->n_edges;
-        }
+        const int& get_n_edges() const { return this->n_edges; }
 
         // Return the number of nodes in the graph
-        int get_n_nodes(){
-            return this->n_nodes;
-        }
+        const int& get_n_nodes() const { return this->n_nodes; }
 
         // Return Nout map
-        unordered_map<T, set<T>> get_Nout(){
-            return this->Nout;
-        }
+        const unordered_map<T, set<T>>& get_Nout() const { return this->Nout; }
 
         // Return Nin map
-        unordered_map<T, set<T>> get_Nin(){
-            return this->Nin;
-        }
+        const unordered_map<T, set<T>>& get_Nin() const { return this->Nin; }
 
         // Creates a node, adds it in the graph and returns it
-        typename set<T>::iterator createNode(T value);
-
-        // bool remove node (by id by value idk) - search and delete    //TODO!
-        // also remove node from any neighbor-lists!
+        typename set<T>::iterator createNode(const T& value);
 
         // Adds an directed edge (from->to). Updates outNeighbors(from) and inNeighbors(to)
-        bool addEdge(T from, T to);
+        bool addEdge(const T& from, const T& to);
 
         // remove edge
-        bool removeEdge(T from, T to);
+        bool removeEdge(const T& from, const T& to);
 
         // clears all neighbors for a specific node
-        bool clearNeighbors(T node);
+        bool clearNeighbors(const T& node);
 
         // clears all edges in the graph
         bool clearEdges();
@@ -98,7 +81,7 @@ class DirectedGraph{
         bool Rgraph(int R);
 
         // Greedy search algorithm
-        vector<set<T>> greedySearch(T s, T xq, int k, int L);
+        const vector<set<T>> greedySearch(const T& s, T xq, int k, int L);
 
         // Robust Prune algorithm
         bool robustPrune(T p, set<T> V, float a, int R);

@@ -23,13 +23,12 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R){  // should "a" be added as
         set<T> Lc = rv[0];
         set<T> V = rv[1];
 
-        float a = 1.0f;  // WHAT IS a? a >= 1 ?
+        float a = 1.0f;  // WHAT IS a? a >= 1 ? should we check in arguments?
 
         if (this->robustPrune(si, V, a, R) == false)
             return false;
 
         for (T j : this->Nout[si]){
-            
             
             set<T> noutJsi;
             if (mapKeyExists(j, this->Nout)){   // if node j has no neighbors the set is the empty set U {σ(i)}
@@ -42,6 +41,7 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R){  // should "a" be added as
                 if(this->robustPrune(j, noutJsi, a, R))
                     return false;
             }
+            
             else{
                 this->addEdge(j, si);
             }
