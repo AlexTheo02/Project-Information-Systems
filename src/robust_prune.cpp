@@ -1,6 +1,5 @@
 #include "util.hpp"
-// #include "types.hpp"
-#include "util_types.hpp"
+#include "types.hpp"
 
 template <typename T>
 bool DirectedGraph<T>::robustPrune(T p, set<T> V, float a, int R){

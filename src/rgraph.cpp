@@ -1,5 +1,5 @@
 #include "util.hpp"
-#include "util_types.hpp"
+#include "types.hpp"
 
 
 // creates a random R graph with the existing nodes. Return TRUE if successful, FALSE otherwise

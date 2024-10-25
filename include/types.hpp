@@ -9,13 +9,17 @@
 #include <vector>
 #include <set>
 #include <cmath>
+#include <functional>
+#include <algorithm>
+#include <limits>
+#include <stdexcept>
 
 #include "util.hpp"
 
 using namespace std;
 
 // Handle for nodes
-typedef vector<float> Node;
+// typedef vector<float> Node;
 // same vector = DUPLICATE??
 
 // Graph Documentation Here
@@ -26,17 +30,18 @@ typedef vector<float> Node;
 // + Dictionary{node : OutNeighbors}
 // + Dictionary{node : InNeighbors}
 // + *Distance Function: Node x Node -> float
+// IMPORTANT: T must be hashable. If T is not hashable by default, user is required to specialize std::hash function for the desired data type.
 template <typename T>
 class DirectedGraph{
 
     private:
-        int n_edges;                    // number of edges present in the graph
-        int n_nodes;                    // number of nodes present in the graph
-        set<T> nodes;                   // a set containing all the nodes in the graph
-        unordered_map<T, set<T>> Nout;  // key: node, value: set of outgoing neighbors 
+    int n_edges;                        // number of edges present in the graph
+    int n_nodes;                        // number of nodes present in the graph
+    set<T> nodes;                       // a set containing all the nodes in the graph
+    unordered_map<T, set<T>> Nout;      // key: node, value: set of outgoing neighbors 
         unordered_map<T, set<T>> Nin;   // key: node, value: set of incoming neighbors
         function<float(T, T)> d;        // Graph's distance function
-
+    
     public:
 
         // Constructor: Initialize an empty graph

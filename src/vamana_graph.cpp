@@ -1,6 +1,5 @@
 #include "util.hpp"
-// #include "types.hpp"
-#include "util_types.hpp"
+#include "types.hpp"
 
 template <typename T>
 bool DirectedGraph<T>::vamanaAlgorithm(int L, int R){  // should "a" be added as a parameter?

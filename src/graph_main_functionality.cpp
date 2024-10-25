@@ -1,5 +1,5 @@
 #include "util.hpp"
-#include "util_types.hpp"
+#include "types.hpp"
 
 // Creates a node, adds it in the graph and returns it
 template<typename T>

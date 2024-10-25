@@ -1,6 +1,5 @@
 #include "util.hpp"
-// #include "types.hpp"
-#include "util_types.hpp"
+#include "types.hpp"
 
 template <typename T>
 const vector<set<T>> DirectedGraph<T>::greedySearch(const T& s, T xq, int k, int L) {

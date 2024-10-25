@@ -244,3 +244,27 @@ vector<vector<T>> read_vecs(string file_path, int n_vec, T){
     cout << file_path << " read successfully, returning vectors." << endl;
     return vectors;
 }
+
+// User Requirement: implement the std::hash<T> for the specific T to be used.
+// In this scenario, T(graph) is a vector<T2>, where T2 can be anything already implemented in the std::hash
+// T2 is the inner type (that inside of the vector)
+
+namespace std {
+    // https://en.cppreference.com/w/cpp/container/unordered_map - unordered map hash defaults to std::hash => specialize for given type.
+    // https://stackoverflow.com/questions/10405030/c-unordered-map-fail-when-used-with-a-vector-as-key - Hash Function for vectors.
+    template <typename T2>
+        class hash<vector<T2>>{
+        public :
+            size_t operator()(const vector<T2>& t) const{
+
+                size_t ret = t.size();
+                for (const auto& v : t) {
+                    ret ^=  hash<T2>()(v) + 0x9e3779b9 + (ret << 6) + (ret >> 2);
+                }
+                return ret;
+            }
+    };
+};
+
+// TO BE REMOVED: just for simplicity in updating tests (further update)
+typedef vector<float> Node;
