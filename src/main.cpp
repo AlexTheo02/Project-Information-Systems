@@ -7,6 +7,10 @@ using namespace std;
 
 int main () {
 
-    DirectedGraph G(euclideanDistance);
+    // DirectedGraph<Node> G(euclideanDistance<Node>);
+
+    // DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
+
+    
     return 0;
 }

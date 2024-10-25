@@ -16,13 +16,34 @@
 
 using namespace std;
 
-// Checks for existence of element in the set
+template <typename T>
+float euclideanDistance(T t1, T t2){
+    int dim1 = t1.size();
+    int dim2 = t2.size();
+
+    if (dim1!=dim2){
+        throw invalid_argument("Dimension Mismatch between Arguments");
+    }
+
+    if (t1.empty()){
+        throw invalid_argument("Argument Containers are empty");
+    }
+    
+    float sum = 0.0f;
+
+    for (int i = 0; i < dim1; i++)
+        sum += pow((t1[i] - t2[i]), 2);
+
+    return sqrt(sum);
+}
+
+// Wrapper function that checks for existence of element in the set
 template <typename T>
 bool setIn(T t, set<T> s){
     return (s.find(t) != s.end());
 }
 
-// Checks for existence as key in an unordered map
+// Wrapper function that checks for existence as key in an unordered map
 template <typename T1, typename T2>
 bool mapKeyExists(T1 key, unordered_map<T1, T2> map){
     return (map.find(key) != map.end());
@@ -160,4 +181,94 @@ vector<T> permutation(const set<T>& s){
     shuffle(vec.begin(), vec.end(), rng);
 
     return vec;
+}
+
+
+// Returns the node from given nodeSet with the minimum distance from a specific vector
+template<typename T>
+T myArgMin(set<T> nodeSet, T vec, function<float(T, T)> d){
+
+    if (nodeSet.empty()){
+        throw invalid_argument("NodeSet is Empty");
+        // cout << "ERROR: NodeSet is empty returning NULL" << endl;
+        // return NULL;
+    }
+
+    if (vec.empty()){
+        throw invalid_argument("Query vector is empty");
+        // cout << "ERROR: Vector(q) is empty returning NULL" << endl;
+        // return NULL;
+    }
+
+    float minDist = numeric_limits<float>::max(), dist;
+    T minNode = NULL;
+
+    for (T n : nodeSet){
+        
+        try {
+            dist = d(n, vec);
+        }
+        catch (exception& exc) {
+            cout << "ERROR: Exception caught on distance function. Returning NULL\n";
+            return NULL;
+        }
+
+        // New minimum distance found
+        if (dist < minDist){
+            minNode = n;
+            minDist = dist;
+        }
+    }
+
+    return minNode;
+}
+
+
+
+// Retains the N closest elements of S to X based on distance d
+template<typename T>
+set<T> closestN(int N, set<T> S, T X, function<float(T, T)> d){
+
+    // transform the set to a vector
+    vector<T> Svec(S.begin(), S.end());
+
+    // keep N first
+    set<T> closest_nodes;    
+
+    // check if N is a valid number (size of set > N > 0)
+    if (N <= 0 )
+        return {};
+    
+    if(S.size() < N)
+        return S;
+    
+    // check if the set is empty
+    if (S.empty())
+        return closest_nodes;
+
+    // check if the vector is empty
+    if (X.empty())
+        return closest_nodes;
+
+    // Check if all nodes in the set have the same dimension as X
+    size_t targetDim = X.size();
+
+    for (T node : S) {
+        if (node->size() != targetDim) {
+
+            return {};
+        }
+    }
+
+    // sort the vector based on the distance from point X
+    sort(Svec.begin(), Svec.end(),
+        [X, d] (T p1, T p2) {return (d(X, p1) < d(X, p2));});
+        // lambda(p1,p2) = determines which of the two points is closest to X
+
+    
+    for (int i = 0; i < N && i < Svec.size(); i++){
+        closest_nodes.insert(Svec[i]);
+    }
+
+    return closest_nodes;
 }

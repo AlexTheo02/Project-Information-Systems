@@ -2,7 +2,8 @@
 // #include "types.hpp"
 #include "util_types.hpp"
 
-vector<set<Node>> DirectedGraph::greedySearch(Node s, vector<float> xq, int k, int L){
+template <typename T>
+vector<set<T>> DirectedGraph<T>::greedySearch(T s, T xq, int k, int L){
     // Create empty sets
     set<Node> Lc,V;
 

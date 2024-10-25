@@ -2,7 +2,8 @@
 // #include "types.hpp"
 #include "util_types.hpp"
 
-bool DirectedGraph::robustPrune(Node p, set<Node> V, float a, int R){
+template <typename T>
+bool DirectedGraph<T>::robustPrune(T p, set<T> V, float a, int R){
 
     if (a < 1 || R <= 0){
         cout << "ERROR: Invalid Parameters in robustPrune.\n";

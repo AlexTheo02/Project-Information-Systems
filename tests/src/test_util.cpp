@@ -281,12 +281,64 @@ using namespace std;
 //     return;
 // }
 
+void test_medoid(){
+
+    // default case
+    set<int> s = {1,2,3,4,5};
+
+
+}
+
+void test_permutation(){
+
+    set<int> numbers;
+
+    // default case
+    for (int i = 0; i < 1000000; i++)
+        numbers.insert(i);
+
+    vector<int> before(numbers.begin(), numbers.end()); // transforming set into vector
+    vector<int> after = permutation(numbers);           // a same permutation for a set of 1000000 elements is very highly unlikely
+    TEST_CHECK((before == after) == false);
+
+    numbers.clear();before.clear();after.clear();
+
+    // empty set check
+    after = permutation(numbers);
+    TEST_CHECK(before == after);
+
+    // set with exactly one element
+    numbers.insert(1);
+    before = vector<int>(numbers.begin(), numbers.end());  // transforming set into vector
+    after = permutation(numbers);
+    TEST_CHECK(before == after);
+
+    // ensure that it is possible to achieve a permutation identical to the original, without requiring the set to remain unchanged.
+    numbers.insert(2);
+    before = vector<int>(numbers.begin(), numbers.end());  // transforming set into vector
+    bool same = false;
+    bool changed = false;
+    for (int i = 0; i < 1000000; i++){  // big number of iterations to make it "impossible" for edge cases to appear
+        after = permutation(numbers);
+        if (!same && before == after)
+            same = true;
+        if (!changed && before != after)
+            changed = true;
+        if (same && changed)
+            break;
+    }
+    TEST_CHECK(changed && same);
+}
+
 TEST_LIST = {
     // { "test_euclideanDistance", test_euclideanDistance },
     // { "test_setIn", test_setIn },
     // { "test_setSubtraction", test_setSubtraction },
     // { "test_setUnion", test_setUnion },
     // { "test_sampleFromSet", test_sampleFromSet },
+    // { "test_medoid", test_medoid },
+    { "test_permutation", test_permutation },
+
     // 
     { NULL, NULL }     // zeroed record marking the end of the list
 };

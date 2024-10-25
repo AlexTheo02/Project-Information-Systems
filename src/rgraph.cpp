@@ -3,7 +3,8 @@
 
 
 // creates a random R graph with the existing nodes. Return TRUE if successful, FALSE otherwise
-bool DirectedGraph::Rgraph(int R){
+template <typename T>
+bool DirectedGraph<T>::Rgraph(int R){
     
     // clear all edges in the graph to create an R random graph anew.
     if (!this->clearEdges())
@@ -13,24 +14,33 @@ bool DirectedGraph::Rgraph(int R){
         cout << "WARNING: R <= logn and therefore the graph will not be well connected.\n";
     }
     if (R > this->n_nodes - 1){
-        cout << "ERROR: R cannot exceed N-1 (N = the total number of nodes in the Graph)";
+        cout << "ERROR: R cannot exceed N-1 (N = the total number of nodes in the Graph)\n";
+        return false;
+    }
+
+    if (R == 0){
+        cout << "WARNING: R is set to 0 and therefore all nodes in the graph are cleared.\n";
+    }
+    
+    if (R < 0) {
+        cout << "ERROR: R must be a positive integer.\n";
         return false;
     }
 
     int r;
-    for (Node n : this->getNodes()){
+    for (T n : this->getNodes()){
         
         // Copy of nodes in the graph
-        set<Node> remaining = this->getNodes();
+        set<T> remaining = this->getNodes();
         // Remove self from remaining nodes
         if (remaining.erase(n) <= 0){
-            cout << "ERROR: Failed to remove self from remaining nodes" << endl;
+            cout << "ERROR: Failed to remove self from remaining nodes\n" << endl;
             return false;
         }
 
         for (int i = 0; i < R; i++){
             
-            Node nr;
+            T nr;
 
             nr = sampleFromSet(remaining);
             
