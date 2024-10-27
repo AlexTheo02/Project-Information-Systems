@@ -3,6 +3,7 @@
 #include "types.hpp"
 
 void test_graphCreation(void){
+    OMIT_OUTPUT;
 
     // Create a directed graph with euclidean distance as the distance function
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
@@ -26,6 +27,7 @@ void test_graphCreation(void){
 }
 
 void test_createNode(void){
+    OMIT_OUTPUT;
 
     // Create graph (should work based on previous tests)
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
@@ -53,6 +55,7 @@ void test_createNode(void){
 }
 
 void test_Edges(void){
+    OMIT_OUTPUT;
 
     // Create graph (should work based on previous tests)
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
@@ -122,6 +125,8 @@ void test_Edges(void){
 }
 
 void test_clear(void){
+    OMIT_OUTPUT;
+
     // Create graph (should work based on previous tests)
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
 
@@ -184,6 +189,7 @@ void test_clear(void){
 }
 
 void test_Rgraph(void){
+    OMIT_OUTPUT;
 
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
     
@@ -241,14 +247,20 @@ void test_Rgraph(void){
 
 // Not yet implemented ----------------------------------------------------
 void test_greedySearch(void){
+    OMIT_OUTPUT;
+
     return;
 }
 
 void test_robustPrune(void){
+    OMIT_OUTPUT;
+
     return;
 }
 
 void test_vamanaAlgorithm(void){
+    OMIT_OUTPUT;
+    
     return;
 }
 

@@ -15,6 +15,11 @@
 
 using namespace std;
 
+// Omits output in the specific scope
+// https://stackoverflow.com/questions/30184998/how-to-disable-cout-output-in-the-runtime
+#define OMIT_OUTPUT cout.setstate(ios_base::failbit)
+
+
 // calculates the euclidean distance between two containers of the same dimension that its elements can be accessed with the [ ] operator.
 template <typename T>
 float euclideanDistance(const T& t1, const T& t2){

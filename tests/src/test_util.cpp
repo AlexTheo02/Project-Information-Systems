@@ -7,6 +7,8 @@
 using namespace std;
 
 void test_euclideanDistance(void){
+    OMIT_OUTPUT;
+
     float tol = 0.001f; // For result comparison (precision issues)
 
     // ------------------------------------------------------------------------------------------- Empty values check
@@ -56,6 +58,7 @@ void test_euclideanDistance(void){
 }
 
 void test_setIn(void){
+    OMIT_OUTPUT;
 
     set<int> s;
     s.insert((int)1);
@@ -65,6 +68,7 @@ void test_setIn(void){
 }
 
 void test_mapKeyExists(void){
+    OMIT_OUTPUT;
 
     unordered_map<int,int> map;
     map[1] = 1;
@@ -74,6 +78,7 @@ void test_mapKeyExists(void){
 }
 
 void test_setSubtraction(void){
+    OMIT_OUTPUT;
     
     set<int> A,B,C,T,TA,TB,N;
 
@@ -113,6 +118,7 @@ void test_setSubtraction(void){
 }
 
 void test_setUnion(void){
+    OMIT_OUTPUT;
 
     set<int> A,B,C,T,N;
 
@@ -155,6 +161,7 @@ void test_setUnion(void){
 }
 
 void test_sampleFromSet(void){
+    OMIT_OUTPUT;
     
     set<int> s;
 
@@ -201,6 +208,7 @@ void test_sampleFromSet(void){
 }
 
 void test_myArgMin(void){
+    OMIT_OUTPUT;
 
     set<vector<float>> s;
 
@@ -258,7 +266,8 @@ void test_myArgMin(void){
 }
 
 void test_closestN(void){
-    
+    OMIT_OUTPUT;
+
     int N = 5;
     set<vector<float>> s;
     vector<float> x;
@@ -344,6 +353,7 @@ void test_closestN(void){
 }
 
 void test_medoid(void){
+    OMIT_OUTPUT;
 
     vector<float> med;
     set<vector<float>> s;
@@ -428,6 +438,7 @@ void test_medoid(void){
 }
 
 void test_permutation(void){
+    OMIT_OUTPUT;
 
     set<int> numbers;
 
