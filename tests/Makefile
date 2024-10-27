@@ -20,11 +20,6 @@ PARENT_DIR = ..
 # File Names
 TYPES = types
 UTIL = util
-GMF = graph_main_functionality
-RG = rgraph
-GS = greedy_search
-RP = robust_prune
-VG = vamana_graph
 
 t_TYPES = test_types
 t_UTIL = test_util
@@ -34,19 +29,11 @@ SRC_t_TYPES = $(SRC_DIR)/$(t_TYPES).cpp
 SRC_t_UTIL = $(SRC_DIR)/$(t_UTIL).cpp
 
 # Object files (build directory)
-OBJ_UTIL = .$(BUILD_DIR)/$(UTIL).o
-OBJ_GMF = .$(BUILD_DIR)/$(GMF).o
-OBJ_RG = .$(BUILD_DIR)/$(RG).o
-OBJ_GS = .$(BUILD_DIR)/$(GS).o
-OBJ_RP = .$(BUILD_DIR)/$(RP).o
-OBJ_VG = .$(BUILD_DIR)/$(VG).o
+# no object files exist in build directory that are needed for this build
 
-# Graph object files
-OBJ_GRAPH = $(OBJ_GMF) $(OBJ_RG) $(OBJ_GS) $(OBJ_RP) $(OBJ_VG)
-
+# Object files (tests/build directory)
 OBJ_t_TYPES = $(BUILD_DIR)/$(t_TYPES).o
 OBJ_t_UTIL = $(BUILD_DIR)/$(t_UTIL).o
-OBJ_t_UT = $(BUILD_DIR)/$(t_UT).o
 
 # Executables (bin directory)
 EX_t_TYPES = $(BIN_DIR)/$(t_TYPES)
@@ -85,6 +72,11 @@ rebuild_t:
 	make rebuild
 	make run_t
 
+run:
+	make rebuild
+	$(EX_t_UTIL)
+	$(EX_t_TYPES)
+
 # Build Executable test_Types
 $(EX_t_TYPES): $(OBJ_t_TYPES) $(OBJ_GRAPH)
 	@echo "Linking Object Files to Create Executable $(EX_t_TYPES) . . ."
@@ -103,11 +95,6 @@ $(OBJ_t_TYPES): $(SRC_t_TYPES) $(INCLUDE_DIR)/acutest.h
 # Rules to build test_Util.o
 $(OBJ_t_UTIL): $(SRC_t_UTIL) $(INCLUDE_DIR)/acutest.h
 	@echo "Building $(t_UTIL) . . . "
-	$(CC) $(CFLAGS) -c $< -o $@
-
-# Rules to build test_UtilTypes.o
-$(OBJ_t_UT): $(SRC_t_UT) $(INCLUDE_DIR)/acutest.h
-	@echo "Building $(t_UT) . . . "
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
