@@ -267,4 +267,4 @@ namespace std {
 };
 
 // TO BE REMOVED: just for simplicity in updating tests (further update)
-typedef vector<float> Node;
+// typedef vector<float> Node;
