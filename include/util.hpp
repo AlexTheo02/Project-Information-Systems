@@ -13,9 +13,9 @@
 #include <cstring>
 #include <random>
 
-
 using namespace std;
 
+// calculates the euclidean distance between two containers of the same dimension that its elements can be accessed with the [ ] operator.
 template <typename T>
 float euclideanDistance(const T& t1, const T& t2){
     int dim1 = t1.size();
@@ -73,17 +73,31 @@ T sampleFromSet(const set<T>& s){
 
     // https://stackoverflow.com/questions/3052788/how-to-select-a-random-element-in-stdset
 
-    if (s.empty()){ throw invalid_argument("Set is empty\n"); }
+    if (s.empty()){ throw invalid_argument("Set is empty.\n"); }
+
+    if (s.size() == 1){ return *(s.begin()); }  // directly return the singular element from the set if |s| is 1.
 
     auto it = s.begin();
     advance(it, rand() % s.size()); // iterator moves to a random position between 0 and set_size
 
-    return *it;                     // dereferencing the iterator will return the pointed element
+    return *it;                     // dereferencing the iterator to return the pointed element
 }
 
-// Returns the medoid of the set s according to distance d
+// Returns the medoid of the set s according to metric distance d
 template<typename T>
 T medoid(const set<T>& s, function<float(T, T)> d){
+
+    // empty set case
+    if (s.empty()){
+        throw invalid_argument("Set is empty.\n");
+    }
+
+    // if |s| = 1 or 2, return the first element of the set (metric distance is symmetric)
+    if (s.size() <= 2){
+        return *(s.begin());
+    }
+
+
     T med;
     float dmin = numeric_limits<float>::max();
 
@@ -125,9 +139,9 @@ const vector<T> permutation(const set<T>& s){
 template<typename T>
 T myArgMin(set<T> nodeSet, T vec, function<float(T, T)> d){
 
-    if (nodeSet.empty()) { throw invalid_argument("Set is Empty"); }
+    if (nodeSet.empty()) { throw invalid_argument("Set is Empty.\n"); }
 
-    if (vec.empty()) { throw invalid_argument("Query container is empty"); }
+    if (vec.empty()) { throw invalid_argument("Query container is empty.\n"); }
 
     float minDist = numeric_limits<float>::max(), dist;
     T minNode;
@@ -149,16 +163,25 @@ template<typename T>
 set<T> closestN(int N, const set<T>& S, T X, function<float(T, T)> d){
 
     // check if the set is empty
-    if (S.empty())
+    if (S.empty()){
+        cout << "WARNING: Set is empty. There exist no neighbors inside the given set.\n";
         return S;
+    }
 
     // check if the vector is empty
     if (X.empty())
-        throw invalid_argument("Query X is empty\n");
+        throw invalid_argument("Query X is empty.\n");
 
     // check if N is a valid number (size of set > N > 0)
-    if (N <= 0)
-        return {};   // empty set
+    if (N < 0){
+        throw invalid_argument("N must be greater than 0.\n");
+    } 
+
+    // if N is equal to 0 return the empty set
+    if (N == 0){
+        cout << "WARNING: N is 0. Returning the empty set.\n";
+        return {};
+    }
     
     // if N is greater than the set size, return the whole set
     if(S.size() < N)
@@ -173,7 +196,7 @@ set<T> closestN(int N, const set<T>& S, T X, function<float(T, T)> d){
     // sort the vector based on the distance from point X
     sort(Svec.begin(), Svec.end(),
         [X, d] (T p1, T p2) {return (d(X, p1) < d(X, p2));});
-        // lambda(p1,p2) = determines which of the two points is closest to X
+        // lambda(p1,p2) = determines which of the two points is closest to X given distance metric d.
 
     
     for (int i = 0; i < N && i < Svec.size(); i++){
@@ -254,7 +277,7 @@ namespace std {
     // https://stackoverflow.com/questions/10405030/c-unordered-map-fail-when-used-with-a-vector-as-key - Hash Function for vectors.
     template <typename T2>
         class hash<vector<T2>>{
-        public :
+        public:
             size_t operator()(const vector<T2>& t) const{
 
                 size_t ret = t.size();
@@ -265,6 +288,3 @@ namespace std {
             }
     };
 };
-
-// TO BE REMOVED: just for simplicity in updating tests (further update)
-// typedef vector<float> Node;
