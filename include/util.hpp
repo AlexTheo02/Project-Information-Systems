@@ -15,9 +15,12 @@
 
 using namespace std;
 
-// Omits output in the specific scope
+// global constant on whether to omit output on tests. Set to non-zero to omit outputs, 0 to allow them.
+#define SHOULD_OMIT 1
+
+// Checks with the SHOULD_OMIT flag on whether to omit or allow output in the specific scope.
 // https://stackoverflow.com/questions/30184998/how-to-disable-cout-output-in-the-runtime
-#define OMIT_OUTPUT cout.setstate(ios_base::failbit)
+#define OMIT_OUTPUT if (SHOULD_OMIT) cout.setstate(ios_base::failbit)
 
 
 // calculates the euclidean distance between two containers of the same dimension that its elements can be accessed with the [ ] operator.
