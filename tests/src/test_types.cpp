@@ -2,7 +2,7 @@
 #include "acutest.h"
 #include "types.hpp"
 
-void test_graphCreation(){
+void test_graphCreation(void){
 
     // Create a directed graph with euclidean distance as the distance function
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
@@ -25,7 +25,7 @@ void test_graphCreation(){
 
 }
 
-void test_createNode(){
+void test_createNode(void){
 
     // Create graph (should work based on previous tests)
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
@@ -52,7 +52,7 @@ void test_createNode(){
     
 }
 
-void test_Edges(){
+void test_Edges(void){
 
     // Create graph (should work based on previous tests)
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
@@ -121,7 +121,7 @@ void test_Edges(){
     
 }
 
-void test_clear(){
+void test_clear(void){
     // Create graph (should work based on previous tests)
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
 
@@ -183,7 +183,7 @@ void test_clear(){
     TEST_ASSERT(DG.clearEdges());
 }
 
-void test_Rgraph(){
+void test_Rgraph(void){
 
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
     
@@ -239,11 +239,28 @@ void test_Rgraph(){
 }
 
 
+// Not yet implemented ----------------------------------------------------
+void test_greedySearch(void){
+    return;
+}
+
+void test_robustPrune(void){
+    return;
+}
+
+void test_vamanaAlgorithm(void){
+    return;
+}
+
+
 TEST_LIST = {
     { "test_graphCreation", test_graphCreation },
     { "test_createNode", test_createNode },
     { "test_Edges", test_Edges },
     { "test_clear", test_clear },
     { "test_Rgraph", test_Rgraph},
+    // { "test_greedySearch", test_greedySearch},
+    // { "test_robustPrune", test_robustPrune},
+    // { "test_vamanaAlgorithm", test_vamanaAlgorithm},
     { NULL, NULL }     // zeroed record marking the end of the list
 };

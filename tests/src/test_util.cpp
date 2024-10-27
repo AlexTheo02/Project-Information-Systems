@@ -6,7 +6,7 @@
 
 using namespace std;
 
-void test_euclideanDistance(){
+void test_euclideanDistance(void){
     float tol = 0.001f; // For result comparison (precision issues)
 
     // ------------------------------------------------------------------------------------------- Empty values check
@@ -55,7 +55,7 @@ void test_euclideanDistance(){
     TEST_MSG("Symmetry check");
 }
 
-void test_setIn(){
+void test_setIn(void){
 
     set<int> s;
     s.insert((int)1);
@@ -64,7 +64,7 @@ void test_setIn(){
     TEST_CHECK(setIn((int)2, s) == false);
 }
 
-void test_mapKeyExists(){
+void test_mapKeyExists(void){
 
     unordered_map<int,int> map;
     map[1] = 1;
@@ -73,7 +73,7 @@ void test_mapKeyExists(){
     TEST_CHECK(mapKeyExists((int)2, map) == false);
 }
 
-void test_setSubtraction(){
+void test_setSubtraction(void){
     
     set<int> A,B,C,T,TA,TB,N;
 
@@ -112,7 +112,7 @@ void test_setSubtraction(){
     TEST_CHECK(setSubtraction(A,A) == N);
 }
 
-void test_setUnion(){
+void test_setUnion(void){
 
     set<int> A,B,C,T,N;
 
@@ -154,7 +154,7 @@ void test_setUnion(){
     TEST_CHECK(setUnion(setUnion(A,B),C) == setUnion(A, setUnion(B,C)));
 }
 
-void test_sampleFromSet(){
+void test_sampleFromSet(void){
     
     set<int> s;
 
@@ -200,7 +200,7 @@ void test_sampleFromSet(){
     TEST_CHECK(same && changed);
 }
 
-void test_myArgMin(){
+void test_myArgMin(void){
 
     set<vector<float>> s;
 
@@ -257,7 +257,7 @@ void test_myArgMin(){
 
 }
 
-void test_closestN(){
+void test_closestN(void){
     
     int N = 5;
     set<vector<float>> s;
@@ -343,7 +343,7 @@ void test_closestN(){
     TEST_CHECK(xclosest == yclosest);
 }
 
-void test_medoid(){
+void test_medoid(void){
 
     vector<float> med;
     set<vector<float>> s;
@@ -427,7 +427,7 @@ void test_medoid(){
     // this case is handled in the euclideanDistance unit test.
 }
 
-void test_permutation(){
+void test_permutation(void){
 
     set<int> numbers;
 
