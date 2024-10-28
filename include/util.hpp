@@ -280,6 +280,13 @@ vector<vector<T>> read_vecs(string file_path, int n_vec){
 // In this scenario, T(graph) is a vector<T2>, where T2 can be anything already implemented in the std::hash
 // T2 is the inner type (that inside of the vector)
 
+// always true function for isEmpty default argument
+template<typename T>
+bool alwaysValid(const T& t) { return true; }
+
+template<typename T>
+bool vectorEmpty(const vector<T>& v){ return v.empty(); }
+
 namespace std {
     // https://en.cppreference.com/w/cpp/container/unordered_map - unordered map hash defaults to std::hash => specialize for given type.
     // https://stackoverflow.com/questions/10405030/c-unordered-map-fail-when-used-with-a-vector-as-key - Hash Function for vectors.

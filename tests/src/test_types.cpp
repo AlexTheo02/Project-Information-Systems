@@ -224,10 +224,19 @@ void test_Rgraph(void){
     TEST_CHECK(DG.get_n_edges() == 100*99);
 
     // if R > N-1 fails
-    TEST_CHECK(DG.Rgraph(100) == false);
+    try{
+        TEST_CHECK(DG.Rgraph(100) == false);
+        TEST_CHECK(false); // control should not reach here
+    }
+    catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "R cannot exceed N-1 (N = the total number of nodes in the Graph).\n"); }
 
     // if R < 0 fails
-    TEST_CHECK(DG.Rgraph(-1) == false);
+    try{
+        TEST_CHECK(DG.Rgraph(-1) == false);
+        TEST_CHECK(false); // control should not reach here
+    }
+    catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "R must be a positive integer.\n"); }
+    
 
     // Consecutive use simply shuffles the edges
     // NOTE: This test MIGHT fail due to randomness.
@@ -249,17 +258,101 @@ void test_Rgraph(void){
 void test_greedySearch(void){
     OMIT_OUTPUT;
 
+    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
+
+    // default case
+
+
+    // Argument checks:
+
+    // No starting node s
+    try{
+        // test goes here
+        TEST_CHECK(false);  // Control should not reach here 
+    }
+    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "")); }
+    
+    // No query point xq
+    try{
+        // test goes here
+        TEST_CHECK(false);  // Control should not reach here 
+    }
+    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "")); }
+
+    // k <= 0
+    try{
+        // test goes here
+        TEST_CHECK(false);  // Control should not reach here 
+    }
+    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "")); }
+
+    // L < k
+    try{
+        // test goes here
+        TEST_CHECK(false);  // Control should not reach here 
+    }
+    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "")); }
+
     return;
 }
 
 void test_robustPrune(void){
     OMIT_OUTPUT;
 
+     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
+
+    // default case
+
+    // Argument checks:
+
+    // Empty Node
+    try{
+        // test goes here
+        TEST_CHECK(false);  // Control should not reach here 
+    }
+    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "")); }
+
+    // a < 1
+    try{
+        // test goes here
+        TEST_CHECK(false);  // Control should not reach here 
+    }
+    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "")); }
+
+    // R <= 0
+    try{
+        // test goes here
+        TEST_CHECK(false);  // Control should not reach here 
+    }
+    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "")); }
+
     return;
 }
 
 void test_vamanaAlgorithm(void){
     OMIT_OUTPUT;
+
+    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
+
+    // default case
+
+    // TODO - initialize graph and test
+
+    // Argument checks
+
+    // R <= 0
+    try{
+        TEST_CHECK(DG.vamanaAlgorithm(1,0));
+        TEST_CHECK(false);  // Control should not reach here
+    }
+    catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "R must be a positive, non-zero integer.\n"); }
+
+    // L <= 0
+    try{
+        TEST_CHECK(DG.vamanaAlgorithm(0,1));
+        TEST_CHECK(false);  // Control should not reach here
+    }
+    catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Parameter L must be at least >= 1.\n"); }
     
     return;
 }
@@ -273,6 +366,6 @@ TEST_LIST = {
     { "test_Rgraph", test_Rgraph},
     // { "test_greedySearch", test_greedySearch},
     // { "test_robustPrune", test_robustPrune},
-    // { "test_vamanaAlgorithm", test_vamanaAlgorithm},
+    { "test_vamanaAlgorithm", test_vamanaAlgorithm},
     { NULL, NULL }     // zeroed record marking the end of the list
 };

@@ -30,7 +30,9 @@ using namespace std;
 // + Dictionary{node : OutNeighbors}
 // + Dictionary{node : InNeighbors}
 // + *Distance Function: Node x Node -> float
+// + Template Type Valid Check Function: Node -> bool
 // IMPORTANT: T must be hashable. If T is not hashable by default, user is required to specialize std::hash function for the desired data type.
+// IMPORTANT: User is required to provide a function that checks if the type is empty. e.g. if T is a pointer, such a function would be the null check, or for containers, if it's empty.
 template <typename T>
 class DirectedGraph{
 
@@ -41,14 +43,16 @@ class DirectedGraph{
     unordered_map<T, set<T>> Nout;      // key: node, value: set of outgoing neighbors 
     unordered_map<T, set<T>> Nin;       // key: node, value: set of incoming neighbors
     function<float(T, T)> d;            // Graph's distance function
+    function<bool(T)> isEmpty;          // typename T valid check
     
     public:
 
         // Constructor: Initialize an empty graph
-        DirectedGraph(function<float(T, T)> distance_function) {
+        DirectedGraph(function<float(T, T)> distance_function, function<bool(T)> is_Empty = alwaysValid<T>) {
             this->n_edges = 0;
             this->n_nodes = 0;
             this->d = distance_function;
+            this->isEmpty = is_Empty;
             cout << "Graph created!" << endl;
         }
 
@@ -85,7 +89,8 @@ class DirectedGraph{
         // creates a random R graph with the existing nodes. Return TRUE if successful, FALSE otherwise
         bool Rgraph(int R);
 
-        // Greedy search algorithm
+        // Greedily searches the graph for the k nearest neighbors of query xq (in an area of size L), starting the search from the node s.
+        // Returns a set with the k closest neighbors (returned_vector[0]) and a set of all visited nodes (returned_vector[1]).
         const vector<set<T>> greedySearch(const T& s, T xq, int k, int L);
 
         // Robust Prune algorithm
@@ -210,32 +215,22 @@ bool DirectedGraph<T>::clearEdges(){
 
 // ------------------------------------------------------------------------------------------------ RGRAPH
 
-// creates a random R graph with the existing nodes. Return TRUE if successful, FALSE otherwise
+// creates a random R graph with the existing nodes. Return TRUE if successful, FALSE otherwise.
 template <typename T>
 bool DirectedGraph<T>::Rgraph(int R){
+
+    if (R < 0) { throw invalid_argument("R must be a positive integer.\n"); }
+
+    if (R > this->n_nodes - 1){ throw invalid_argument("R cannot exceed N-1 (N = the total number of nodes in the Graph).\n"); }
+
+    if (R <= log(this->n_nodes)){ cout << "WARNING: R <= logn and therefore the graph will not be well connected.\n"; }
+    
+    if (R == 0){ cout << "WARNING: R is set to 0 and therefore all nodes in the graph are cleared.\n"; }
     
     // clear all edges in the graph to create an R random graph anew.
     if (!this->clearEdges())
         return false;
 
-    if (R <= log(this->n_nodes)){
-        cout << "WARNING: R <= logn and therefore the graph will not be well connected.\n";
-    }
-    if (R > this->n_nodes - 1){
-        cout << "ERROR: R cannot exceed N-1 (N = the total number of nodes in the Graph)\n";
-        return false;
-    }
-
-    if (R == 0){
-        cout << "WARNING: R is set to 0 and therefore all nodes in the graph are cleared.\n";
-    }
-    
-    if (R < 0) {
-        cout << "ERROR: R must be a positive integer.\n";
-        return false;
-    }
-
-    int r;
     set<vector<float>> nodesCopy(this->nodes.begin(), this->nodes.end());
     for (T n : nodesCopy){
         
@@ -264,6 +259,17 @@ bool DirectedGraph<T>::Rgraph(int R){
 
 template <typename T>
 const vector<set<T>> DirectedGraph<T>::greedySearch(const T& s, T xq, int k, int L) {
+
+    // argument checks
+    if (this->isEmpty(s)){ throw invalid_argument("No start node was provided.\n"); }
+
+    if (this->isEmpty(xq)){ throw invalid_argument("No query was provided.\n"); }
+
+    if (k <= 0){ throw invalid_argument("K must be greater than 0.\n"); }
+
+    if (L < k){ throw invalid_argument("L must be greater or equal to K.\n"); }
+
+
     // Create empty sets
     set<T> Lc,V;
 
@@ -298,10 +304,13 @@ const vector<set<T>> DirectedGraph<T>::greedySearch(const T& s, T xq, int k, int
 template <typename T>
 bool DirectedGraph<T>::robustPrune(T p, set<T> V, float a, int R){
 
-    if (a < 1 || R <= 0){
-        cout << "ERROR: Invalid Parameters in robustPrune.\n";
-        return false;
-    }
+    // Argument Checks
+    if (this->isEmpty(p)) { throw invalid_argument("No node was provided.\n"); }
+
+    if (a < 1) { throw invalid_argument("Parameter a must be >= 1.\n"); }
+
+    if (R <= 0) {throw invalid_argument("Parameter R must be > 0.\n"); }
+
 
     if (mapKeyExists(p, this->Nout))
         V = setUnion(V, this->Nout[p]);
@@ -310,7 +319,7 @@ bool DirectedGraph<T>::robustPrune(T p, set<T> V, float a, int R){
     T p_opt;
 
     while (!V.empty()){
-        p_opt = myArgMin(V, *p, this->d);
+        p_opt = myArgMin(V, p, this->d);
         
         this->Nout[p].insert(p_opt);
 
@@ -334,10 +343,13 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R){  // should "a" be added as
 
 
     // check parameters if they are in legal range, for example R > 0 
-    if (R <= 0){    // ADD MORE
-        cout << "ERROR: Invalid Parameter Values on vamanaAlgorithm.\n";
-        return false;
-    }
+
+    if (R <= 0){ throw invalid_argument("R must be a positive, non-zero integer.\n"); }
+
+    if (L < 1) { throw invalid_argument("Parameter L must be at least >= 1.\n"); }
+
+    // if (a ??? ) { throw invalid_argument("Parameter a must be at least ???.\n"); }
+    
 
     if (this->Rgraph(R) == false)    // Initializing graph to a random R-Regular Directed Graph
         return false;
@@ -346,7 +358,7 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R){  // should "a" be added as
     vector<T> perm = permutation(this->nodes);
 
     for (T si : perm){
-        vector<set<T>> rv = greedySearch(s, *si, 1, L);
+        vector<set<T>> rv = greedySearch(s, si, 1, L);
         set<T> Lc = rv[0];
         set<T> V = rv[1];
 
