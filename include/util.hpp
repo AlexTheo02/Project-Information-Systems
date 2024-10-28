@@ -217,7 +217,7 @@ set<T> closestN(int N, const set<T>& S, T X, function<float(T, T)> d){
 
 // Returns a vector of vectors from specified .<f|i|b>vecs file
 template <typename T>
-vector<vector<T>> read_vecs(string file_path, int n_vec, T){
+vector<vector<T>> read_vecs(string file_path, int n_vec){
 
     // Open file in binary mode
     ifstream file(file_path, ios::binary);
