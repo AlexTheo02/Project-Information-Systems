@@ -19,8 +19,11 @@ int main () {
     // Read groundtruth file
     vector<vector<int>> groundtruth = read_vecs<int>("data/siftsmall/siftsmall_groundtruth.ivecs", 100);
 
+    for (auto& v : vectors){
+        DG.createNode(v);
+    }
     // Print groundtruth vectors
-    printVectors(groundtruth);
+    printVectors(DG.getNodes());
 
     return 0;
 }

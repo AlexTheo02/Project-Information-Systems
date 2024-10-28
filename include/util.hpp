@@ -306,6 +306,7 @@ namespace std {
 
 // Print vector functions
 
+// prints a vector
 template <typename T>
 void printVector(vector<T> v){
     cout << "<";
@@ -318,12 +319,10 @@ void printVector(vector<T> v){
     cout << ">" << endl;
 }
 
-// make generic for any vector<T> container (set<vector<T>> etc)
+// Prints all vectors stored in any iterable container
 template <typename T>
-void printVectors(vector<vector<T>> vs){
-    vector<T> current;
-    for (int i=0; i<vs.size(); i++){
-        current = vs[i];
+void printVectors(T vs){
+    for (auto& current : vs){   // auto type is vector<ContentType>, int,float,...
         printVector(current);
     }
 }
