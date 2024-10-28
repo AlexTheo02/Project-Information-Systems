@@ -29,13 +29,9 @@ float euclideanDistance(const T& t1, const T& t2){
     int dim1 = t1.size();
     int dim2 = t2.size();
 
-    if (dim1!=dim2){
-        throw invalid_argument("Dimension Mismatch between Arguments");
-    }
+    if (dim1!=dim2){ throw invalid_argument("Dimension Mismatch between Arguments"); }
 
-    if (t1.empty()){
-        throw invalid_argument("Argument Containers are empty");
-    }
+    if (t1.empty()){ throw invalid_argument("Argument Containers are empty"); }
     
     float sum = 0.0f;
 
@@ -96,14 +92,10 @@ template<typename T>
 T medoid(const set<T>& s, function<float(T, T)> d){
 
     // empty set case
-    if (s.empty()){
-        throw invalid_argument("Set is empty.\n");
-    }
+    if (s.empty()){ throw invalid_argument("Set is empty.\n"); }
 
     // if |s| = 1 or 2, return the first element of the set (metric distance is symmetric)
-    if (s.size() <= 2){
-        return *(s.begin());
-    }
+    if (s.size() <= 2){ return *(s.begin()); }
 
 
     T med;
@@ -177,18 +169,16 @@ set<T> closestN(int N, const set<T>& S, T X, function<float(T, T)> d){
     }
 
     // check if the vector is empty
-    if (X.empty())
-        throw invalid_argument("Query X is empty.\n");
+    if (X.empty()) { throw invalid_argument("Query X is empty.\n"); }
 
     // check if N is a valid number (size of set > N > 0)
-    if (N < 0){
-        throw invalid_argument("N must be greater than 0.\n");
-    } 
+    if (N < 0){ throw invalid_argument("N must be greater than 0.\n"); } 
 
     // if N is equal to 0 return the empty set
     if (N == 0){
         cout << "WARNING: N is 0. Returning the empty set.\n";
-        return {};
+        set<T> nullset;
+        return nullset;
     }
     
     // if N is greater than the set size, return the whole set
@@ -276,10 +266,6 @@ vector<vector<T>> read_vecs(string file_path, int n_vec){
     return vectors;
 }
 
-// User Requirement: implement the std::hash<T> for the specific T to be used.
-// In this scenario, T(graph) is a vector<T2>, where T2 can be anything already implemented in the std::hash
-// T2 is the inner type (that inside of the vector)
-
 // always true function for isEmpty default argument
 template<typename T>
 bool alwaysValid(const T& t) { return true; }
@@ -287,6 +273,9 @@ bool alwaysValid(const T& t) { return true; }
 template<typename T>
 bool vectorEmpty(const vector<T>& v){ return v.empty(); }
 
+// User Requirement: implement the std::hash<T> for the specific T to be used.
+// In this scenario, Content Type of graph T is a vector<T2>, where T2 can be anything already implemented (or expanded) in the std::hash
+// T2 is the inner type (that inside of the vector: int, float, ..., any other type that std::hash<T> has been expanded for)
 namespace std {
     // https://en.cppreference.com/w/cpp/container/unordered_map - unordered map hash defaults to std::hash => specialize for given type.
     // https://stackoverflow.com/questions/10405030/c-unordered-map-fail-when-used-with-a-vector-as-key - Hash Function for vectors.
@@ -304,7 +293,6 @@ namespace std {
     };
 };
 
-// Print vector functions
 
 // prints a vector
 template <typename T>
