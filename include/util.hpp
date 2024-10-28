@@ -314,3 +314,10 @@ void printVectors(T vs){
         printVector(current);
     }
 }
+
+// Returns the index of the requested value inside the given vector
+template <typename T>
+int getIndex(T value, vector<T> v){
+    auto it = find(v.begin(), v.end(), value);
+    return distance(v.begin(), it);
+}

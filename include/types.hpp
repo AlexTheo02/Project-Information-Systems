@@ -323,7 +323,7 @@ void DirectedGraph<T>::robustPrune(T p, set<T> V, float a, int R){
     
     V.erase(p);
     T p_opt;
-
+    
     while (!V.empty()){
         p_opt = myArgMin(V, p, this->d);
         
@@ -333,7 +333,8 @@ void DirectedGraph<T>::robustPrune(T p, set<T> V, float a, int R){
             break;
         
         // n = p', p_opt = p*
-        for (T n : V){   
+        set<T> copyV(V.begin(), V.end());
+        for (T n : copyV){
             if ( (a * this->d(p_opt, n)) <= this->d(p, n)){
                 V.erase(n);
             }
@@ -363,32 +364,58 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){  // should "a" be
 
     if (this->Rgraph(R) == false)    // Initializing graph to a random R-Regular Directed Graph
         return false;
+    
+    // ERROR CHECK
+    cout << "Graph randomized successfully with out-degree: " << R << endl;
 
     T s = medoid(this->nodes, this->d);
+
+    cout << "Medoid done" << endl;
+
     vector<T> perm = permutation(this->nodes);
 
+    cout << "Permutation done" << endl;
+
     for (T si : perm){
+        cout << "Greedy searching 379" << endl;
         vector<set<T>> rv = greedySearch(s, si, 1, L);
+        cout << "381" << endl;
         set<T> Lc = rv[0];
+        cout << "383" << endl;
         set<T> V = rv[1];
+        cout << "Robust pruning" << endl;
 
         this->robustPrune(si, V, a, R);
+        cout << "Robust prune done" << endl;
 
-        for (T j : this->Nout[si]){
+        set<T> siNoutCopy;
+        // Create a copy of s1 nout neighbors
+        if (mapKeyExists(si, this->Nout)){
+            siNoutCopy.insert(this->Nout[si].begin(), this->Nout[si].end());
+        }
+
+        for (T j : siNoutCopy){
             
             set<T> noutJsi;
+            cout << "396" << endl;
             if (mapKeyExists(j, this->Nout)){   // if node j has no neighbors the set is the empty set U {σ(i)}
-                noutJsi.insert(this->Nout[j].begin(), this->Nout[j].end());
+                noutJsi.insert(siNoutCopy.begin(), siNoutCopy.end());
             }
             
+            cout << "401" << endl;
             noutJsi.insert(si);
+            cout << "403" << endl;
 
             if (noutJsi.size() > R){
+                cout << "Robust prune 406" << endl;
                 this->robustPrune(j, noutJsi, a, R);
+                cout << "Robust prune done 408" << endl;
             }
             
             else{
+                cout << "412" << endl;
                 this->addEdge(j, si);
+                cout << "414" << endl;
             }
         }
     }
