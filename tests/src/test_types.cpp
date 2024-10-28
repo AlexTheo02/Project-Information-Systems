@@ -253,8 +253,6 @@ void test_Rgraph(void){
     // https://en.cppreference.com/w/cpp/container/unordered_map/operator_cmp
 }
 
-
-// Not yet implemented ----------------------------------------------------
 void test_greedySearch(void){
     OMIT_OUTPUT;
 
@@ -262,36 +260,58 @@ void test_greedySearch(void){
 
     // default case
 
+    // Read base vectors
+    vector<vector<float>> vectors = read_vecs<float>("../data/siftsmall/siftsmall_base.fvecs", 10000);
+
+    // Add nodes to graph
+    for (vector<float>& v : vectors){
+        DG.createNode(v);
+    }
+    // Verify that 10000 nodes have been added
+    TEST_ASSERT(DG.get_n_nodes() == 10000);
 
     // Argument checks:
 
-    // No starting node s
+    // Empty starting node s
+    vector<float> startingNode;
     try{
-        // test goes here
+        vector<set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 4, 5);
         TEST_CHECK(false);  // Control should not reach here 
     }
-    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "")); }
+    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "No start node was provided.\n")); }
     
-    // No query point xq
-    try{
-        // test goes here
-        TEST_CHECK(false);  // Control should not reach here 
+    // Starting node not in Graph's nodeSet
+    for (int i=0; i<128; i++){
+        startingNode.push_back(-i);
     }
-    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "")); }
+    try {
+        vector<set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 4, 5);
+        TEST_CHECK(false);
+    }
+    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Starting node not in nodeSet.\n")); }
 
-    // k <= 0
+    // Empty query point xq
+    startingNode = vectors[129];
+    vector<float> xq;
     try{
-        // test goes here
+        vector<set<vector<float>>> ret = DG.greedySearch(startingNode, xq, 4, 5);
         TEST_CHECK(false);  // Control should not reach here 
     }
-    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "")); }
+    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "No query was provided.\n")); }
 
-    // L < k
+    // if k <= 0
     try{
-        // test goes here
+        vector<set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 0, 5);
         TEST_CHECK(false);  // Control should not reach here 
     }
-    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "")); }
+    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "K must be greater than 0.\n")); }
+
+    // if L < k
+    try{
+        vector<set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 2, 1);
+        TEST_CHECK(false);  // Control should not reach here 
+    }
+    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "L must be greater or equal to K.\n")); }
 
     return;
 }
@@ -299,32 +319,55 @@ void test_greedySearch(void){
 void test_robustPrune(void){
     OMIT_OUTPUT;
 
-     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
+    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
 
-    // default case
+    // Read base vectors
+    vector<vector<float>> vectors = read_vecs<float>("../data/siftsmall/siftsmall_base.fvecs", 10000);
+
+    // Add nodes to graph
+    for (vector<float>& v : vectors){
+        DG.createNode(v);
+    }
+    // Verify that 10000 nodes have been added
+    TEST_ASSERT(DG.get_n_nodes() == 10000);
+    set<vector<float>> nullset;
+
+    // Valid
+    bool ret = DG.robustPrune(vectors[0], nullset, 1, 5);
 
     // Argument checks:
 
     // Empty Node
+    vector<float> startingNode;
     try{
-        // test goes here
+        ret = DG.robustPrune(startingNode, nullset, 1, 5);
         TEST_CHECK(false);  // Control should not reach here 
     }
-    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "")); }
+    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "No node was provided.\n")); }
 
+    // Node not in Graph's nodeSet
+    for (int i=0; i<128; i++){
+        startingNode.push_back(-i);
+    }
+    try{
+        ret = DG.robustPrune(startingNode, nullset, 1, 5);
+        TEST_CHECK(false); // Control should not reach here
+    }
+    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Node not in nodeSet\n")); }
     // a < 1
     try{
-        // test goes here
+        ret = DG.robustPrune(vectors[43], nullset, 0, 5);
         TEST_CHECK(false);  // Control should not reach here 
     }
-    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "")); }
+    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Parameter a must be >= 1.\n")); }
 
     // R <= 0
     try{
         // test goes here
+        ret = DG.robustPrune(vectors[43], nullset, 1, 0);
         TEST_CHECK(false);  // Control should not reach here 
     }
-    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "")); }
+    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Parameter R must be > 0.\n")); }
 
     return;
 }
@@ -334,25 +377,28 @@ void test_vamanaAlgorithm(void){
 
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
 
-    // default case
-
-    // TODO - initialize graph and test
-
     // Argument checks
 
     // R <= 0
     try{
-        TEST_CHECK(DG.vamanaAlgorithm(1,0));
+        TEST_CHECK(DG.vamanaAlgorithm(1,0,1));
         TEST_CHECK(false);  // Control should not reach here
     }
     catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "R must be a positive, non-zero integer.\n"); }
 
     // L <= 0
     try{
-        TEST_CHECK(DG.vamanaAlgorithm(0,1));
+        TEST_CHECK(DG.vamanaAlgorithm(0,1,1));
         TEST_CHECK(false);  // Control should not reach here
     }
-    catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Parameter L must be at least >= 1.\n"); }
+    catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Parameter L must be >= 1.\n"); }
+
+    // a < 1
+    try{
+        TEST_CHECK(DG.vamanaAlgorithm(1,1,0));
+        TEST_CHECK(false);  // Control should not reach here
+    }
+    catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Parameter a must be >= 1.\n"); }
     
     return;
 }
@@ -364,8 +410,8 @@ TEST_LIST = {
     { "test_Edges", test_Edges },
     { "test_clear", test_clear },
     { "test_Rgraph", test_Rgraph},
-    // { "test_greedySearch", test_greedySearch},
-    // { "test_robustPrune", test_robustPrune},
+    { "test_greedySearch", test_greedySearch},
+    { "test_robustPrune", test_robustPrune},
     { "test_vamanaAlgorithm", test_vamanaAlgorithm},
     { NULL, NULL }     // zeroed record marking the end of the list
 };

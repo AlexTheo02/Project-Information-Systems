@@ -97,7 +97,7 @@ class DirectedGraph{
         bool robustPrune(T p, set<T> V, float a, int R);
 
         // Vamana Graph creation algorithm
-        bool vamanaAlgorithm(int L, int R);
+        bool vamanaAlgorithm(int L, int R, float a);
 };
 
 // ------------------------------------------------------------------------------------------------ FUNCTIONALITY
@@ -263,6 +263,8 @@ const vector<set<T>> DirectedGraph<T>::greedySearch(const T& s, T xq, int k, int
     // argument checks
     if (this->isEmpty(s)){ throw invalid_argument("No start node was provided.\n"); }
 
+    if (!setIn(s, this->nodes)) { throw invalid_argument("Starting node not in nodeSet.\n"); }
+
     if (this->isEmpty(xq)){ throw invalid_argument("No query was provided.\n"); }
 
     if (k <= 0){ throw invalid_argument("K must be greater than 0.\n"); }
@@ -307,6 +309,8 @@ bool DirectedGraph<T>::robustPrune(T p, set<T> V, float a, int R){
     // Argument Checks
     if (this->isEmpty(p)) { throw invalid_argument("No node was provided.\n"); }
 
+    if (!setIn(p, this->nodes)) { throw invalid_argument("Node not in nodeSet\n"); };
+
     if (a < 1) { throw invalid_argument("Parameter a must be >= 1.\n"); }
 
     if (R <= 0) {throw invalid_argument("Parameter R must be > 0.\n"); }
@@ -339,16 +343,16 @@ bool DirectedGraph<T>::robustPrune(T p, set<T> V, float a, int R){
 // ------------------------------------------------------------------------------------------------ VAMANA GRAPH
 
 template <typename T>
-bool DirectedGraph<T>::vamanaAlgorithm(int L, int R){  // should "a" be added as a parameter?
+bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){  // should "a" be added as a parameter?
 
 
     // check parameters if they are in legal range, for example R > 0 
 
     if (R <= 0){ throw invalid_argument("R must be a positive, non-zero integer.\n"); }
 
-    if (L < 1) { throw invalid_argument("Parameter L must be at least >= 1.\n"); }
+    if (L < 1) { throw invalid_argument("Parameter L must be >= 1.\n"); }
 
-    // if (a ??? ) { throw invalid_argument("Parameter a must be at least ???.\n"); }
+    if (a < 1) { throw invalid_argument("Parameter a must be >= 1.\n"); }
     
 
     if (this->Rgraph(R) == false)    // Initializing graph to a random R-Regular Directed Graph

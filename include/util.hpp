@@ -303,3 +303,27 @@ namespace std {
             }
     };
 };
+
+// Print vector functions
+
+template <typename T>
+void printVector(vector<T> v){
+    cout << "<";
+    for (int i=0; i<v.size(); i++){
+        cout << v[i];
+        if (i < v.size() -1){
+            cout << ", ";
+        }
+    }
+    cout << ">" << endl;
+}
+
+// make generic for any vector<T> container (set<vector<T>> etc)
+template <typename T>
+void printVectors(vector<vector<T>> vs){
+    vector<T> current;
+    for (int i=0; i<vs.size(); i++){
+        current = vs[i];
+        printVector(current);
+    }
+}
