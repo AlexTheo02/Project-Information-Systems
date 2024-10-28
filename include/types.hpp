@@ -2,9 +2,7 @@
 
 #include <iostream>
 #include <iterator>
-#include <cstdlib>  // for rand()
-#include <ctime>    // for rand seed (not yet used DO IT)
-#include <list>
+#include <cstdlib>
 #include <unordered_map>
 #include <vector>
 #include <set>
@@ -18,21 +16,14 @@
 
 using namespace std;
 
-// Handle for nodes
-// typedef vector<float> Node;
-// same vector = DUPLICATE??
-
-// Graph Documentation Here
-// Attributes required for Constructor are marked with *
-// + Number of Edges
-// + Number of Nodes
-// + Set containing all nodes in the graph
-// + Dictionary{node : OutNeighbors}
-// + Dictionary{node : InNeighbors}
-// + *Distance Function: Node x Node -> float
-// + Template Type Valid Check Function: Node -> bool
-// IMPORTANT: T must be hashable. If T is not hashable by default, user is required to specialize std::hash function for the desired data type.
-// IMPORTANT: User is required to provide a function that checks if the type is empty. e.g. if T is a pointer, such a function would be the null check, or for containers, if it's empty.
+// Directed Graph Class Template:
+// This implementation of a Directed Graph Class makes use of dictionaries/maps for adjacency lists.
+// To instantiate such a Directed Graph Object, you will need to specify the Content Type T, as well as provide:
+// 1. Distance Function: T x T -> float => float distance_function(T,T)
+// 2. (Optional) Content type T Valid Check Function: T -> bool => bool isEmpty(T) (Default is an AlwaysValid function that returns true for any input)
+//
+// IMPORTANT: You are also required to specialize the std namespace with an appropriate implementation of std::hash<T> for your specific content type.
+// see more on specializing std::hash<T> on: https://en.cppreference.com/w/cpp/utility/hash/operator()
 template <typename T>
 class DirectedGraph{
 
@@ -93,19 +84,23 @@ class DirectedGraph{
         // Returns a set with the k closest neighbors (returned_vector[0]) and a set of all visited nodes (returned_vector[1]).
         const vector<set<T>> greedySearch(const T& s, T xq, int k, int L);
 
-        // Robust Prune algorithm
-        bool robustPrune(T p, set<T> V, float a, int R);
+        // Prunes out-neighbors of node p up until a minimum threshold R of out-neighbors for node p, based on distance criteria with parameter a.
+        void robustPrune(T p, set<T> V, float a, int R);
 
-        // Vamana Graph creation algorithm
+        // Transforms the graph into a Directed Graph such that it makes the finding of nearest neighbors easier.
+        // Parameters:
+        // + R the out-degree of each node in the graph (R >= 1)
+        // + L the area parameter for searching (L >= k >= 1, where k is the desired number of neighbors)
+        // + a the parameter for robust pruning (a >=1)
         bool vamanaAlgorithm(int L, int R, float a);
 };
 
-// ------------------------------------------------------------------------------------------------ FUNCTIONALITY
+// Implementation of already declared Graph Template: MAIN FUNCTIONALITY ----------------------------------- //
 
 // Creates a node, adds it in the graph and returns it
 template<typename T>
 typename set<T>::iterator DirectedGraph<T>::createNode(const T& value){
-    // https://cplusplus.com/reference/set/set/insert/
+    // https://cplusplus.com/reference/set/set/insert/ - return values of insert
 
     // Add the value to graph's set of nodes
     pair<typename set<T>::iterator, bool> ret;
@@ -119,7 +114,7 @@ typename set<T>::iterator DirectedGraph<T>::createNode(const T& value){
     return ret.first;
 }
 
-// Adds an directed edge (from->to). Updates outNeighbors(from) and inNeighbors(to)
+// Adds a directed edge (from->to). Updates outNeighbors(from) and inNeighbors(to)
 template <typename T>
 bool DirectedGraph<T>::addEdge(const T& from, const T& to){
     // At least one of the nodes is not present in nodeSet
@@ -163,7 +158,7 @@ bool DirectedGraph<T>::removeEdge(const T& from, const T& to){
             return true;
         }
     }
-    cout << "WARNING: Trying to remove non-existing edge" << endl;
+    cout << "WARNING: Trying to remove non-existing edge.\n" << endl;
     return false;
 }
 
@@ -213,9 +208,13 @@ bool DirectedGraph<T>::clearEdges(){
     return true;
 }
 
+
+// Implementation of already declared Graph Template: VAMANA INDEXING DEPENDENCIES ------------------------- //
+
+
 // ------------------------------------------------------------------------------------------------ RGRAPH
 
-// creates a random R graph with the existing nodes. Return TRUE if successful, FALSE otherwise.
+// creates a random R graph with the existing nodes. Return TRUE if successful, FALSE otherwise
 template <typename T>
 bool DirectedGraph<T>::Rgraph(int R){
 
@@ -257,6 +256,8 @@ bool DirectedGraph<T>::Rgraph(int R){
 
 // ------------------------------------------------------------------------------------------------ GREEDY SEARCH
 
+// Greedily searches the graph for the k nearest neighbors of query xq (in an area of size L), starting the search from the node s.
+// Returns a set with the k closest neighbors (returned_vector[0]) and a set of all visited nodes (returned_vector[1]).
 template <typename T>
 const vector<set<T>> DirectedGraph<T>::greedySearch(const T& s, T xq, int k, int L) {
 
@@ -303,8 +304,9 @@ const vector<set<T>> DirectedGraph<T>::greedySearch(const T& s, T xq, int k, int
 
 // ------------------------------------------------------------------------------------------------ ROBUST PRUNE
 
+// Prunes out-neighbors of node p up until a minimum threshold R of out-neighbors for node p, based on distance criteria with parameter a.
 template <typename T>
-bool DirectedGraph<T>::robustPrune(T p, set<T> V, float a, int R){
+void DirectedGraph<T>::robustPrune(T p, set<T> V, float a, int R){
 
     // Argument Checks
     if (this->isEmpty(p)) { throw invalid_argument("No node was provided.\n"); }
@@ -337,11 +339,15 @@ bool DirectedGraph<T>::robustPrune(T p, set<T> V, float a, int R){
             }
         }
     }
-    return true;
 }
 
 // ------------------------------------------------------------------------------------------------ VAMANA GRAPH
 
+// Transforms the graph into a Directed Graph such that it makes the finding of nearest neighbors easier.
+// Parameters:
+// + R the out-degree of each node in the graph (R >= 1)
+// + L the area parameter for searching (L >= k >= 1, where k is the desired number of neighbors)
+// + a the parameter for robust pruning (a >=1)
 template <typename T>
 bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){  // should "a" be added as a parameter?
 
@@ -366,10 +372,7 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){  // should "a" be
         set<T> Lc = rv[0];
         set<T> V = rv[1];
 
-        float a = 1.0f;  // WHAT IS a? a >= 1 ? should we check in arguments?
-
-        if (this->robustPrune(si, V, a, R) == false)
-            return false;
+        this->robustPrune(si, V, a, R);
 
         for (T j : this->Nout[si]){
             
@@ -381,8 +384,7 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){  // should "a" be
             noutJsi.insert(si);
 
             if (noutJsi.size() > R){
-                if(this->robustPrune(j, noutJsi, a, R))
-                    return false;
+                this->robustPrune(j, noutJsi, a, R);
             }
             
             else{

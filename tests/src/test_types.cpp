@@ -227,15 +227,13 @@ void test_Rgraph(void){
     try{
         TEST_CHECK(DG.Rgraph(100) == false);
         TEST_CHECK(false); // control should not reach here
-    }
-    catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "R cannot exceed N-1 (N = the total number of nodes in the Graph).\n"); }
+    }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "R cannot exceed N-1 (N = the total number of nodes in the Graph).\n"); }
 
     // if R < 0 fails
     try{
         TEST_CHECK(DG.Rgraph(-1) == false);
         TEST_CHECK(false); // control should not reach here
-    }
-    catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "R must be a positive integer.\n"); }
+    }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "R must be a positive integer.\n"); }
     
 
     // Consecutive use simply shuffles the edges
@@ -277,8 +275,7 @@ void test_greedySearch(void){
     try{
         vector<set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 4, 5);
         TEST_CHECK(false);  // Control should not reach here 
-    }
-    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "No start node was provided.\n")); }
+    }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "No start node was provided.\n")); }
     
     // Starting node not in Graph's nodeSet
     for (int i=0; i<128; i++){
@@ -287,8 +284,7 @@ void test_greedySearch(void){
     try {
         vector<set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 4, 5);
         TEST_CHECK(false);
-    }
-    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Starting node not in nodeSet.\n")); }
+    }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Starting node not in nodeSet.\n")); }
 
     // Empty query point xq
     startingNode = vectors[129];
@@ -296,22 +292,19 @@ void test_greedySearch(void){
     try{
         vector<set<vector<float>>> ret = DG.greedySearch(startingNode, xq, 4, 5);
         TEST_CHECK(false);  // Control should not reach here 
-    }
-    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "No query was provided.\n")); }
+    }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "No query was provided.\n")); }
 
     // if k <= 0
     try{
         vector<set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 0, 5);
         TEST_CHECK(false);  // Control should not reach here 
-    }
-    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "K must be greater than 0.\n")); }
+    }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "K must be greater than 0.\n")); }
 
     // if L < k
     try{
         vector<set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 2, 1);
         TEST_CHECK(false);  // Control should not reach here 
-    }
-    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "L must be greater or equal to K.\n")); }
+    }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "L must be greater or equal to K.\n")); }
 
     return;
 }
@@ -333,41 +326,37 @@ void test_robustPrune(void){
     set<vector<float>> nullset;
 
     // Valid
-    bool ret = DG.robustPrune(vectors[0], nullset, 1, 5);
+    DG.robustPrune(vectors[0], nullset, 1, 5);
 
     // Argument checks:
 
     // Empty Node
     vector<float> startingNode;
     try{
-        ret = DG.robustPrune(startingNode, nullset, 1, 5);
+        DG.robustPrune(startingNode, nullset, 1, 5);
         TEST_CHECK(false);  // Control should not reach here 
-    }
-    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "No node was provided.\n")); }
+    }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "No node was provided.\n")); }
 
     // Node not in Graph's nodeSet
     for (int i=0; i<128; i++){
         startingNode.push_back(-i);
     }
     try{
-        ret = DG.robustPrune(startingNode, nullset, 1, 5);
+        DG.robustPrune(startingNode, nullset, 1, 5);
         TEST_CHECK(false); // Control should not reach here
-    }
-    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Node not in nodeSet\n")); }
+    }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Node not in nodeSet\n")); }
     // a < 1
     try{
-        ret = DG.robustPrune(vectors[43], nullset, 0, 5);
+        DG.robustPrune(vectors[43], nullset, 0, 5);
         TEST_CHECK(false);  // Control should not reach here 
-    }
-    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Parameter a must be >= 1.\n")); }
+    }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Parameter a must be >= 1.\n")); }
 
     // R <= 0
     try{
         // test goes here
-        ret = DG.robustPrune(vectors[43], nullset, 1, 0);
+        DG.robustPrune(vectors[43], nullset, 1, 0);
         TEST_CHECK(false);  // Control should not reach here 
-    }
-    catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Parameter R must be > 0.\n")); }
+    }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Parameter R must be > 0.\n")); }
 
     return;
 }
@@ -383,22 +372,19 @@ void test_vamanaAlgorithm(void){
     try{
         TEST_CHECK(DG.vamanaAlgorithm(1,0,1));
         TEST_CHECK(false);  // Control should not reach here
-    }
-    catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "R must be a positive, non-zero integer.\n"); }
+    }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "R must be a positive, non-zero integer.\n"); }
 
     // L <= 0
     try{
         TEST_CHECK(DG.vamanaAlgorithm(0,1,1));
         TEST_CHECK(false);  // Control should not reach here
-    }
-    catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Parameter L must be >= 1.\n"); }
+    }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Parameter L must be >= 1.\n"); }
 
     // a < 1
     try{
         TEST_CHECK(DG.vamanaAlgorithm(1,1,0));
         TEST_CHECK(false);  // Control should not reach here
-    }
-    catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Parameter a must be >= 1.\n"); }
+    }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Parameter a must be >= 1.\n"); }
     
     return;
 }

@@ -172,8 +172,7 @@ void test_sampleFromSet(void){
     try {
         r = sampleFromSet(s);
         TEST_CHECK(false); // control should not reach here
-    }
-    catch(const invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Set is empty.\n"); }
+    }catch(const invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Set is empty.\n"); }
 
     // |s| is 1 always brings the same element
     s = {1};
@@ -229,8 +228,7 @@ void test_myArgMin(void){
     try{
         xmin = myArgMin<vector<float>>(s, xq, euclideanDistance<vector<float>>);
         TEST_CHECK(false);  // control should not reach here
-    }
-    catch(invalid_argument &ia){ TEST_CHECK(string(ia.what()) == "Query container is empty.\n"); }
+    }catch(invalid_argument &ia){ TEST_CHECK(string(ia.what()) == "Query container is empty.\n"); }
 
     // empty set, non empty query
     xq = {2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f};
@@ -238,16 +236,14 @@ void test_myArgMin(void){
     try{
         xmin = myArgMin<vector<float>>(s, xq, euclideanDistance<vector<float>>);
         TEST_CHECK(false);  // control should not reach here
-    }
-    catch(invalid_argument &ia){ TEST_CHECK(string(ia.what()) == "Set is Empty.\n"); }
+    }catch(invalid_argument &ia){ TEST_CHECK(string(ia.what()) == "Set is Empty.\n"); }
 
     // both empty
     xq.clear();
     try{
         xmin = myArgMin<vector<float>>(s, xq, euclideanDistance<vector<float>>);
         TEST_CHECK(false);  // control should not reach here
-    }
-    catch(invalid_argument &ia){ TEST_CHECK(string(ia.what()) == "Set is Empty.\n"); }
+    }catch(invalid_argument &ia){ TEST_CHECK(string(ia.what()) == "Set is Empty.\n"); }
 
 }
 
@@ -293,8 +289,7 @@ void test_closestN(void){
     try{
         xclosest = closestN<vector<float>>(-1, s, x, euclideanDistance<vector<float>>);
         TEST_CHECK(false);  // Control should not reach here
-    }
-    catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "N must be greater than 0.\n"); }
+    }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "N must be greater than 0.\n"); }
 
     // N == 0
     set<vector<float>> nullset;
@@ -308,8 +303,7 @@ void test_closestN(void){
     try {
         xclosest = closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>);
         TEST_CHECK(false);  // Control should not reach here
-    }
-    catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Query X is empty.\n"); }
+    }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Query X is empty.\n"); }
 
     // both set and query empty
     TEST_CHECK(closestN<vector<float>>(N, nullset, x, euclideanDistance<vector<float>>) == nullset);
@@ -362,8 +356,7 @@ void test_medoid(void){
     try{
         med = medoid<vector<float>>(s, euclideanDistance<vector<float>>);
         TEST_CHECK(false); // control should not reach here
-    }
-    catch(const invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Set is empty.\n"); }
+    }catch(const invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Set is empty.\n"); }
 
     // set size is 1
     vector<float> v1 = {0.0f, 1.1f, 2.2f, 3.3f, 4.4f, 5.5f};
