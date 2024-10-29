@@ -516,13 +516,11 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){  // should "a" be
     vector<T> perm = permutation(this->nodes);
 
     for (T si : perm){
-        cout << "Greedy searching" << endl;
         vector<unordered_set<T>> rv = greedySearch(s, si, 1, L);
         unordered_set<T> Lc = rv[0];
         unordered_set<T> V = rv[1];
-        cout << "Robust pruning" << endl;
+
         this->robustPrune(si, V, a, R);
-        cout << "Robust prune done" << endl;
 
         unordered_set<T> siNoutCopy;
         // Create a copy of s1 nout neighbors
@@ -540,9 +538,7 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){  // should "a" be
             noutJsi.insert(si);
 
             if (noutJsi.size() > R){
-                cout << "Robust pruning" << endl;
                 this->robustPrune(j, noutJsi, a, R);
-                cout << "Robust pruning done" << endl;
             }
             
             else{

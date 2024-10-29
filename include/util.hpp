@@ -296,3 +296,17 @@ int getIndex(T value, vector<T> v){
     auto it = find(v.begin(), v.end(), value);
     return distance(v.begin(), it);
 }
+
+// Returns the k-recall value between 2 Containers that support the .size(), .begin(), .end() methods
+template <typename Container>
+float k_recall(Container c1, Container c2){
+
+    if (c1.empty()) { return 0.0f; }
+
+    int cnt = 0;
+    for (auto& elem : c1){
+        if (find(c2.begin(), c2.end(), elem) != c2.end()) { cnt++; }
+    }
+    // Typecast return
+    return (float) cnt / c1.size();
+}
