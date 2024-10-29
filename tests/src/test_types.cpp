@@ -12,9 +12,9 @@ void test_graphCreation(void){
     TEST_ASSERT(&DG != NULL);
     TEST_MSG("Address is NULL");
 
-    // Nodes is an empty set
+    // Nodes is an empty unordered_set
     TEST_ASSERT(DG.getNodes().empty());
-    TEST_MSG("Nodes (set) is non-empty on creation");
+    TEST_MSG("Nodes (unordered_set) is non-empty on creation");
 
     // Number of nodes is zero
     TEST_ASSERT(DG.get_n_nodes() == 0);
@@ -37,7 +37,7 @@ void test_createNode(void){
     vector<float> value = vector<float>{1.2f,2.4f,3.64f,4.234f,5.8f,6.0f};
     
     // Create a node inside the graph
-    set<vector<float>>::iterator it = DG.createNode(value);
+    unordered_set<vector<float>>::iterator it = DG.createNode(value);
 
     // Check that node creation was successful
     TEST_ASSERT(DG.get_n_nodes() == 1);
@@ -80,13 +80,13 @@ void test_Edges(void){
     TEST_ASSERT(mapKeyExists(n2, DG.get_Nin()));
     TEST_MSG("Add edge, nin key does not exist");
 
-    set<vector<float>> n1out = DG.get_Nout().at(n1);
+    unordered_set<vector<float>> n1out = DG.get_Nout().at(n1);
     TEST_ASSERT(*n1out.begin() == n2);
     TEST_MSG("Add edge verification nout");
     
     DG.get_Nout();
 
-    set<vector<float>> n2in = DG.get_Nin().at(n2);
+    unordered_set<vector<float>> n2in = DG.get_Nin().at(n2);
     TEST_ASSERT(*n2in.begin() == n1);
     TEST_MSG("Add edge verification nin");
 
@@ -239,12 +239,12 @@ void test_Rgraph(void){
     // Consecutive use simply shuffles the edges
     // NOTE: This test MIGHT fail due to randomness.
     // Each of the 100 nodes can make one out of 99 possible connections => 99^{100} different ways (cycles are allowed to exist in the directed graph).
-    // The probability for each specific set of edges (assuming uniform) is 1/99^{100}.
+    // The probability for each specific unordered_set of edges (assuming uniform) is 1/99^{100}.
     // For this test to fail, it would mean that we drew the same number twice in a row from a uniform distribution among 99^{100} numbers.
-    unordered_map<vector<float>, set<vector<float>>> before = DG.get_Nout();
+    unordered_map<vector<float>, unordered_set<vector<float>>> before = DG.get_Nout();
     TEST_CHECK(DG.Rgraph(1));
     TEST_CHECK(DG.get_n_edges() == 100*1);
-    unordered_map<vector<float>, set<vector<float>>> after = DG.get_Nout();
+    unordered_map<vector<float>, unordered_set<vector<float>>> after = DG.get_Nout();
     TEST_CHECK(DG.Rgraph(1));
     TEST_CHECK(DG.get_n_edges() == 100*1);
     TEST_CHECK((before == after) == false); // unordered_map equality operator == is by default overloaded to them containing exactly the same items
@@ -273,7 +273,7 @@ void test_greedySearch(void){
     // Empty starting node s
     vector<float> startingNode;
     try{
-        vector<set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 4, 5);
+        vector<unordered_set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 4, 5);
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "No start node was provided.\n")); }
     
@@ -282,7 +282,7 @@ void test_greedySearch(void){
         startingNode.push_back(-i);
     }
     try {
-        vector<set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 4, 5);
+        vector<unordered_set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 4, 5);
         TEST_CHECK(false);
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Starting node not in nodeSet.\n")); }
 
@@ -290,19 +290,19 @@ void test_greedySearch(void){
     startingNode = vectors[129];
     vector<float> xq;
     try{
-        vector<set<vector<float>>> ret = DG.greedySearch(startingNode, xq, 4, 5);
+        vector<unordered_set<vector<float>>> ret = DG.greedySearch(startingNode, xq, 4, 5);
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "No query was provided.\n")); }
 
     // if k <= 0
     try{
-        vector<set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 0, 5);
+        vector<unordered_set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 0, 5);
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "K must be greater than 0.\n")); }
 
     // if L < k
     try{
-        vector<set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 2, 1);
+        vector<unordered_set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 2, 1);
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "L must be greater or equal to K.\n")); }
 
@@ -323,7 +323,7 @@ void test_robustPrune(void){
     }
     // Verify that 10000 nodes have been added
     TEST_ASSERT(DG.get_n_nodes() == 10000);
-    set<vector<float>> nullset;
+    unordered_set<vector<float>> nullset;
 
     // Valid
     DG.robustPrune(vectors[0], nullset, 1, 5);

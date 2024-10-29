@@ -39,11 +39,11 @@ int main () {
     cout << "Vamana Index Created!" << endl;
 
     // Greedy search
-    vector<set<vector<float>>> GS_return =  DG.greedySearch(vectors[0], queries[0], k, L);
+    vector<unordered_set<vector<float>>> GS_return =  DG.greedySearch(vectors[0], queries[0], k, L);
 
     cout << "Greedy search done!" << endl;
 
-    set<vector<float>> neighbors = GS_return[0];
+    unordered_set<vector<float>> neighbors = GS_return[0];
 
     // for each neighbor
     float score = 0;

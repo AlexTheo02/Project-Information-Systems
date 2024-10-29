@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <functional>
 #include <unordered_map>
-#include <set>
+#include <unordered_set>
 #include <cstdlib>
 #include <string>
 #include <cstring>
@@ -41,9 +41,9 @@ float euclideanDistance(const T& t1, const T& t2){
     return sqrt(sum);
 }
 
-// Wrapper function that checks for existence of element in the set
+// Wrapper function that checks for existence of element in the unordered_set
 template <typename T>
-bool setIn(const T& t, const set<T>& s){
+bool setIn(const T& t, const unordered_set<T>& s){
     return (s.find(t) != s.end());
 }
 
@@ -54,10 +54,10 @@ bool mapKeyExists(const T1& key, const unordered_map<T1, T2>& map){
 }
 
 // Subtract set2 from set1
-// https://stackoverflow.com/questions/283977/c-stl-set-difference
+// https://stackoverflow.com/questions/283977/c-stl-unordered_set-difference
 template <typename T>
-set<T> setSubtraction(const set<T>& set1, const set<T>& set2){
-    set<T> result;
+unordered_set<T> setSubtraction(const unordered_set<T>& set1, const unordered_set<T>& set2){
+    unordered_set<T> result;
     set_difference(set1.begin(), set1.end(), set2.begin(), set2.end(), inserter(result, result.end()));
     return result;
 }
@@ -65,21 +65,21 @@ set<T> setSubtraction(const set<T>& set1, const set<T>& set2){
 // Joins set1 with set1
 // source corresponding to setSubtraction
 template <typename T>
-set<T> setUnion(const set<T>& set1, const set<T>& set2){
-    set<T> result;
+unordered_set<T> setUnion(const unordered_set<T>& set1, const unordered_set<T>& set2){
+    unordered_set<T> result;
     set_union(set1.begin(), set1.end(), set2.begin(), set2.end(), inserter(result, result.end()));
     return result;
 }
 
-// Returns an element from the set, chosen uniformly at random
+// Returns an element from the unordered_set, chosen uniformly at random
 template <typename T>
-T sampleFromSet(const set<T>& s){
+T sampleFromSet(const unordered_set<T>& s){
 
     // https://stackoverflow.com/questions/3052788/how-to-select-a-random-element-in-stdset
 
     if (s.empty()){ throw invalid_argument("Set is empty.\n"); }
 
-    if (s.size() == 1){ return *(s.begin()); }  // directly return the singular element from the set if |s| is 1.
+    if (s.size() == 1){ return *(s.begin()); }  // directly return the singular element from the unordered_set if |s| is 1.
 
     auto it = s.begin();
     advance(it, rand() % s.size()); // iterator moves to a random position between 0 and set_size
@@ -87,43 +87,13 @@ T sampleFromSet(const set<T>& s){
     return *it;                     // dereferencing the iterator to return the pointed element
 }
 
-// Returns the medoid of the set s according to metric distance d
+// returns a vector of a random permutation of the elements beloning in the unordered_set s
 template<typename T>
-T medoid(const set<T>& s, function<float(T, T)> d){
-
-    // empty set case
-    if (s.empty()){ throw invalid_argument("Set is empty.\n"); }
-
-    // if |s| = 1 or 2, return the first element of the set (metric distance is symmetric)
-    if (s.size() <= 2){ return *(s.begin()); }
-
-
-    T med;
-    float dmin = numeric_limits<float>::max();
-
-    for (const T& t : s){
-        float dsum = 0;
-
-        for (const T& t_other : s)
-            dsum += d(t, t_other);  // we don't need to check if the other element is the same, because one's distance to itself is zero
-
-        // updating best medoid if current total distance is smaller than the minimum total distance yet
-        if (dsum < dmin){
-            dmin = dsum;
-            med = t;
-        }
-    }
-    return med;
-}
-
-
-// returns a vector of a random permutation of the elements beloning in the set s
-template<typename T>
-const vector<T> permutation(const set<T>& s){
+const vector<T> permutation(const unordered_set<T>& s){
 
     // https://stackoverflow.com/questions/6926433/how-to-shuffle-a-stdvector
 
-    // transforming the set into a vector
+    // transforming the unordered_set into a vector
     vector<T> vec(s.begin(), s.end());
 
     // shuffling the vector
@@ -137,7 +107,7 @@ const vector<T> permutation(const set<T>& s){
 
 // Returns the node from given nodeSet with the minimum distance from a specific vector
 template<typename T>
-T myArgMin(set<T> nodeSet, T vec, function<float(T, T)> d){
+T myArgMin(unordered_set<T> nodeSet, T vec, function<float(T, T)> d){
 
     if (nodeSet.empty()) { throw invalid_argument("Set is Empty.\n"); }
 
@@ -160,36 +130,36 @@ T myArgMin(set<T> nodeSet, T vec, function<float(T, T)> d){
 
 // Retains the N closest elements of S to X based on distance d
 template<typename T>
-set<T> closestN(int N, const set<T>& S, T X, function<float(T, T)> d){
+unordered_set<T> closestN(int N, const unordered_set<T>& S, T X, function<float(T, T)> d){
 
-    // check if the set is empty
+    // check if the unordered_set is empty
     if (S.empty()){
-        cout << "WARNING: Set is empty. There exist no neighbors inside the given set.\n";
+        cout << "WARNING: Set is empty. There exist no neighbors inside the given unordered_set.\n";
         return S;
     }
 
     // check if the vector is empty
     if (X.empty()) { throw invalid_argument("Query X is empty.\n"); }
 
-    // check if N is a valid number (size of set > N > 0)
+    // check if N is a valid number (size of unordered_set > N > 0)
     if (N < 0){ throw invalid_argument("N must be greater than 0.\n"); } 
 
-    // if N is equal to 0 return the empty set
+    // if N is equal to 0 return the empty unordered_set
     if (N == 0){
-        cout << "WARNING: N is 0. Returning the empty set.\n";
-        set<T> nullset;
+        cout << "WARNING: N is 0. Returning the empty unordered_set.\n";
+        unordered_set<T> nullset;
         return nullset;
     }
     
-    // if N is greater than the set size, return the whole set
+    // if N is greater than the unordered_set size, return the whole unordered_set
     if(S.size() < N)
         return S;
 
-    // transform the set to a vector
+    // transform the unordered_set to a vector
     vector<T> Svec(S.begin(), S.end());
 
     // keep N first
-    set<T> closest_nodes;
+    unordered_set<T> closest_nodes;
 
     // sort the vector based on the distance from point X
     sort(Svec.begin(), Svec.end(),
