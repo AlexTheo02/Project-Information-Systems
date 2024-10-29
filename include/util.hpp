@@ -111,7 +111,7 @@ const vector<T> permutation(const unordered_set<T>& s){
 
 // Returns the node from given nodeSet with the minimum distance from a specific vector
 template<typename T>
-T myArgMin(unordered_set<T> nodeSet, T vec, function<float(T, T)> d){
+T myArgMin(const unordered_set<T>& nodeSet, T vec, function<float(T, T)> d){
 
     if (nodeSet.empty()) { throw invalid_argument("Set is Empty.\n"); }
 
@@ -134,7 +134,7 @@ T myArgMin(unordered_set<T> nodeSet, T vec, function<float(T, T)> d){
 
 // Retains the N closest elements of S to X based on distance d
 template<typename T>
-unordered_set<T> closestN(int N, const unordered_set<T>& S, T X, function<float(T, T)> d){
+unordered_set<T> closestN(int N, const unordered_set<T>& S, T X, function<float(T, T)> d, function<bool(T)> isEmpty){
 
     // check if the unordered_set is empty
     if (S.empty()){
@@ -143,7 +143,7 @@ unordered_set<T> closestN(int N, const unordered_set<T>& S, T X, function<float(
     }
 
     // check if the vector is empty
-    if (X.empty()) { throw invalid_argument("Query X is empty.\n"); }
+    if (isEmpty(X)) { throw invalid_argument("Query X is empty.\n"); }
 
     // check if N is a valid number (size of unordered_set > N > 0)
     if (N < 0){ throw invalid_argument("N must be greater than 0.\n"); } 
@@ -159,21 +159,22 @@ unordered_set<T> closestN(int N, const unordered_set<T>& S, T X, function<float(
     if(S.size() < N)
         return S;
 
-    // transform the unordered_set to a vector
+    // transform the unordered_set to a vector for partitioning around a pivot
     vector<T> Svec(S.begin(), S.end());
 
+    // partition the vector based on the distance from point X up around the N-th element
+    nth_element(Svec.begin(), Svec.begin() + N, Svec.end(),
+                [X, d] (T p1, T p2) {return (d(X, p1) < d(X, p2));});
+                // lambda(p1,p2) = determines which of the two points is closest to X given distance metric d.
+
+    // the vector after the use of nth_element has the following properties:
+    // the N-th element is in the position that it would've been if the vector was sorted in its entirety
+    // elements before the N-th element are < than the N-th element, and elements after the N-th element are > than the N-th element. (< and > defined by compare function)
+    // the elements in the left and right subvectors are not themselves sorted, but for this task we don't need them sorted. 
+    // https://en.cppreference.com/w/cpp/algorithm/nth_element
+
     // keep N first
-    unordered_set<T> closest_nodes;
-
-    // sort the vector based on the distance from point X
-    sort(Svec.begin(), Svec.end(),
-        [X, d] (T p1, T p2) {return (d(X, p1) < d(X, p2));});
-        // lambda(p1,p2) = determines which of the two points is closest to X given distance metric d.
-
-    
-    for (int i = 0; i < N && i < Svec.size(); i++){
-        closest_nodes.insert(Svec[i]);
-    }
+    unordered_set<T> closest_nodes(Svec.begin(), Svec.begin() + N);
 
     return closest_nodes;
 }
@@ -240,9 +241,9 @@ vector<vector<T>> read_vecs(string file_path, int n_vec){
     return vectors;
 }
 
-// always true function for isEmpty default argument
+// always false function for isEmpty default argument
 template<typename T>
-bool alwaysValid(const T& t) { return true; }
+bool alwaysValid(const T& t) { return false; }
 
 template<typename T>
 bool vectorEmpty(const vector<T>& v){ return v.empty(); }

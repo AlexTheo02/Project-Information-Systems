@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
+#include <thread>
 
 #include "util.hpp"
 
@@ -20,7 +21,7 @@ using namespace std;
 // This implementation of a Directed Graph Class makes use of dictionaries/maps for adjacency lists.
 // To instantiate such a Directed Graph Object, you will need to specify the Content Type T, as well as provide:
 // 1. Distance Function: T x T -> float => float distance_function(T,T)
-// 2. (Optional) Content type T Valid Check Function: T -> bool => bool isEmpty(T) (Default is an AlwaysValid function that returns true for any input)
+// 2. (Optional) Content type T Valid Check Function: T -> bool => bool isEmpty(T) (Default is an AlwaysValid function that returns false for any input)
 //
 // IMPORTANT: You are also required to specialize the std namespace with an appropriate implementation of std::hash<T> for your specific content type.
 // see more on specializing std::hash<T> on: https://en.cppreference.com/w/cpp/utility/hash/operator()
@@ -31,6 +32,7 @@ class DirectedGraph{
     int n_edges;                            // number of edges present in the graph
     int n_nodes;                            // number of nodes present in the graph
     unordered_set<T> nodes;                 // an unordered_set containing all the nodes in the graph
+    vector<T> _nodes;                       // vector representation of nodes used for medoid
     unordered_map<T, unordered_set<T>> Nout;// key: node, value: unordered_set of outgoing neighbors 
     unordered_map<T, unordered_set<T>> Nin; // key: node, value: unordered_set of incoming neighbors
     function<float(T, T)> dst;              // Graph's distance function
@@ -84,6 +86,10 @@ class DirectedGraph{
 
         // calculates the medoid of the nodes in the graph. Also updates the precomputed distance matrix (for optimization purposes)
         T medoid(void);
+
+        T parallel_medoid(int n_threads);
+
+        void _thread_medoid_fn(int start_index, int end_index, T& local_minimum, float& local_dmin);
 
         // creates a random R graph with the existing nodes. Return TRUE if successful, FALSE otherwise
         bool Rgraph(int R);
@@ -241,7 +247,6 @@ const float DirectedGraph<T>::d(T t1,T t2){
 // ------------------------------------------------------------------------------------------------ MEDOID
 
 
-// Returns the medoid of the unordered_set s according to metric distance d
 template<typename T>
 T DirectedGraph<T>::medoid(void){
 
@@ -269,6 +274,77 @@ T DirectedGraph<T>::medoid(void){
         }
     }
     return med;
+}
+
+
+template<typename T>
+void DirectedGraph<T>::_thread_medoid_fn(int start_index, int end_index, T& local_minimum, float& local_dmin){
+
+    local_dmin = numeric_limits<float>::max();
+    float dsum, dist;
+
+    for (int i = start_index; i < end_index; i++){
+        dsum = 0;
+        const T& node = this->_nodes[i];
+
+        for (const T& other_node : this->_nodes)
+            dsum += this->d(node, other_node);
+
+        if (dsum < local_dmin){
+            local_dmin = dsum;
+            local_minimum = node;
+        }
+    }
+}
+
+
+template<typename T>
+T DirectedGraph<T>::parallel_medoid(int n_threads){
+
+    // empty unordered_set case
+    if (this->nodes.empty()){ throw invalid_argument("Set is empty.\n"); }
+
+    // if |s| = 1 or 2, return the first element of the unordered_set (metric distance is symmetric)
+    if (this->nodes.size() <= 2){ return *(this->nodes.begin()); }
+
+    // transforming unordered set into vector to allow random access and direct indexing.
+    this->_nodes.assign(this->nodes.begin(), this->nodes.end());
+
+    int chunk_size = (int) this->nodes.size() / n_threads;
+    int remainder = this->nodes.size() - n_threads*chunk_size;
+
+    // each thread will handle chunk_size nodes. Any remaining nodes will be split evenly among threads
+    // for example 53 nodes among 5 threads => chunk_size = 10, remainder = 3. => 3 threads will do chunk_size + 1 while 2 threads will do chunk_size. 
+
+    int start_index = 0, end_index;
+
+    // initializing the threads
+    vector<thread> threads(n_threads);                                  // a vector of size n_threads holding all the threads
+    vector<T> local_minima(n_threads);                                  // a vector of size n_threads all initialized with default-constructed T
+    vector<float> local_dmin(n_threads, numeric_limits<float>::max());  // a vector of size n_threads all initialized with float_max
+
+    for (int i = 0; i < n_threads; i++){
+        end_index = start_index + chunk_size + ((remainder-- > 0) ? 1 : 0); // if remaining exist, add + 1
+
+        // load and launch thread 
+        threads[i] = thread(&DirectedGraph::_thread_medoid_fn, this, start_index, end_index, ref(local_minima[i]), ref(local_dmin[i]));
+        // ref( ) sends the vectors by reference to update their values.
+
+        start_index = end_index;    // update index for next thread
+    }
+
+    // collecting all threads
+    for (thread& th : threads){
+        th.join();
+    }
+
+    // threads are joined. All dsums have been calculated in parallel and we have the local minimum of each.
+    float dmin = *min_element(local_dmin.begin(), local_dmin.end());
+
+    int min_index = getIndex(dmin, local_dmin);
+
+    this->_nodes.clear();   // temporary use of _nodes vector for instant access for parallelization. We don't need it anymore.
+    return local_minima[min_index];
 }
 
 
@@ -354,13 +430,13 @@ const vector<unordered_set<T>> DirectedGraph<T>::greedySearch(const T& s, T xq, 
         V.insert(pmin);
 
         if (Lc.size() > L){
-            Lc = closestN(L, Lc, xq, this->dst);    // function: find N closest points from a specific Xq from given unordered_set and return them
+            Lc = closestN(L, Lc, xq, this->dst, this->isEmpty);    // function: find N closest points from a specific Xq from given unordered_set and return them
         }
     }
 
     vector<unordered_set<T>> ret;
     
-    ret.insert(ret.begin(), closestN(k, Lc, xq, this->dst));
+    ret.insert(ret.begin(), closestN(k, Lc, xq, this->dst, this->isEmpty));
     ret.insert(ret.end(), V);
 
     return ret;
@@ -432,7 +508,8 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){  // should "a" be
     // ERROR CHECK
     cout << "Graph randomized successfully with out-degree: " << R << endl;
     cout << "Searching for medoid node . . ." << endl;
-    T s = this->medoid();
+    // T s = this->medoid();
+    T s = this->parallel_medoid(8);
 
     cout << "Medoid node found" << endl;
 
