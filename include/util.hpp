@@ -58,8 +58,12 @@ bool mapKeyExists(const T1& key, const unordered_map<T1, T2>& map){
 template <typename T>
 unordered_set<T> setSubtraction(const unordered_set<T>& set1, const unordered_set<T>& set2){
     unordered_set<T> result;
-    set_difference(set1.begin(), set1.end(), set2.begin(), set2.end(), inserter(result, result.end()));
+    for (auto& elem1 : set1){
+        if (!setIn(elem1, set2))
+            result.insert(elem1);
+    }
     return result;
+    // set_difference(set1.begin(), set1.end(), set2.begin(), set2.end(), inserter(result, result.end()));
 }
 
 // Joins set1 with set1
