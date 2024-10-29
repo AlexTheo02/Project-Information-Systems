@@ -60,7 +60,7 @@ void profileVamana(
         total_recall += recall;
 
     }
-    cout << "FINISHED!\n Average recall score is: " << total_recall / queries.size() << endl;
+    cout << "FINISHED!\nAverage recall score is: " << total_recall / queries.size() << endl;
 }
 
 

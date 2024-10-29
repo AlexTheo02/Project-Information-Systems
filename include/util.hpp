@@ -16,12 +16,11 @@
 using namespace std;
 
 // global constant on whether to omit output on tests. Set to non-zero to omit outputs, 0 to allow them.
-#define SHOULD_OMIT 1
+#define SHOULD_OMIT 0
 
 // Checks with the SHOULD_OMIT flag on whether to omit or allow output in the specific scope.
 // https://stackoverflow.com/questions/30184998/how-to-disable-cout-output-in-the-runtime
 #define OMIT_OUTPUT if (SHOULD_OMIT) cout.setstate(ios_base::failbit)
-
 
 // calculates the euclidean distance between two containers of the same dimension that its elements can be accessed with the [ ] operator.
 template <typename T>
@@ -38,7 +37,8 @@ float euclideanDistance(const T& t1, const T& t2){
     for (int i = 0; i < dim1; i++)
         sum += pow((t1[i] - t2[i]), 2);
 
-    return sqrt(sum);
+    return sum;
+    // return sqrt(sum);
 }
 
 // Wrapper function that checks for existence of element in the unordered_set
@@ -53,23 +53,22 @@ bool mapKeyExists(const T1& key, const unordered_map<T1, T2>& map){
     return (map.find(key) != map.end());
 }
 
-// Subtract set2 from set1
-// https://stackoverflow.com/questions/283977/c-stl-unordered_set-difference
+// Subtract set2 from set1. Returns a new set.
 template <typename T>
 unordered_set<T> setSubtraction(const unordered_set<T>& set1, const unordered_set<T>& set2){
-    unordered_set<T> result;
-    for (auto& elem1 : set1){
-        if (!setIn(elem1, set2))
-            result.insert(elem1);
+    unordered_set<T> result = set1;
+
+    for (auto& elem : set2){
+        result.erase(elem);
     }
     return result;
-    // set_difference(set1.begin(), set1.end(), set2.begin(), set2.end(), inserter(result, result.end()));
 }
 
-// Joins set1 with set1
-// source corresponding to setSubtraction
+// Joins set1 with set1. Returns a new set.
 template <typename T>
 unordered_set<T> setUnion(const unordered_set<T>& set1, const unordered_set<T>& set2){
+    // https://stackoverflow.com/questions/283977/c-stl-unordered_set-difference - adapted for setUnion
+
     unordered_set<T> result;
     set_union(set1.begin(), set1.end(), set2.begin(), set2.end(), inserter(result, result.end()));
     return result;
@@ -109,19 +108,19 @@ const vector<T> permutation(const unordered_set<T>& s){
 }
 
 
-// Returns the node from given nodeSet with the minimum distance from a specific vector
+// Returns the node from given nodeSet with the minimum distance from a specific point in the nodespace (node is allowed to not exist in the graph)
 template<typename T>
-T myArgMin(const unordered_set<T>& nodeSet, T vec, function<float(T, T)> d){
+T myArgMin(const unordered_set<T>& nodeSet, T t, function<float(const T&, const T&)> d, function<bool(const T&)> isEmpty){
 
     if (nodeSet.empty()) { throw invalid_argument("Set is Empty.\n"); }
 
-    if (vec.empty()) { throw invalid_argument("Query container is empty.\n"); }
+    if (isEmpty(t)) { throw invalid_argument("Query container is empty.\n"); }
 
     float minDist = numeric_limits<float>::max(), dist;
     T minNode;
 
-    for (T n : nodeSet){
-        dist = d(n, vec);
+    for (const T& n : nodeSet){
+        dist = d(n, t);
        
         if (dist <= minDist){    // New minimum distance found
             minNode = n;
@@ -134,7 +133,7 @@ T myArgMin(const unordered_set<T>& nodeSet, T vec, function<float(T, T)> d){
 
 // Retains the N closest elements of S to X based on distance d
 template<typename T>
-unordered_set<T> closestN(int N, const unordered_set<T>& S, T X, function<float(T, T)> d, function<bool(T)> isEmpty){
+unordered_set<T> closestN(int N, const unordered_set<T>& S, T X, function<float(const T&, const T&)> d, function<bool(const T&)> isEmpty){
 
     // check if the unordered_set is empty
     if (S.empty()){
@@ -245,6 +244,7 @@ vector<vector<T>> read_vecs(string file_path, int n_vec){
 template<typename T>
 bool alwaysValid(const T& t) { return false; }
 
+// ValidCheck function specific for vector container of any type.
 template<typename T>
 bool vectorEmpty(const vector<T>& v){ return v.empty(); }
 
@@ -252,7 +252,7 @@ bool vectorEmpty(const vector<T>& v){ return v.empty(); }
 // In this scenario, Content Type of graph T is a vector<T2>, where T2 can be anything already implemented (or expanded) in the std::hash
 // T2 is the inner type (that inside of the vector: int, float, ..., any other type that std::hash<T> has been expanded for)
 namespace std {
-    // https://en.cppreference.com/w/cpp/container/unordered_map - unordered map hash defaults to std::hash => specialize for given type.
+    // https://en.cppreference.com/w/cpp/container/unordered_map - unordered map hash defaults to std::hash<TYPE> => specialize for given type TYPE.
     // https://stackoverflow.com/questions/10405030/c-unordered-map-fail-when-used-with-a-vector-as-key - Hash Function for vectors.
     template <typename T2>
         class hash<vector<T2>>{
@@ -271,7 +271,7 @@ namespace std {
 
 // prints a vector
 template <typename T>
-void printVector(vector<T> v){
+void printVector(const vector<T>& v){
     cout << "<";
     for (int i=0; i<v.size(); i++){
         cout << v[i];
@@ -284,7 +284,7 @@ void printVector(vector<T> v){
 
 // Prints all vectors stored in any iterable container
 template <typename T>
-void printVectors(T vs){
+void printVectors(const T& vs){
     for (auto& current : vs){   // auto type is vector<ContentType>, int,float,...
         printVector(current);
     }
@@ -292,14 +292,14 @@ void printVectors(T vs){
 
 // Returns the index of the requested value inside the given vector
 template <typename T>
-int getIndex(T value, vector<T> v){
+int getIndex(const T& value, const vector<T>& v){
     auto it = find(v.begin(), v.end(), value);
     return distance(v.begin(), it);
 }
 
 // Returns the k-recall value between 2 Containers that support the .size(), .begin(), .end() methods
 template <typename Container>
-float k_recall(Container c1, Container c2){
+float k_recall(const Container& c1, const Container& c2){
 
     if (c1.empty()) { return 0.0f; }
 
