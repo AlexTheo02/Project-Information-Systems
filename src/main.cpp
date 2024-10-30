@@ -26,7 +26,7 @@ void profileVamana(
     const vector<vector<float>>& vectors,
     const vector<vector<float>>& queries,
     const vector<vector<int>>& groundtruth,
-    unordered_map<vector<float>, int> v2id
+    map<vector<float>, int> v2id
     ){
     
     auto startTime = chrono::high_resolution_clock::now();
@@ -45,9 +45,9 @@ void profileVamana(
     // Greedy search for all queries
     for (int i=0; i<queries.size(); i++){
 
-        vector<unordered_set<vector<float>>> GS_return =  DG.greedySearch(vectors[0], queries[i], k, L);
+        vector<set<vector<float>>> GS_return =  DG.greedySearch(vectors[0], queries[i], k, L);
 
-        unordered_set<vector<float>> neighbors = GS_return[0];
+        set<vector<float>> neighbors = GS_return[0];
 
         vector<int> neighborIds;
 
@@ -73,8 +73,8 @@ int main () {
     // Read base vectors file
     vector<vector<float>> vectors = read_vecs<float>("data/siftsmall/siftsmall_base.fvecs", 10000);
 
-    // Create unordered_map key: vector, value: id
-    unordered_map<vector<float>, int> v2id;
+    // Create map key: vector, value: id
+    map<vector<float>, int> v2id;
     for (int i=0; i<vectors.size(); i++){
         v2id[vectors[i]] = i;
     }
@@ -95,9 +95,7 @@ int main () {
         profileVamana(L,R,a,k,DG,vectors,queries,groundtruth,v2id);
     };
 
-    callProfileVamana(100, 5, 1, 100);
-    callProfileVamana(100, 10, 1, 100);
-    callProfileVamana(100, 30, 1, 100);
+    callProfileVamana(100, 13, 1, 100); // creating the vamana index and querying the groundtruths
 
     return 0;
 }
