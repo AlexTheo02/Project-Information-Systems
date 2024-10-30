@@ -111,6 +111,20 @@ const vector<T> permutation(const set<T>& s){
     return vec;
 }
 
+template<typename T>
+vector<T> permutation(const set<T>& s) {
+    // Transforming the set into a vector
+    vector<T> vec(s.begin(), s.end());
+
+    // Shuffling the vector
+    random_device rd;
+    default_random_engine rng(rd());  // Seed the engine with rd()
+
+    shuffle(vec.begin(), vec.end(), rng);
+
+    return vec;
+}
+
 // Returns the node from given nodeSet with the minimum distance from a specific point in the nodespace (node is allowed to not exist in the graph)
 template<typename T>
 T myArgMin(const set<T>& nodeSet, T t, function<float(const T&, const T&)> d, function<bool(const T&)> isEmpty){
