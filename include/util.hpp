@@ -18,7 +18,7 @@
 using namespace std;
 
 // global constant on whether to omit output on tests. Set to non-zero to omit outputs, 0 to allow them.
-#define SHOULD_OMIT 0
+#define SHOULD_OMIT 1
 
 // Checks with the SHOULD_OMIT flag on whether to omit or allow output (sets state).
 // https://stackoverflow.com/questions/30184998/how-to-disable-cout-output-in-the-runtime

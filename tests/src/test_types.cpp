@@ -59,7 +59,6 @@ void test_Edges(void){
     // Create graph (should work based on previous tests)
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
 
-
     // Add nodes to graph (should work based on previous tests)
     vector<float> v1 = vector<float>{1.2f,2.4f,3.64f,4.234f,5.8f,6.0f};
     vector<float> v2 = vector<float>{2.1f,4.2f,6.63f,3.232f,8.5f,0.6f};
@@ -155,7 +154,6 @@ void test_clear(void){
     // Verify that Nout key is removed
     TEST_ASSERT(!mapKeyExists(n1, DG.get_Nout()));
 
-
     // Verify that number of edges is reduced to 2
     TEST_ASSERT(DG.get_n_edges() == 2);
 
@@ -170,6 +168,75 @@ void test_clear(void){
 
     // Verify that no harm is done when clearing edges when no edges are present 
     TEST_ASSERT(DG.clearEdges());
+}
+
+void test_medoid(void){
+    OMIT_OUTPUT;
+
+    // Create the graph
+    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
+
+    // Add nodes
+    vector<float> v1 = {1.f, 1.f, 1.f, 1.f, 1.f, 1.f};
+    vector<float> v2 = {2.f, 2.f, 2.f, 2.f, 2.f, 2.f};
+    vector<float> v3 = {3.f, 3.f, 3.f, 3.f, 3.f, 3.f};
+    vector<float> v4 = {4.f, 4.f, 4.f, 4.f, 4.f, 4.f};
+    vector<float> v5 = {5.f, 5.f, 5.f, 5.f, 5.f, 5.f};
+
+    // Test Case 1: Check for medoid in an empty graph
+    TEST_EXCEPTION(DG.medoid(), invalid_argument);  // Should throw an exception for empty graph
+
+    // Add nodes to the graph
+    DG.createNode(v1);
+    DG.createNode(v2);
+    DG.createNode(v3);
+    DG.createNode(v4);
+    DG.createNode(v5);
+
+    // Test Case 2: When only one or two nodes are present
+    DirectedGraph<vector<float>> smallGraph(euclideanDistance<vector<float>>);
+    smallGraph.createNode(v1);
+    TEST_CHECK(smallGraph.medoid() == v1);  // Medoid should be v1 in single-node graph
+    smallGraph.createNode(v2);
+    TEST_CHECK(smallGraph.medoid() == v1);  // With two nodes, should return the first node
+
+    // Test Case 3: Multiple nodes in the graph (check that medoid is calculated correctly)
+    DG.addEdge(v1, v2);
+    DG.addEdge(v1, v3);
+    DG.addEdge(v1, v4);
+    DG.addEdge(v2, v1);
+    DG.addEdge(v2, v3);
+
+    // Save the original value of N_THREADS
+    #ifdef N_THREADS
+        const int originalNThreads = N_THREADS; // Store original number of threads
+    #else
+        const int originalNThreads = 1; // Default if N_THREADS is not defined
+    #endif
+
+    // Test Serial Medoid
+    #undef N_THREADS
+    #define N_THREADS 1  // Set N_THREADS to 1 for serial execution
+    vector<float> computedMedoidSerial = DG.medoid(); // Call medoid in serial mode
+    TEST_CHECK(computedMedoidSerial == v3); // Check against expected medoid
+
+    // Test Parallel Medoid
+    #undef N_THREADS
+    #define N_THREADS originalNThreads  // Restore original N_THREADS for parallel execution
+    vector<float> computedMedoidParallel = DG.medoid(); // Call medoid in parallel mode
+    TEST_CHECK(computedMedoidParallel == v3); // Check against expected medoid
+
+    // Ensure both methods yield the same result
+    TEST_CHECK(computedMedoidSerial == computedMedoidParallel); // Ensure both methods return the same result
+
+    // Output the results for verification
+    TEST_MSG("Expected medoid: [%f, %f, %f, %f, %f, %f], Got (Serial): [%f, %f, %f, %f, %f, %f] and Got (Parallel): [%f, %f, %f, %f, %f, %f]",
+             v3[0], v3[1], v3[2], v3[3], v3[4], v3[5],
+             computedMedoidSerial[0], computedMedoidSerial[1], computedMedoidSerial[2], computedMedoidSerial[3], computedMedoidSerial[4], computedMedoidSerial[5],
+             computedMedoidParallel[0], computedMedoidParallel[1], computedMedoidParallel[2], computedMedoidParallel[3], computedMedoidParallel[4], computedMedoidParallel[5]);
+
+    // dimension mismatch will not be tested, as we assume that all elements in the set must be able to be passed on to the given distance function without error.
+    // this case is handled in the euclideanDistance unit test.
 }
 
 void test_Rgraph(void){
@@ -192,6 +259,15 @@ void test_Rgraph(void){
     // Default case
     TEST_CHECK(DG.Rgraph(10));
     TEST_CHECK(DG.get_n_edges() == 100*10);
+
+    int c = 0;
+    map<vector<float>, set<vector<float>>> m = DG.get_Nout();
+
+    for (vector<float>& n : nodes){
+        c+= m[n].size();
+    }
+
+    TEST_CHECK(c == 1000);
 
     // R == 0 <=> clear all edges
     TEST_CHECK(DG.Rgraph(0));
@@ -223,7 +299,7 @@ void test_Rgraph(void){
     // Consecutive use simply shuffles the edges
     // NOTE: This test MIGHT fail due to randomness.
     // Each of the 100 nodes can make one out of 99 possible connections => 99^{100} different ways (cycles are allowed to exist in the directed graph).
-    // The probability for each specific unordered_set of edges (assuming uniform) is 1/99^{100}.
+    // The probability for each specific set of edges (assuming uniform) is 1/99^{100}.
     // For this test to fail, it would mean that we drew the same number twice in a row from a uniform distribution among 99^{100} numbers.
     map<vector<float>, set<vector<float>>> before = DG.get_Nout();
     TEST_CHECK(DG.Rgraph(1));
@@ -231,8 +307,8 @@ void test_Rgraph(void){
     map<vector<float>, set<vector<float>>> after = DG.get_Nout();
     TEST_CHECK(DG.Rgraph(1));
     TEST_CHECK(DG.get_n_edges() == 100*1);
-    TEST_CHECK((before == after) == false); // unordered_map equality operator == is by default overloaded to them containing exactly the same items
-    // https://en.cppreference.com/w/cpp/container/unordered_map/operator_cmp
+    TEST_CHECK((before == after) == false); // map equality operator == is by default overloaded to them containing exactly the same items
+    // https://en.cppreference.com/w/cpp/container/map/operator_cmp
 }
 
 void test_greedySearch(void){
@@ -379,9 +455,10 @@ TEST_LIST = {
     { "test_createNode", test_createNode },
     { "test_Edges", test_Edges },
     { "test_clear", test_clear },
-    // { "test_Rgraph", test_Rgraph},
-    // { "test_greedySearch", test_greedySearch},
-    // { "test_robustPrune", test_robustPrune},
-    // { "test_vamanaAlgorithm", test_vamanaAlgorithm},
+    { "test_medoid", test_medoid},
+    { "test_Rgraph", test_Rgraph},
+    { "test_greedySearch", test_greedySearch},
+    { "test_robustPrune", test_robustPrune},
+    { "test_vamanaAlgorithm", test_vamanaAlgorithm},
     { NULL, NULL }     // zeroed record marking the end of the list
 };

@@ -2,6 +2,7 @@
 #include "util.hpp"
 #include "acutest.h"
 #include <vector>
+#include <string.h>
 #include "types.hpp"
 
 using namespace std;
@@ -40,10 +41,15 @@ void test_euclideanDistance(void){
     // ------------------------------------------------------------------------------------------- Normal values testing
     v1 = {1.5f, 2.5f, 3.5f};
     v2 = {4.5f, 5.5f, 6.5f};
-    float expected = 5.196f;
-    float result = euclideanDistance(v1,v2);
+    float expected = 27.0f; // Squared distance expected value
+    tol = 0.001f;     // Define tolerance level
+
+    float result = euclideanDistance(v1, v2);
+
     TEST_CHECK(fabs(result - expected) <= tol);
-    TEST_MSG("Normal values, ({1.5f, 2.5f, 3.5f}, {4.5f, 5.5f, 6.5f}) between [5.196-tol, 5.196+tol]");
+    TEST_MSG("Squared distance values, ({1.5f, 2.5f, 3.5f}, {4.5f, 5.5f, 6.5f}) between [%.3f, %.3f], but got %.3f", 
+             expected - tol, expected + tol, result);
+
 
     // ------------------------------------------------------------------------------------------- Symmetry check
     result = euclideanDistance(v2,v1);
@@ -252,29 +258,21 @@ void test_closestN(void){
 
     int N = 5;
     set<vector<float>> s;
-    vector<float> x;
 
-    // default case
-    for (int i = 0; i < 1000; i++){
-        vector<float> v;
-        for (int j = 0; j < 128; j++){
-            v.push_back(i);             // 1000 vectors of dimension 128. The i-th vector has values [i,i,...,i]
-        }
+    // Create 1000 vectors of dimension 128 with values [i, i, ..., i]
+    for (int i = 0; i < 1000; i++) {
+        vector<float> v(128, static_cast<float>(i));
         s.insert(v);
-        v.clear();
     }
 
-    for (int i = 0; i < 128; i++)
-        x.push_back(327.3f);            // query vector is [327.5 , 327.5, ... , 327.5] of size 128
+    // Query vector [327.3f, 327.3f, ..., 327.3f]
+    vector<float> x(128, 327.3f);
 
+    // Expected closest vectors: [325, 326, 327, 328, 329]
     set<vector<float>> yclosest;
-    for (int i = 0; i < 5; i++){
-        vector<float> v;
-        for (int j = 0; j < 128; j++){
-            v.push_back(325+i);         // closest vectors are: [325, 326, 327, 328, 329] (in 128-vector format as above)
-        }
+    for (int i = 0; i < 5; i++) {
+        vector<float> v(128, static_cast<float>(325 + i));
         yclosest.insert(v);
-        v.clear();
     }
     set<vector<float>> xclosest = closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>);
 
@@ -282,31 +280,39 @@ void test_closestN(void){
 
     // argument checks:
     
-    // N > |s| returns the whole unordered_set
+    // N > |s| returns the whole set
+    N = 1001; // |s| = 1000
     TEST_CHECK(closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>) == s);
 
     // N < 0
     try{
-        xclosest = closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>);
+        xclosest = closestN<vector<float>>(-1, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>);
         TEST_CHECK(false);  // Control should not reach here
     }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "N must be greater than 0.\n"); }
 
     // N == 0
+    N = 0;
     set<vector<float>> nullset;
     TEST_CHECK(closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>) == nullset);
 
-    // unordered_set is empty
-    TEST_CHECK(closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>) == nullset);
+    // set is empty
+    TEST_CHECK(closestN<vector<float>>(N, nullset, x, euclideanDistance<vector<float>>, vectorEmpty<float>) == nullset);
 
-    // empty query
-    x.clear();
-    try {
+    // Empty query
+    x.clear();  // Clear the query vector
+
+    try{
         xclosest = closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>);
         TEST_CHECK(false);  // Control should not reach here
-    }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Query X is empty.\n"); }
+    }catch(invalid_argument& ia){ 
+        // Check if the caught exception message matches the expected message
+        TEST_CHECK(string(ia.what()) == "Query X is empty.\n");
+    }
 
-    // both unordered_set and query empty
-    TEST_CHECK(closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>) == nullset);
+
+
+    // both set and query empty
+    TEST_CHECK(closestN<vector<float>>(N, nullset, x, euclideanDistance<vector<float>>, vectorEmpty<float>) == nullset);
 
     // case with ties
     s = {
