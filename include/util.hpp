@@ -96,22 +96,6 @@ T sampleFromSet(const set<T>& s){
 
 // returns a vector of a random permutation of the elements beloning in the set s
 template<typename T>
-const vector<T> permutation(const set<T>& s){
-
-    // https://stackoverflow.com/questions/6926433/how-to-shuffle-a-stdvector
-
-    // transforming the set into a vector
-    vector<T> vec(s.begin(), s.end());
-
-    // shuffling the vector
-    auto rd = random_device {};
-    auto rng = default_random_engine { rd() };
-    shuffle(vec.begin(), vec.end(), rng);
-
-    return vec;
-}
-
-template<typename T>
 vector<T> permutation(const set<T>& s) {
     // Transforming the set into a vector
     vector<T> vec(s.begin(), s.end());
