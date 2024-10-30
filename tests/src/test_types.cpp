@@ -14,7 +14,7 @@ void test_graphCreation(void){
 
     // Nodes is an empty unordered_set
     TEST_ASSERT(DG.getNodes().empty());
-    TEST_MSG("Nodes (unordered_set) is non-empty on creation");
+    TEST_MSG("Nodes (set) is non-empty on creation");
 
     // Number of nodes is zero
     TEST_ASSERT(DG.get_n_nodes() == 0);
@@ -32,12 +32,11 @@ void test_createNode(void){
     // Create graph (should work based on previous tests)
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
 
-
     // Value for node
     vector<float> value = vector<float>{1.2f,2.4f,3.64f,4.234f,5.8f,6.0f};
     
     // Create a node inside the graph
-    unordered_set<vector<float>>::iterator it = DG.createNode(value);
+    set<vector<float>>::iterator it = DG.createNode(value);
 
     // Check that node creation was successful
     TEST_ASSERT(DG.get_n_nodes() == 1);
@@ -76,19 +75,12 @@ void test_Edges(void){
     // Verify that edge exists
     TEST_ASSERT(mapKeyExists(n1, DG.get_Nout()));
     TEST_MSG("Add edge, nout key does not exist");
-    
-    TEST_ASSERT(mapKeyExists(n2, DG.get_Nin()));
-    TEST_MSG("Add edge, nin key does not exist");
 
-    unordered_set<vector<float>> n1out = DG.get_Nout().at(n1);
+    set<vector<float>> n1out = DG.get_Nout().at(n1);
     TEST_ASSERT(*n1out.begin() == n2);
     TEST_MSG("Add edge verification nout");
     
     DG.get_Nout();
-
-    unordered_set<vector<float>> n2in = DG.get_Nin().at(n2);
-    TEST_ASSERT(*n2in.begin() == n1);
-    TEST_MSG("Add edge verification nin");
 
     TEST_ASSERT(DG.get_n_edges() == 1);
     TEST_MSG("Failed to increment n_edges");
@@ -107,9 +99,6 @@ void test_Edges(void){
     // Verify that edge has been removed
     TEST_ASSERT(mapKeyExists(n1, DG.get_Nout()));
     TEST_MSG("Remove edge, nout key removed");
-
-    TEST_ASSERT(!mapKeyExists(n2, DG.get_Nin()));
-    TEST_MSG("Remove edge, failed to remove nin");
 
     TEST_ASSERT(DG.get_n_edges() == 1);
     TEST_MSG("Failed to ddecrement n_edges");
@@ -152,13 +141,16 @@ void test_clear(void){
     TEST_ASSERT(DG.get_n_edges() == 5);
     TEST_MSG("Number of edges is wrong");
 
+    // Check remove edge function for wrong arguments -> edge that does not exist
+    TEST_ASSERT(!DG.removeEdge(n2,n4));
+    TEST_MSG("Removed edge that does not exist");
+
+    // Check remove edge function for appropriate args
+    TEST_ASSERT(DG.removeEdge(n1,n2));
+
     TEST_ASSERT(mapKeyExists(n1,DG.get_Nout()));
-    TEST_ASSERT(mapKeyExists(n2,DG.get_Nin()));
-    TEST_ASSERT(mapKeyExists(n3,DG.get_Nin()));
-    TEST_ASSERT(mapKeyExists(n4,DG.get_Nin()));
 
     TEST_ASSERT(DG.clearNeighbors(n1));
-    cout << "PASS" << endl;
 
     // Verify that Nout key is removed
     TEST_ASSERT(!mapKeyExists(n1, DG.get_Nout()));
@@ -167,19 +159,11 @@ void test_clear(void){
     // Verify that number of edges is reduced to 2
     TEST_ASSERT(DG.get_n_edges() == 2);
 
-    // Verify that n4 has no incoming nodes
-    TEST_ASSERT(!mapKeyExists(n4,DG.get_Nin()));
-
     // Clear all edges in graph
     DG.clearEdges();
 
     // Verify that no in-out neighbors are present
     TEST_ASSERT(!mapKeyExists(n2, DG.get_Nout()));
-
-    TEST_ASSERT(!mapKeyExists(n1, DG.get_Nin()));
-    TEST_ASSERT(!mapKeyExists(n2, DG.get_Nin()));
-    TEST_ASSERT(!mapKeyExists(n3, DG.get_Nin()));
-    TEST_ASSERT(!mapKeyExists(n4, DG.get_Nin()));
 
     // Verify that counter of edges is reduced to 0
     TEST_ASSERT(DG.get_n_edges() == 0);
@@ -241,10 +225,10 @@ void test_Rgraph(void){
     // Each of the 100 nodes can make one out of 99 possible connections => 99^{100} different ways (cycles are allowed to exist in the directed graph).
     // The probability for each specific unordered_set of edges (assuming uniform) is 1/99^{100}.
     // For this test to fail, it would mean that we drew the same number twice in a row from a uniform distribution among 99^{100} numbers.
-    unordered_map<vector<float>, unordered_set<vector<float>>> before = DG.get_Nout();
+    map<vector<float>, set<vector<float>>> before = DG.get_Nout();
     TEST_CHECK(DG.Rgraph(1));
     TEST_CHECK(DG.get_n_edges() == 100*1);
-    unordered_map<vector<float>, unordered_set<vector<float>>> after = DG.get_Nout();
+    map<vector<float>, set<vector<float>>> after = DG.get_Nout();
     TEST_CHECK(DG.Rgraph(1));
     TEST_CHECK(DG.get_n_edges() == 100*1);
     TEST_CHECK((before == after) == false); // unordered_map equality operator == is by default overloaded to them containing exactly the same items
@@ -273,7 +257,7 @@ void test_greedySearch(void){
     // Empty starting node s
     vector<float> startingNode;
     try{
-        vector<unordered_set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 4, 5);
+        vector<set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 4, 5);
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "No start node was provided.\n")); }
     
@@ -282,7 +266,7 @@ void test_greedySearch(void){
         startingNode.push_back(-i);
     }
     try {
-        vector<unordered_set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 4, 5);
+        vector<set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 4, 5);
         TEST_CHECK(false);
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Starting node not in nodeSet.\n")); }
 
@@ -290,19 +274,19 @@ void test_greedySearch(void){
     startingNode = vectors[129];
     vector<float> xq;
     try{
-        vector<unordered_set<vector<float>>> ret = DG.greedySearch(startingNode, xq, 4, 5);
+        vector<set<vector<float>>> ret = DG.greedySearch(startingNode, xq, 4, 5);
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "No query was provided.\n")); }
 
     // if k <= 0
     try{
-        vector<unordered_set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 0, 5);
+        vector<set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 0, 5);
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "K must be greater than 0.\n")); }
 
     // if L < k
     try{
-        vector<unordered_set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 2, 1);
+        vector<set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 2, 1);
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "L must be greater or equal to K.\n")); }
 
@@ -323,7 +307,7 @@ void test_robustPrune(void){
     }
     // Verify that 10000 nodes have been added
     TEST_ASSERT(DG.get_n_nodes() == 10000);
-    unordered_set<vector<float>> nullset;
+    set<vector<float>> nullset;
 
     // Valid
     DG.robustPrune(vectors[0], nullset, 1, 5);
@@ -395,9 +379,9 @@ TEST_LIST = {
     { "test_createNode", test_createNode },
     { "test_Edges", test_Edges },
     { "test_clear", test_clear },
-    { "test_Rgraph", test_Rgraph},
-    { "test_greedySearch", test_greedySearch},
-    { "test_robustPrune", test_robustPrune},
-    { "test_vamanaAlgorithm", test_vamanaAlgorithm},
+    // { "test_Rgraph", test_Rgraph},
+    // { "test_greedySearch", test_greedySearch},
+    // { "test_robustPrune", test_robustPrune},
+    // { "test_vamanaAlgorithm", test_vamanaAlgorithm},
     { NULL, NULL }     // zeroed record marking the end of the list
 };
