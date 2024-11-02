@@ -18,8 +18,6 @@
 
 using namespace std;
 
-#define N_THREADS 8 // Some functions are accelerated by leveraging parallelism using N_THREADS threads (eg. DirectedGraph::medoid).
-
 // Directed Graph Class Template:
 // This implementation of a Directed Graph Class makes use of dictionaries/maps for adjacency lists.
 // To instantiate such a Directed Graph Object, you will need to specify the Content Type T, as well as provide:
@@ -118,42 +116,11 @@ class DirectedGraph{
         // Stores the current state of a graph into the specified file.
         // IMPORTANT: makes use of overloaded << operator to store the graph into a file.
         // Make sure SHOULD_OMIT flag in config.hpp file is set to 0
-        void store(const string& filename) const{
-
-            fstream file;
-
-            // create a new file if it did not exist, or replace any contents existing before
-            file.open(filename, ios::out | ios::trunc);  // mode flags: https://cplusplus.com/reference/fstream/fstream/open/
-
-            file << this->n_edges;
-            file << '\n';
-            file << this->n_nodes;
-            file << '\n';
-            file << this->nodes;
-            file << '\n';
-            file << this->Nout;
-
-            file.close();
-        }
+        void store(const string& filename) const;
 
         // Loads a graph state from the specified file. A Graph instance must already be instantiated with the appropriate distance and isEmpty functions.
         // IMPORTANT: makes use of overloaded >> operator to load the graph from a file
-        void load(const string& filename){
-
-            fstream file;
-
-            file.open(filename, ios::in);
-
-            file >> this->n_edges;
-            file.ignore(1);
-            file >> this->n_nodes;
-            file.ignore(1);
-            file >> this->nodes;
-            file.ignore(1);
-            file >> this->Nout;
-
-            file.close();
-        }
+        void load(const string& filename);
 };
 
 // Implementation of already declared Graph Template: MAIN FUNCTIONALITY ----------------------------------- //
@@ -178,6 +145,7 @@ typename set<T>::iterator DirectedGraph<T>::createNode(const T& value){
 // Adds a directed edge (from->to). Updates outNeighbors(from) and inNeighbors(to)
 template <typename T>
 bool DirectedGraph<T>::addEdge(const T& from, const T& to){
+    OMIT_OUTPUT;
     // At least one of the nodes is not present in nodeSet
     if (!setIn(from, this->nodes) || !setIn(to, this->nodes)){
         cout << "Node is not present in nodeSet" << endl;
@@ -557,4 +525,47 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){
         }
     }
     return true;
+}
+
+
+// Stores the current state of a graph into the specified file.
+// IMPORTANT: makes use of overloaded << operator to store the graph into a file.
+// Make sure SHOULD_OMIT flag in config.hpp file is set to 0
+template<typename T>
+void DirectedGraph<T>::store(const string& filename) const{
+
+    fstream file;
+
+    // create a new file if it did not exist, or replace any contents existing before
+    file.open(filename, ios::out | ios::trunc);  // mode flags: https://cplusplus.com/reference/fstream/fstream/open/
+
+    file << this->n_edges;
+    file << '\n';
+    file << this->n_nodes;
+    file << '\n';
+    file << this->nodes;
+    file << '\n';
+    file << this->Nout;
+
+    file.close();
+}
+
+// Loads a graph state from the specified file. A Graph instance must already be instantiated with the appropriate distance and isEmpty functions.
+// IMPORTANT: makes use of overloaded >> operator to load the graph from a file
+template<typename T>
+void DirectedGraph<T>::load(const string& filename){
+
+    fstream file;
+
+    file.open(filename, ios::in);
+
+    file >> this->n_edges;
+    file.ignore(1);
+    file >> this->n_nodes;
+    file.ignore(1);
+    file >> this->nodes;
+    file.ignore(1);
+    file >> this->Nout;
+
+    file.close();
 }

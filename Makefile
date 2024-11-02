@@ -20,6 +20,7 @@ INCLUDE_DIR = ./include
 # File Names
 TYPES = types
 UTIL = util
+CONFIG = config
 
 MAIN = main
 
@@ -33,9 +34,10 @@ OBJS_ALL = $(OBJ_MAIN)
 # Header Files
 HEADER_UTIL = $(INCLUDE_DIR)/$(UTIL).hpp
 HEADER_TYPES = $(INCLUDE_DIR)/$(TYPES).hpp
+HEADER_CONFIG = $(INCLUDE_DIR)/$(CONFIG).hpp
 
 # Include
-INCLUDE_MAIN = $(HEADER_UTIL) $(HEADER_TYPES)
+INCLUDE_MAIN = $(HEADER_UTIL) $(HEADER_TYPES) $(HEADER_CONFIG)
 
 
 # Dependencies

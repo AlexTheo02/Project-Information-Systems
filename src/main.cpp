@@ -2,6 +2,7 @@
 
 #include "util.hpp"
 #include "types.hpp"
+#include "config.hpp"
 
 // Timing functions 
 // https://www.geeksforgeeks.org/measure-execution-time-function-cpp/
