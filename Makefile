@@ -8,7 +8,7 @@ CC = g++
 CFLAGS = -I./include
 
 # Linker Flags
-LDFLAGS = -pthread -lm
+LDFLAGS = -pthread -lm -std=c++17
 
 # Directory Names
 SRC_DIR = ./src

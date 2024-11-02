@@ -52,87 +52,6 @@ using namespace std;
 // };
 // from previous implementation. Commented out instead of deleted because we might need it again in future updates.
 
-
-
-// Operator Overloading for Map (adjacency). Works for any printable type T.
-
-// template overload for printing a map of T,set<T>
-template <typename T>
-ostream& operator<<(ostream& stream, const map<T, set<T>>& m){
-
-    stream << "{";
-
-    bool first = true;  // flag to omit delimiter in first iteration
-
-    for (const auto& pair : m){
-
-        if (first){
-            stream << "(" << pair.first << ", " << pair.second << ")";  // dereference the iterator->first for key and seconds for value and print value in stream
-            first = false;  // from now on print delimiters
-        }
-        else{
-            stream << ", " << "(" << pair.first << ", " << pair.second << ")";
-        }
-    }
-    stream << "}";
-    return stream;
-}
-
-// template overload for reading a map of T,set<T>
-template <typename T>
-istream& operator>>(istream& stream, map<T, set<T>>& m){
-
-    m.clear();
-
-    stream.ignore(1);   // reads and consumes "{"
-
-    // if map is empty
-    if (stream.peek() == '}'){
-        stream.ignore(1);   // consume the '}'
-        return stream;
-    }
-        
-    T key;
-    set<T> value;
-
-    // pair ::= ε
-    // pair ::= (T, set<T>)
-    // pair_list ::= ε
-    // pair_list ::= pair, pair_list
-    // map ::= {pair_list}
-
-    // if we reach here, it is guaranteed that the map is not empty and a pair exists
-    
-    stream.ignore(1);   // consume the first parenthesis of the pair
-
-    while (stream >> key){  // loop condition: formatted read from stream and attempt to store T type variable (key)
-        // stream >> value returns true if it can successfully read a Container::value_type variable from the stream
-        // stream >> value returns false if the stream input cannot be converted into a Container::value_type variable format
-        
-        stream.ignore(2);   // consume in-pair delimiter ", "
-
-        stream >> value;    // read the value
-
-        m[key] = value;     // create the pair and put it in the map
-
-        stream.ignore(1);   // consume pair closing parenthesis ')'
-        
-        if (stream.peek() == '}'){  // check if we have reached the end of the map (in string representation)
-            stream.ignore(1);       // consume the '}'
-            return stream;          
-        }
-
-        // consume delimiter ", "
-        stream.ignore(2);
-        // consume "(" for the next pair
-        stream.ignore(1);
-    }
-
-    return stream;
-}
-
-
-
 // User Requirement: implement << and >> for I/O operations for the specific data type
 // https://stackoverflow.com/questions/476272/how-can-i-properly-overload-the-operator-for-an-ostream
 // https://stackoverflow.com/questions/69803296/overloading-istream-operator
@@ -216,6 +135,83 @@ operator>>(istream& stream, Container& container) {  // container is updated by 
         }
         // consume delimiter: ", " (= consume 2 characters)
         stream.ignore(2);
+    }
+
+    return stream;
+}
+
+// Operator Overloading for Map (adjacency). Works for any printable type T.
+
+// template overload for printing a map of T,set<T>
+template <typename T>
+ostream& operator<<(ostream& stream, const map<T, set<T>>& m){
+
+    stream << "{";
+
+    bool first = true;  // flag to omit delimiter in first iteration
+
+    for (const auto& pair : m){
+
+        if (first){
+            stream << "(" << pair.first << ", " << pair.second << ")";  // dereference the iterator->first for key and seconds for value and print value in stream
+            first = false;  // from now on print delimiters
+        }
+        else{
+            stream << ", " << "(" << pair.first << ", " << pair.second << ")";
+        }
+    }
+    stream << "}";
+    return stream;
+}
+
+// template overload for reading a map of T,set<T>
+template <typename T>
+istream& operator>>(istream& stream, map<T, set<T>>& m){
+
+    m.clear();
+
+    stream.ignore(1);   // reads and consumes "{"
+
+    // if map is empty
+    if (stream.peek() == '}'){
+        stream.ignore(1);   // consume the '}'
+        return stream;
+    }
+        
+    T key;
+    set<T> value;
+
+    // pair ::= ε
+    // pair ::= (T, set<T>)
+    // pair_list ::= ε
+    // pair_list ::= pair, pair_list
+    // map ::= {pair_list}
+
+    // if we reach here, it is guaranteed that the map is not empty and a pair exists
+    
+    stream.ignore(1);   // consume the first parenthesis of the pair
+
+    while (stream >> key){  // loop condition: formatted read from stream and attempt to store T type variable (key)
+        // stream >> value returns true if it can successfully read a Container::value_type variable from the stream
+        // stream >> value returns false if the stream input cannot be converted into a Container::value_type variable format
+        
+        stream.ignore(2);   // consume in-pair delimiter ", "
+
+        stream >> value;    // read the value
+
+        m[key] = value;     // create the pair and put it in the map
+
+        stream.ignore(1);   // consume pair closing parenthesis ')'
+        
+        if (stream.peek() == '}'){  // check if we have reached the end of the map (in string representation)
+            stream.ignore(1);       // consume the '}'
+            return stream;          
+        }
+
+        // consume delimiter ", "
+        stream.ignore(2);
+        // consume "(" for the next pair
+        stream.ignore(1);
     }
 
     return stream;
