@@ -95,7 +95,34 @@ int main () {
         profileVamana(L,R,a,k,DG,vectors,queries,groundtruth,v2id);
     };
 
-    callProfileVamana(100, 13, 1, 100); // creating the vamana index and querying the groundtruths
+    callProfileVamana(100, 14, 1, 100); // creating the vamana index and querying the groundtruths
+    DG.store("graph_instance.txt");
+
+
+    // DG.Rgraph(5);
+
+    // DG.store("graph_instance.txt");
+
+    // DirectedGraph<vector<float>> DG2(euclideanDistance<vector<float>>, vectorEmpty<float>);
+
+    // DG2.load("graph_instance.txt");
+
+
+    // cout << DG.get_n_edges() << endl;
+    // cout << DG2.get_n_edges() << endl;
+
+    // cout << DG.get_n_nodes() << endl;
+    // cout << DG2.get_n_nodes() << endl;
+
+    // vector<vector<float>> n1 = DG.getNodes();
+    // vector<vector<float>> n2 = DG2.getNodes();
+
+    // cout << (n1 == n2) << endl;
+
+    // map<vector<float>, set<vector<float>>> m1 = DG.get_Nout();
+    // map<vector<float>, set<vector<float>>> m2 = DG2.get_Nout();
+
+    // cout << (m1 == m2) << endl;
 
     return 0;
 }

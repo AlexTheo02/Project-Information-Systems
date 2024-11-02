@@ -26,8 +26,10 @@ using namespace std;
 // 1. Distance Function: T x T -> float => float distance_function(T,T)
 // 2. (Optional) Content type T Valid Check Function: T -> bool => bool isEmpty(T) (Default is an AlwaysValid function that returns false for any input)
 //
-// IMPORTANT: You are also required to specialize the std namespace with an appropriate implementation of std::hash<T> for your specific content type.
-// see more on specializing std::hash<T> on: https://en.cppreference.com/w/cpp/utility/hash/operator()
+// IMPORTANT: If you are planning to use DirectedGraph::store and DirectedGraph::load methods, you must have the operators "<<" and ">>" overloaded FOR I/O OPERATIONS
+// for your specific content type T.
+// See more on: https://stackoverflow.com/questions/476272/how-can-i-properly-overload-the-operator-for-an-ostream
+//              https://stackoverflow.com/questions/69803296/overloading-istream-operator
 template <typename T>
 class DirectedGraph{
 
@@ -111,6 +113,47 @@ class DirectedGraph{
         // + L the area parameter for searching (L >= k >= 1, where k is the desired number of neighbors)
         // + a the parameter for robust pruning (a >=1)
         bool vamanaAlgorithm(int L, int R, float a);
+
+
+        // Stores the current state of a graph into the specified file.
+        // IMPORTANT: makes use of overloaded << operator to store the graph into a file.
+        // Make sure SHOULD_OMIT flag in config.hpp file is set to 0
+        void store(const string& filename) const{
+
+            fstream file;
+
+            // create a new file if it did not exist, or replace any contents existing before
+            file.open(filename, ios::out | ios::trunc);  // mode flags: https://cplusplus.com/reference/fstream/fstream/open/
+
+            file << this->n_edges;
+            file << '\n';
+            file << this->n_nodes;
+            file << '\n';
+            file << this->nodes;
+            file << '\n';
+            file << this->Nout;
+
+            file.close();
+        }
+
+        // Loads a graph state from the specified file. A Graph instance must already be instantiated with the appropriate distance and isEmpty functions.
+        // IMPORTANT: makes use of overloaded >> operator to load the graph from a file
+        void load(const string& filename){
+
+            fstream file;
+
+            file.open(filename, ios::in);
+
+            file >> this->n_edges;
+            file.ignore(1);
+            file >> this->n_nodes;
+            file.ignore(1);
+            file >> this->nodes;
+            file.ignore(1);
+            file >> this->Nout;
+
+            file.close();
+        }
 };
 
 // Implementation of already declared Graph Template: MAIN FUNCTIONALITY ----------------------------------- //
