@@ -96,7 +96,8 @@ int main () {
         profileVamana(L,R,a,k,DG,vectors,queries,groundtruth,v2id);
     };
 
-    callProfileVamana(100, 14, 1, 100); // creating the vamana index and querying the groundtruths
+    // callProfileVamana(100, 14, 1, 100); // creating the vamana index and querying the groundtruths
+    DG.Rgraph(14);
     DG.store("graph_instance.txt");
 
 

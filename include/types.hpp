@@ -545,7 +545,29 @@ void DirectedGraph<T>::store(const string& filename) const{
     file << '\n';
     file << this->nodes;
     file << '\n';
-    file << this->Nout;
+
+    // Map each element to its corresponding index
+    int index = 0;
+    map<T, int> elemIndexMap;
+    for (const T& elem: this->nodes){
+        elemIndexMap[elem] = index++; 
+    }
+
+    // Create output map
+    map<int, set<int>> outNout;
+
+    for (auto& pair : this->Nout){
+
+        // Get element's index
+        index = elemIndexMap[pair.first];
+
+        // Out neighbours set
+        for (const T& neighbor : pair.second){
+            outNout[index].insert(elemIndexMap[neighbor]);
+        }
+    }
+
+    file << outNout;
 
     file.close();
 }
@@ -565,7 +587,30 @@ void DirectedGraph<T>::load(const string& filename){
     file.ignore(1);
     file >> this->nodes;
     file.ignore(1);
-    file >> this->Nout;
+
+    // Map each index to its corresponding element
+    int index = 0;
+    map<int, T> indexElemMap;
+    for (const T& elem: this->nodes){
+        indexElemMap[index++] = elem;
+    }
+
+
+
+    map <int, set<int>> inNout;
+
+    file >> inNout;
+
+    T elem;
+    // Translate int key to T
+    for (auto& pair : inNout){
+        elem = indexElemMap[pair.first];
+
+        // Translate int neighbors to T
+        for (int neighbor: pair.second){
+            this->Nout[elem].insert(indexElemMap[neighbor]);
+        }
+    }
 
     file.close();
 }
