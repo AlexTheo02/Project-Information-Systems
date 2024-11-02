@@ -1,11 +1,61 @@
 #include <iostream>
+#include <fstream>
 #include "acutest.h"
 #include "types.hpp"
 #include "config.hpp"
 
 
+void clearFileContents(const std::string& filename) {
+
+    // Open the file in write mode with truncation
+    ofstream file(filename, ios::trunc);
+    if (!file) {
+        cerr << "Error opening file: " << filename << endl;
+    }
+    file.close(); // Close the file
+}
+
 void test_Store_and_Load(){
+
+    string filename = "graph_instance.txt";
+
+    // Create a DG
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
+
+    // Create a second directed graph to compare the two
+    DirectedGraph<vector<float>> DG2(euclideanDistance<vector<float>>, vectorEmpty<float>);
+
+    // ------------------------------------------------------------------------------------------- Empty graphs check
+
+    // Store the graph in a textfile
+    DG.store(filename);
+
+    // Load the previously stored data of the first graph into the second
+    DG2.load(filename);
+
+    // Check if the number of the edges are equal
+    TEST_CHECK(DG.get_n_edges() == DG2.get_n_edges());
+
+    // Check if the number of the nodes are equal
+    TEST_CHECK(DG.get_n_nodes() == DG2.get_n_nodes());
+
+    // Retrieve the nodes of the two DGs
+    set<vector<float>> nodes1 = DG.getNodes();
+    set<vector<float>> nodes2 = DG2.getNodes();
+
+    // Compare the two nodes if they are similar
+    TEST_CHECK(nodes1 == nodes2);
+
+    // Retrieve the two maps containing the neighbors
+    map<vector<float>, set<vector<float>>> m1 = DG.get_Nout();
+    map<vector<float>, set<vector<float>>> m2 = DG2.get_Nout();
+
+    // Compare the two maps if they are equal
+    TEST_CHECK(m1 == m2);
+
+    clearFileContents(filename);
+
+    // ------------------------------------------------------------------------------------------- Graph with only nodes check (0 edges)
 
     // Add nodes to graph (10 nodes)
     vector<float> v1 = vector<float>{1.2f, 2.4f, 3.64f, 4.234f, 5.8f, 6.0f};
@@ -31,29 +81,68 @@ void test_Store_and_Load(){
     vector<float> n9 = *DG.createNode(v9);
     vector<float> n10 = *DG.createNode(v10);
 
+    // Store the graph in a textfile
+    DG.store(filename);
 
+    // Load the previously stored data of the first graph into the second
+    DG2.load(filename);
 
-    DG.Rgraph(5);
-
-    DG.store("graph_instance.txt");
-
-    DirectedGraph<vector<float>> DG2(euclideanDistance<vector<float>>, vectorEmpty<float>);
-
-    DG2.load("graph_instance.txt");
-
+    // Check if the number of the edges are equal
     TEST_CHECK(DG.get_n_edges() == DG2.get_n_edges());
 
+    // Check if the number of the nodes are equal
     TEST_CHECK(DG.get_n_nodes() == DG2.get_n_nodes());
 
-    set<vector<float>> nodes1 = DG.getNodes();
-    set<vector<float>> nodes2 = DG2.getNodes();
+    // Retrieve the nodes of the two DGs
+    nodes1 = DG.getNodes();
+    nodes2 = DG2.getNodes();
 
+    // Compare the two nodes if they are similar
     TEST_CHECK(nodes1 == nodes2);
 
-    map<vector<float>, set<vector<float>>> m1 = DG.get_Nout();
-    map<vector<float>, set<vector<float>>> m2 = DG2.get_Nout();
+    // Retrieve the two maps containing the neighbors
+    m1 = DG.get_Nout();
+    m2 = DG2.get_Nout();
 
+    // Compare the two maps if they are equal
     TEST_CHECK(m1 == m2);
+
+    clearFileContents(filename);
+
+    // ------------------------------------------------------------------------------------------- Graphs with edges
+
+    // Create a random graph with R = 5
+    DG.Rgraph(5);
+
+    // Store the graph in a textfile
+    DG.store(filename);
+
+    // Load the previously stored data of the first graph into the second
+    DG2.load(filename);
+
+    // Check if the number of the edges are equal
+    TEST_CHECK(DG.get_n_edges() == DG2.get_n_edges());
+
+    // Check if the number of the nodes are equal
+    TEST_CHECK(DG.get_n_nodes() == DG2.get_n_nodes());
+
+    // Retrieve the nodes of the two DGs
+    nodes1 = DG.getNodes();
+    nodes2 = DG2.getNodes();
+
+    // Compare the two nodes if they are similar
+    TEST_CHECK(nodes1 == nodes2);
+
+    // Retrieve the two maps containing the neighbors
+    m1 = DG.get_Nout();
+    m2 = DG2.get_Nout();
+
+    // Compare the two maps if they are equal
+    TEST_CHECK(m1 == m2);
+
+    // Delete the temporary file for storing and loading the contents of a graph
+    remove(filename.c_str());
+
 
 }
 
