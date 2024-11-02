@@ -20,7 +20,7 @@
 using namespace std;
 
 // global constant on whether to omit output on tests. Set to non-zero to omit outputs, 0 to allow them.
-#define SHOULD_OMIT 0
+#define SHOULD_OMIT 1
 
 // Checks with the SHOULD_OMIT flag on whether to omit or allow output (sets state).
 // https://stackoverflow.com/questions/30184998/how-to-disable-cout-output-in-the-runtime
@@ -98,16 +98,14 @@ T sampleFromSet(const set<T>& s){
 
 // returns a vector of a random permutation of the elements beloning in the set s
 template<typename T>
-const vector<T> permutation(const set<T>& s){
-
-    // https://stackoverflow.com/questions/6926433/how-to-shuffle-a-stdvector
-
-    // transforming the set into a vector
+vector<T> permutation(const set<T>& s) {
+    // Transforming the set into a vector
     vector<T> vec(s.begin(), s.end());
 
-    // shuffling the vector
-    auto rd = random_device {};
-    auto rng = default_random_engine { rd() };
+    // Shuffling the vector
+    random_device rd;
+    default_random_engine rng(rd());  // Seed the engine with rd()
+
     shuffle(vec.begin(), vec.end(), rng);
 
     return vec;

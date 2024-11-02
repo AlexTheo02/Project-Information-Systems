@@ -41,7 +41,7 @@ class DirectedGraph{
     map<T, set<T>> Nout;                    // key: node, value: set of outgoing neighbors 
     function<float(const T&, const T&)> d;  // Graph's distance function
     function<bool(const T&)> isEmpty;       // typename T valid check
-    
+
     
     public:
 
@@ -184,11 +184,20 @@ bool DirectedGraph<T>::addEdge(const T& from, const T& to){
         return false;
     }
 
-    // Verify that both nodes exist in nodeset
-    if (from == to)
+    // No self-loops are allowed
+    if (from == to){
+        cout << "Cannot add edge from self to self" << endl;
         return false;
+    }
 
+    int previous_size = this->Nout[from].size(); 
     this->Nout[from].insert(to);
+    int next_size = this->Nout[from].size(); 
+
+    if(next_size == previous_size){
+        cout << "Cannot add edge. Edge already exists" << endl;
+        return false;
+    }
     this->n_edges++;
     return true;
 }
@@ -200,13 +209,11 @@ bool DirectedGraph<T>::removeEdge(const T& from, const T& to){
     // Check if keys exist before accessing them (and removing them)
     if (mapKeyExists(from, this->Nout)) {
         // Key exists, access the value, if successfully removed, return true
-        set<T>& nout = this->Nout[from];
-        if (nout.erase(to)){
+        if(this->Nout[from].erase(to)){
             // Check if outgoing neighbors are empty, if so, remove entry from unordered map
-            if (nout.empty()){
+            if(this->Nout[from].empty()){
                 this->Nout.erase(from);
             }
-            
             // Decrement the number of edges in graph
             this->n_edges--;
             return true;
@@ -229,12 +236,12 @@ bool DirectedGraph<T>::clearNeighbors(const T& node){
     if (mapKeyExists(node, this->Nout)){
         // For each outgoing neighbor, remove the edge
         set<T> noutCopy(this->Nout[node].begin(), this->Nout[node].end());
-        for (const T& n : noutCopy){
+        for (const T& n : noutCopy){      
             if (!this->removeEdge(node,n)){
                 cout << "ERROR: Failed to remove edge, something went wrong" << endl;
                 return false;
-            }
-        }
+            }          
+        }      
         // Check if node has been removed from neighbors map
         if (mapKeyExists(node, this->Nout)){
             cout << "ERROR: Something went wrong when clearing neighbors" << endl;
