@@ -184,29 +184,49 @@ void test_medoid(void){
     vector<float> v4 = {4.f, 4.f, 4.f, 4.f, 4.f, 4.f};
     vector<float> v5 = {5.f, 5.f, 5.f, 5.f, 5.f, 5.f};
 
-    // Test Case 1: Check for medoid in an empty graph
+    // ------------------------------------------------------------------------------------------- Empty graph check
     TEST_EXCEPTION(DG.medoid(), invalid_argument);  // Should throw an exception for empty graph
 
-    // Add nodes to the graph
+    // ------------------------------------------------------------------------------------------- Graph with one or two nodes check
+    DirectedGraph<vector<float>> smallGraph(euclideanDistance<vector<float>>);
+    smallGraph.createNode(v1);
+    TEST_CHECK(smallGraph.medoid() == v1);  // Medoid should be v1 in single-node graph
+
+    DirectedGraph<vector<float>> smallGraph2(euclideanDistance<vector<float>>);
+    smallGraph2.createNode(v1);
+    smallGraph2.createNode(v2);
+    TEST_CHECK(smallGraph2.medoid() == v1);  // With two nodes, should return the first node
+
+    // ------------------------------------------------------------------------------------------- Graph with multiple nodes
+
+    // Create a second graph
+    DirectedGraph<vector<float>> DG2(euclideanDistance<vector<float>>);
+
+    // Add the same nodes to the two graphs
     DG.createNode(v1);
     DG.createNode(v2);
     DG.createNode(v3);
     DG.createNode(v4);
     DG.createNode(v5);
 
-    // Test Case 2: When only one or two nodes are present
-    DirectedGraph<vector<float>> smallGraph(euclideanDistance<vector<float>>);
-    smallGraph.createNode(v1);
-    TEST_CHECK(smallGraph.medoid() == v1);  // Medoid should be v1 in single-node graph
-    smallGraph.createNode(v2);
-    TEST_CHECK(smallGraph.medoid() == v1);  // With two nodes, should return the first node
-
-    // Test Case 3: Multiple nodes in the graph (check that medoid is calculated correctly)
+    DG2.createNode(v1);
+    DG2.createNode(v2);
+    DG2.createNode(v3);
+    DG2.createNode(v4);
+    DG2.createNode(v5);
+    
+    // Add the same edges to the two graphs
     DG.addEdge(v1, v2);
     DG.addEdge(v1, v3);
     DG.addEdge(v1, v4);
     DG.addEdge(v2, v1);
     DG.addEdge(v2, v3);
+
+    DG2.addEdge(v1, v2);
+    DG2.addEdge(v1, v3);
+    DG2.addEdge(v1, v4);
+    DG2.addEdge(v2, v1);
+    DG2.addEdge(v2, v3);
 
     // Save the original value of N_THREADS
     #ifdef N_THREADS
@@ -224,7 +244,7 @@ void test_medoid(void){
     // Test Parallel Medoid
     #undef N_THREADS
     #define N_THREADS originalNThreads  // Restore original N_THREADS for parallel execution
-    vector<float> computedMedoidParallel = DG.medoid(); // Call medoid in parallel mode
+    vector<float> computedMedoidParallel = DG2.medoid(); // Call medoid in parallel mode
     TEST_CHECK(computedMedoidParallel == v3); // Check against expected medoid
 
     // Ensure both methods yield the same result
