@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <vector>
 #include <cmath>
@@ -306,6 +307,19 @@ double measureTime(const string name, Func func, Args&&... args){
     // Use example: need to bind method to instance and add placeholders for arguments
     // auto boundRgraph = bind(&DirectedGraph<vector<float>>::Rgraph, &DG, placeholders::_1);
     // measureTime("Medoid", boundRgraph, 14);
+}
+
+// Timing functions 
+// https://www.geeksforgeeks.org/measure-execution-time-function-cpp/
+void printFormatMiliseconds(chrono::milliseconds duration){
+    int hours = duration.count() / 3600000;
+    int minutes = (duration.count() % 3600000) / 60000;
+    int seconds = (duration.count() % 60000) / 1000;
+
+    cout 
+    << setw(2) << setfill('0') << hours << ":"
+    << setw(2) << setfill('0') << minutes << ":"
+    << setw(2) << setfill('0') << seconds << endl;
 }
 
 

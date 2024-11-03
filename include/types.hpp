@@ -41,6 +41,7 @@ class DirectedGraph{
     int n_nodes;                            // number of nodes present in the graph
     set<T> nodes;                           // a set containing all the nodes in the graph
     vector<T> _nodes;                       // vector representation of nodes used temporarily for medoid (if parallel approach is chosen)
+    T _medoid;                              // used to avoid recalculation of medoid if we want to access it more than once
     map<T, set<T>> Nout;                    // key: node, value: set of outgoing neighbors 
     function<float(const T&, const T&)> d;  // Graph's distance function
     function<bool(const T&)> isEmpty;       // typename T valid check
@@ -54,6 +55,8 @@ class DirectedGraph{
             this->n_nodes = values.size();
             this->d = distance_function;
             this->isEmpty = is_Empty;
+            this->_medoid.clear();
+            this->_nodes.clear();
             cout << "Graph created!" << endl;
 
             for (const T& value : values){
@@ -120,7 +123,6 @@ class DirectedGraph{
 
         // Stores the current state of a graph into the specified file.
         // IMPORTANT: makes use of overloaded << operator to store the graph into a file.
-        // Make sure SHOULD_OMIT flag in config.hpp file is set to 0
         void store(const string& filename) const;
 
         // Loads a graph state from the specified file. A Graph instance must already be instantiated with the appropriate distance and isEmpty functions.

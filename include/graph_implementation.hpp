@@ -132,14 +132,16 @@ const T DirectedGraph<T>::medoid(void){
     // if |s| = 1 or 2, return the first element of the set (metric distance is symmetric)
     if (this->nodes.size() <= 2){ return *(this->nodes.begin()); }
 
-    // Serial Case
-    if (N_THREADS == 1) return this->_serial_medoid();
-
-    // Parallel Case
-    if (N_THREADS > 1)  return this->_parallel_medoid();
-
     // Invalid N_THREADS
-    throw invalid_argument("N_THREADS constant is invalid. Value must be N_THREADS >= 1.\n");
+    if (N_THREADS <= 0) throw invalid_argument("N_THREADS constant is invalid. Value must be N_THREADS >= 1.\n");
+
+    // avoid recalculation:
+    if (this->_medoid.empty())
+        this->_medoid = (N_THREADS == 1) ? this->_serial_medoid() : this->_parallel_medoid();
+
+    // return saved or new medoid
+    return this->_medoid;
+    
 }
 
 // Implements medoid function using serial programming.
@@ -449,6 +451,8 @@ void DirectedGraph<T>::store(const string& filename) const{
     file << outNout;
 
     file.close();
+
+    cout << "Graph Instance stored successfully in \"" << filename << '\"' << endl;
 }
 
 // Loads a graph state from the specified file. A Graph instance must already be instantiated with the appropriate distance and isEmpty functions.
@@ -490,4 +494,5 @@ void DirectedGraph<T>::load(const string& filename){
     }
 
     file.close();
+    cout << "Graph Instance loaded successfully from \"" << filename << '\"' << endl;
 }

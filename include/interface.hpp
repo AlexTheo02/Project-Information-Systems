@@ -4,6 +4,7 @@
 #include "util.hpp"
 #include "types.hpp"
 #include "graph_implementation.hpp"
+#include "evaluation.hpp"
 
 using namespace std;
 

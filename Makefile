@@ -23,6 +23,7 @@ UTIL = util
 CONFIG = config
 GRAPH = graph_implementation
 INTERFACE = interface
+EVAL = evaluation
 
 MAIN = main
 
@@ -38,6 +39,7 @@ HEADER_UTIL = $(INCLUDE_DIR)/$(UTIL).hpp
 HEADER_TYPES = $(INCLUDE_DIR)/$(TYPES).hpp
 HEADER_CONFIG = $(INCLUDE_DIR)/$(CONFIG).hpp
 HEADER_GRAPH = $(INCLUDE_DIR)/$(GRAPH).hpp
+HEADER_EVAL = $(INCLUDE_DIR)/$(EVAL).hpp
 HEADER_INTERFACE = $(INCLUDE_DIR)/$(INTERFACE).hpp
 
 # Include
