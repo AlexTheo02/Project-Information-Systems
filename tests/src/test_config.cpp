@@ -1,9 +1,7 @@
-#include <iostream>
-#include <fstream>
 #include "acutest.h"
-#include "types.hpp"
-#include "config.hpp"
+#include "interface.hpp"
 
+using namespace std;
 
 void clearFileContents(const std::string& filename) {
 
@@ -16,6 +14,7 @@ void clearFileContents(const std::string& filename) {
 }
 
 void test_Store_and_Load(){
+    OMIT_OUTPUT;
 
     string filename = "graph_instance.txt";
 
@@ -142,8 +141,6 @@ void test_Store_and_Load(){
 
     // Delete the temporary file for storing and loading the contents of a graph
     remove(filename.c_str());
-
-
 }
 
 TEST_LIST = {

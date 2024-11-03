@@ -17,45 +17,41 @@
 #include <type_traits>
 #include <list>
 
+using namespace std;
+
+// This is the configuration file for this Project.
+// Here you will find:
+//
+//      1. Global Constants
+//      2. Global Definitions
+//      3. Operator overloads
+//      (4. Specialized Hash Functions for specific Types) - was used in a previous implementation, commented out
+//
+// For your specified datatype T, you should have the ostream << and istream >> operators overloaded. 
 
 
-#define N_THREADS 8 // Some functions are accelerated by leveraging parallelism using N_THREADS threads (eg. DirectedGraph::medoid).
+// Some functions are accelerated by leveraging parallelism using N_THREADS threads (eg. DirectedGraph::medoid).
+#define N_THREADS 8 
+
 // global constant on whether to omit output on tests. Set to non-zero to omit outputs, 0 to allow them.
 #define SHOULD_OMIT 1
 
-// Checks with the SHOULD_OMIT flag on whether to omit or allow output (sets state).
+// Checks with the SHOULD_OMIT flag on whether to omit or allow output (sets failbit for cout stream and disables any further outputs on the cout stream).
 // https://stackoverflow.com/questions/30184998/how-to-disable-cout-output-in-the-runtime
 #define OMIT_OUTPUT if (SHOULD_OMIT) cout.setstate(ios_base::failbit)
 
 
-using namespace std;
+// If you plan to use DirectedGraph::load and DirectedGraph::store functions:
 
-
-// User Requirement: implement the std::hash<T> for the specific T to be used.
-// In this scenario, Content Type of graph T is a vector<T2>, where T2 can be anything already implemented (or expanded) in the std::hash
-// T2 is the inner type (that inside of the vector: int, float, ..., any other type that std::hash<T> has been expanded for)
-// namespace std {
-//     // https://en.cppreference.com/w/cpp/container/map - unordered map hash defaults to std::hash<TYPE> => specialize for given type TYPE.
-//     // https://stackoverflow.com/questions/10405030/c-unordered-map-fail-when-used-with-a-vector-as-key - Hash Function for vectors.
-//     template <typename T2>
-//         class hash<vector<T2>>{
-//         public:
-//             size_t operator()(const vector<T2>& t) const{
-
-//                 size_t ret = t.size();
-//                 for (const auto& v : t) {
-//                     ret ^=  hash<T2>()(v) + 0x9e3779b9 + (ret << 6) + (ret >> 2);
-//                 }
-//                 return ret;
-//             }
-//     };
-// };
-// from previous implementation. Commented out instead of deleted because we might need it again in future updates.
-
-// User Requirement: implement << and >> for I/O operations for the specific data type
-// https://stackoverflow.com/questions/476272/how-can-i-properly-overload-the-operator-for-an-ostream
-// https://stackoverflow.com/questions/69803296/overloading-istream-operator
-
+// You should implement << and >> for I/O operations for the specific data type
+// 
+//      Helpful Links (Tutorials):
+//      https://stackoverflow.com/questions/476272/how-can-i-properly-overload-the-operator-for-an-ostream
+//      https://stackoverflow.com/questions/69803296/overloading-istream-operator
+//      https://learn.microsoft.com/en-us/cpp/standard-library/overloading-the-output-operator-for-your-own-classes?view=msvc-170
+//
+// Such overloads have already been implemented for some specific standard template types that contain any printable type.
+// Your overloads should either precede them or be contained within your class.
 
 
 // Enable Operator Overloading only for specific types, but using a generic template
@@ -63,28 +59,28 @@ using namespace std;
 // list
 // vector
 // set
-// ADD MORE IF NEEDED
+// .        add more as needed. See code below on how to do it:
 
 // https://medium.com/@sidbhasin82/c-templates-what-is-std-enable-if-and-how-to-use-it-fd76d3abbabe
 
-// Primary template for unsupported types
+// Primary generic template for unsupported types           All types begin as unsupported
 template <typename Container, typename Enable = void>
 struct is_supported_container : false_type {};
 
-// Specialization for vector
+// Specialization for vector                                vector is enabled
 template <typename T>
 struct is_supported_container<vector<T>> : true_type {};
 
-// Specialization for list
+// Specialization for list                                  list is enabled
 template <typename T>
 struct is_supported_container<list<T>> : true_type {};
 
-// Specialization for set
+// Specialization for set                                   set is enabled
 template <typename T>
 struct is_supported_container<set<T>> : true_type {};
 
 
-// template overload for printing any iterable container, containing any printable type 
+// template overload for printing any iterable container (of the above specialized), containing any printable type 
 template<typename Container>
 enable_if_t<is_supported_container<Container>::value, ostream&>
 operator<<(ostream& stream, const Container& container) {
@@ -140,7 +136,7 @@ operator>>(istream& stream, Container& container) {  // container is updated by 
     return stream;
 }
 
-// Operator Overloading for Map (adjacency). Works for any printable type T.
+// Operator Overloading for Map<T, set<T>>. Works for any printable type T.
 
 // template overload for printing a map of T,set<T>
 template <typename T>
@@ -181,13 +177,14 @@ istream& operator>>(istream& stream, map<T, set<T>>& m){
     T key;
     set<T> value;
 
+    // how the map string representation is formatted (BNF syntax)
     // pair ::= ε
     // pair ::= (T, set<T>)
     // pair_list ::= ε
     // pair_list ::= pair, pair_list
     // map ::= {pair_list}
 
-    // if we reach here, it is guaranteed that the map is not empty and a pair exists
+    // if we reach here, it is guaranteed that the map is not empty and at least one pair exists in the map's pair_list
     
     stream.ignore(1);   // consume the first parenthesis of the pair
 
@@ -216,3 +213,27 @@ istream& operator>>(istream& stream, map<T, set<T>>& m){
 
     return stream;
 }
+
+
+// If implementation makes use of containers that use hashes, this should be uncommented. (unordered_set, unordered_map etc)
+
+// User Requirement: implement the std::hash<T> for the specific T to be used.
+// In this scenario, Content Type of graph T is a vector<T2>, where T2 can be any hashable type (or a type with a specialized std::hash function)
+// T2 is the inner type (that inside of the vector: int, float, ..., any other type that std::hash<T> has been specialized or exists for)
+// namespace std {
+//     // https://en.cppreference.com/w/cpp/container/map - unordered map hash defaults to std::hash<TYPE> => specialize for given type TYPE.
+//     // https://stackoverflow.com/questions/10405030/c-unordered-map-fail-when-used-with-a-vector-as-key - Hash Function for vectors.
+//     template <typename T2>
+//         class hash<vector<T2>>{
+//         public:
+//             size_t operator()(const vector<T2>& t) const{
+
+//                 size_t ret = t.size();
+//                 for (const auto& v : t) {
+//                     ret ^=  hash<T2>()(v) + 0x9e3779b9 + (ret << 6) + (ret >> 2);
+//                 }
+//                 return ret;
+//             }
+//     };
+// };
+// 

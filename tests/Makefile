@@ -92,17 +92,17 @@ run:
 	$(EX_t_CONFIG)
 
 # Build Executable test_Types
-$(EX_t_TYPES): $(OBJ_t_TYPES) $(OBJ_GRAPH)
+$(EX_t_TYPES): $(OBJ_t_TYPES)
 	@echo "Linking Object Files to Create Executable $(EX_t_TYPES) . . ."
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 # Build Executable test_Util
-$(EX_t_UTIL): $(OBJ_t_UTIL) $(OBJ_UTIL)
+$(EX_t_UTIL): $(OBJ_t_UTIL)
 	@echo "Linking Object Files to Create Executable $(EX_t_UTIL) . . ."
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 # Build Executable test_Util
-$(EX_t_CONFIG): $(OBJ_t_CONFIG) $(OBJ_CONFIG)
+$(EX_t_CONFIG): $(OBJ_t_CONFIG)
 	@echo "Linking Object Files to Create Executable $(EX_t_UTIL) . . ."
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 

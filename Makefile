@@ -21,6 +21,8 @@ INCLUDE_DIR = ./include
 TYPES = types
 UTIL = util
 CONFIG = config
+GRAPH = graph_implementation
+INTERFACE = interface
 
 MAIN = main
 
@@ -35,9 +37,11 @@ OBJS_ALL = $(OBJ_MAIN)
 HEADER_UTIL = $(INCLUDE_DIR)/$(UTIL).hpp
 HEADER_TYPES = $(INCLUDE_DIR)/$(TYPES).hpp
 HEADER_CONFIG = $(INCLUDE_DIR)/$(CONFIG).hpp
+HEADER_GRAPH = $(INCLUDE_DIR)/$(GRAPH).hpp
+HEADER_INTERFACE = $(INCLUDE_DIR)/$(INTERFACE).hpp
 
 # Include
-INCLUDE_MAIN = $(HEADER_UTIL) $(HEADER_TYPES) $(HEADER_CONFIG)
+INCLUDE_MAIN = $(HEADER_INTERFACE)
 
 
 # Dependencies

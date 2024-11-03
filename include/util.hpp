@@ -21,6 +21,8 @@
 
 using namespace std;
 
+// This file contains several independent utility function templates.
+// Other .hpp files use these functions internally, but they can be used independently.
 
 
 // calculates the euclidean distance between two containers of the same dimension that its elements can be accessed with the [ ] operator.
@@ -297,19 +299,19 @@ double measureTime(const string name, Func func, Args&&... args){
 
     chrono::duration<double, milli> ms_double = end - start;
 
-    cout << "Elapsed Time for "<< name <<": " << ms_double.count() << "ms | " << ms_double.count()/1000 << "s" << endl;
+    cout << "Elapsed Time for "<< name <<": " << ms_double.count() << "ms | " << ms_double.count()/1000 << 's' << endl;
 
     return ms_double.count();
 
     // Use example: need to bind method to instance and add placeholders for arguments
     // auto boundRgraph = bind(&DirectedGraph<vector<float>>::Rgraph, &DG, placeholders::_1);
-    // measureTime("Medoid", boundRgraph, 13);
+    // measureTime("Medoid", boundRgraph, 14);
 }
 
 
 // Requirements and requirement-placeholders
 
-// always false function for isEmpty default argument
+// always false function for DirectedGraph::isEmpty default argument
 template<typename T>
 bool alwaysValid(const T& t) { return false; }
 

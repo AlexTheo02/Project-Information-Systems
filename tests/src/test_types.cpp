@@ -1,6 +1,7 @@
-#include <iostream>
 #include "acutest.h"
-#include "types.hpp"
+#include "interface.hpp"
+
+using namespace std;
 
 void test_graphCreation(void){
     OMIT_OUTPUT;

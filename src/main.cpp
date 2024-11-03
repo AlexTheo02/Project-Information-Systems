@@ -1,8 +1,6 @@
 #include <iostream>
 
-#include "util.hpp"
-#include "types.hpp"
-#include "config.hpp"
+#include "interface.hpp"
 
 // Timing functions 
 // https://www.geeksforgeeks.org/measure-execution-time-function-cpp/

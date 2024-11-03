@@ -1,9 +1,5 @@
-#include <iostream>
-#include "util.hpp"
 #include "acutest.h"
-#include <vector>
-#include <string.h>
-#include "types.hpp"
+#include "interface.hpp"
 
 using namespace std;
 
