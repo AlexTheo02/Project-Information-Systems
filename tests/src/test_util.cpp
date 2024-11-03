@@ -4,7 +4,6 @@
 using namespace std;
 
 void test_euclideanDistance(void){
-    OMIT_OUTPUT;
 
     float tol = 0.001f; // For result comparison (precision issues)
 
@@ -53,8 +52,7 @@ void test_euclideanDistance(void){
     TEST_MSG("Symmetry check");
 }
 
-void test_setIn(void){
-    OMIT_OUTPUT;
+void test_setIn(void){  
 
     set<int> s;
     s.insert((int)1);
@@ -63,8 +61,7 @@ void test_setIn(void){
     TEST_CHECK(setIn((int)2, s) == false);
 }
 
-void test_mapKeyExists(void){
-    OMIT_OUTPUT;
+void test_mapKeyExists(void){  
 
     map<int,int> map;
     map[1] = 1;
@@ -73,8 +70,7 @@ void test_mapKeyExists(void){
     TEST_CHECK(mapKeyExists((int)2, map) == false);
 }
 
-void test_setSubtraction(void){
-    OMIT_OUTPUT;
+void test_setSubtraction(void){    
     
     set<int> A,B,C,T,TA,TB,N;
 
@@ -113,8 +109,7 @@ void test_setSubtraction(void){
     TEST_CHECK(setSubtraction(A,A) == N);
 }
 
-void test_setUnion(void){
-    OMIT_OUTPUT;
+void test_setUnion(void){   
 
     set<int> A,B,C,T,N;
 
@@ -156,8 +151,7 @@ void test_setUnion(void){
     TEST_CHECK(setUnion(setUnion(A,B),C) == setUnion(A, setUnion(B,C)));
 }
 
-void test_sampleFromSet(void){
-    OMIT_OUTPUT;
+void test_sampleFromSet(void){    
     
     set<int> s;
 
@@ -200,8 +194,7 @@ void test_sampleFromSet(void){
     TEST_CHECK(same && changed);
 }
 
-void test_myArgMin(void){
-    OMIT_OUTPUT;
+void test_myArgMin(void){   
 
     set<vector<float>> s;
 
@@ -249,8 +242,7 @@ void test_myArgMin(void){
 
 }
 
-void test_closestN(void){
-    OMIT_OUTPUT;
+void test_closestN(void){    
 
     int N = 5;
     set<vector<float>> s;
@@ -330,8 +322,7 @@ void test_closestN(void){
     TEST_CHECK(xclosest == yclosest);
 }
 
-void test_permutation(void){
-    OMIT_OUTPUT;
+void test_permutation(void){    
 
     set<int> numbers;
 

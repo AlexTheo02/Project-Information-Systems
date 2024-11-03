@@ -36,9 +36,28 @@ using namespace std;
 // global constant on whether to omit output on tests. Set to non-zero to omit outputs, 0 to allow them.
 #define SHOULD_OMIT 1
 
-// Checks with the SHOULD_OMIT flag on whether to omit or allow output (sets failbit for cout stream and disables any further outputs on the cout stream).
-// https://stackoverflow.com/questions/30184998/how-to-disable-cout-output-in-the-runtime
-#define OMIT_OUTPUT if (SHOULD_OMIT) cout.setstate(ios_base::failbit)
+// Custom Cout-like Object that respects the SHOULD_OMIT flag on whether to print or not.
+// Cannot be used with endl. Please use << '\n'; instead of << endl;
+// Can be chained with simple printable types: c_log << a << b << ... ;
+class ConsoleLog{
+
+    public:
+
+    ConsoleLog(){};   // empty constructor
+
+    // overloading the << operator
+    template <typename T>
+    ConsoleLog& operator<<(const T& t){
+        if (!SHOULD_OMIT)
+            cout << t;
+        return *this;
+    }
+};
+// instantiation of static object
+static ConsoleLog c_log;    // each source file that includes config.hpp will have its own instance of c_log
+
+
+
 
 
 // If you plan to use DirectedGraph::load and DirectedGraph::store functions:

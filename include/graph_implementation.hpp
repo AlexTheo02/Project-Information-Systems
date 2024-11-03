@@ -24,16 +24,16 @@ typename set<T>::iterator DirectedGraph<T>::createNode(const T& value){
 // Adds a directed edge (from->to). Updates outNeighbors(from) and inNeighbors(to)
 template <typename T>
 bool DirectedGraph<T>::addEdge(const T& from, const T& to){
-    OMIT_OUTPUT;
+    
     // At least one of the nodes is not present in nodeSet
     if (!setIn(from, this->nodes) || !setIn(to, this->nodes)){
-        cout << "Node is not present in nodeSet" << endl;
+        c_log << "Node is not present in nodeSet" << '\n';
         return false;
     }
 
     // No self-loops are allowed
     if (from == to){
-        cout << "Cannot add edge from self to self" << endl;
+        c_log << "Cannot add edge from self to self" << '\n';
         return false;
     }
 
@@ -42,7 +42,7 @@ bool DirectedGraph<T>::addEdge(const T& from, const T& to){
     int next_size = this->Nout[from].size(); 
 
     if(next_size == previous_size){
-        cout << "Cannot add edge. Edge already exists" << endl;
+        c_log << "Cannot add edge. Edge already exists" << '\n';
         return false;
     }
     this->n_edges++;
@@ -66,7 +66,7 @@ bool DirectedGraph<T>::removeEdge(const T& from, const T& to){
             return true;
         }
     }
-    cout << "WARNING: Trying to remove non-existing edge.\n" << endl;
+    c_log << "WARNING: Trying to remove non-existing edge.\n" << '\n';
     return false;
 }
 
@@ -75,7 +75,7 @@ template <typename T>
 bool DirectedGraph<T>::clearNeighbors(const T& node){
     // Check if node exists before trying to access it
     if (!setIn(node,this->nodes)){
-        cout << "ERROR: Node does not exist in set" << endl;
+        c_log << "ERROR: Node does not exist in set" << '\n';
         return false;
     }
 
@@ -85,13 +85,13 @@ bool DirectedGraph<T>::clearNeighbors(const T& node){
         set<T> noutCopy(this->Nout[node].begin(), this->Nout[node].end());
         for (const T& n : noutCopy){      
             if (!this->removeEdge(node,n)){
-                cout << "ERROR: Failed to remove edge, something went wrong" << endl;
+                c_log << "ERROR: Failed to remove edge, something went wrong" << '\n';
                 return false;
             }          
         }      
         // Check if node has been removed from neighbors map
         if (mapKeyExists(node, this->Nout)){
-            cout << "ERROR: Something went wrong when clearing neighbors" << endl;
+            c_log << "ERROR: Something went wrong when clearing neighbors" << '\n';
             return false;
         }
     }
@@ -103,13 +103,13 @@ template <typename T>
 bool DirectedGraph<T>::clearEdges(void){
     for (T n : this->nodes){
         if (!this->clearNeighbors(n)){
-            cout << "ERROR: Failed to clear neighbors for node" << endl;
+            c_log << "ERROR: Failed to clear neighbors for node" << '\n';
             return false;
         }
     }
 
     if (this->n_edges != 0 || !this->Nout.empty()){
-        cout << "ERROR: Failed to clear edges in graph" << endl;
+        c_log << "ERROR: Failed to clear edges in graph" << '\n';
         return false;
     }
     
@@ -251,15 +251,15 @@ bool DirectedGraph<T>::Rgraph(int R){
 
     if (R > this->n_nodes - 1){ throw invalid_argument("R cannot exceed N-1 (N = the total number of nodes in the Graph).\n"); }
 
-    if (R <= log(this->n_nodes)){ cout << "WARNING: R <= logn and therefore the graph will not be well connected.\n"; }
+    if (R <= log(this->n_nodes)){ c_log << "WARNING: R <= logn and therefore the graph will not be well connected.\n"; }
     
-    if (R == 0){ cout << "WARNING: R is set to 0 and therefore all nodes in the graph are cleared.\n"; }
+    if (R == 0){ c_log << "WARNING: R is set to 0 and therefore all nodes in the graph are cleared.\n"; }
     
     // clear all edges in the graph to create an R random graph anew.
     if (!this->clearEdges())
         return false;
 
-    cout << "Rgraph edges cleared" << endl;
+    c_log << "Rgraph edges cleared" << '\n';
 
     for (T n : this->nodes){            // for each node
         for (int i = 0; i < R; i++){    // repeat R times: sample from set and add until valid
@@ -375,17 +375,17 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){
     if (a < 1) { throw invalid_argument("Parameter a must be >= 1.\n"); }
     
 
-    cout << "Initializing a random R-Regular Directed Graph with out-degree R = " << R << ". . ." << endl;
+    c_log << "Initializing a random R-Regular Directed Graph with out-degree R = " << R << ". . ." << '\n';
     if (this->Rgraph(R) == false)
         return false;
-    cout << "Graph initialized successfully!" << endl;
+    c_log << "Graph initialized successfully!" << '\n';
 
 
-    cout << "Searching for medoid node . . ." << endl;
+    c_log << "Searching for medoid node . . ." << '\n';
     T s = this->medoid();
-    cout << "Medoid node found successfully!" << endl;
+    c_log << "Medoid node found successfully!" << '\n';
 
-    cout << "Finalizing Vamana Index using the Vamana Algorithm . . ." << endl;
+    c_log << "Finalizing Vamana Index using the Vamana Algorithm . . ." << '\n';
     vector<T> perm = permutation(this->nodes);
 
     for (const T& si : perm){
@@ -452,7 +452,7 @@ void DirectedGraph<T>::store(const string& filename) const{
 
     file.close();
 
-    cout << "Graph Instance stored successfully in \"" << filename << '\"' << endl;
+    c_log << "Graph Instance stored successfully in \"" << filename << '\"' << '\n';
 }
 
 // Loads a graph state from the specified file. A Graph instance must already be instantiated with the appropriate distance and isEmpty functions.
@@ -494,5 +494,5 @@ void DirectedGraph<T>::load(const string& filename){
     }
 
     file.close();
-    cout << "Graph Instance loaded successfully from \"" << filename << '\"' << endl;
+    c_log << "Graph Instance loaded successfully from \"" << filename << '\"' << '\n';
 }

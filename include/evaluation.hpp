@@ -16,13 +16,12 @@ void profileVamana(
     map<vector<float>, int> v2id
     ){
     
+    // ignores the SHOULD_OMIT flag. Forces output through cout (if available).
+
     auto startTime = chrono::high_resolution_clock::now();
     // Vamana indexing
     DG.vamanaAlgorithm(L, R, a);
     auto endTime = chrono::high_resolution_clock::now();
-
-    // clear failbit (to change when new cout object)
-    cout.clear();
 
     auto duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime);
 

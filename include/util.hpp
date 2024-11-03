@@ -143,7 +143,7 @@ set<T> closestN(int N, const set<T>& S, T X, function<float(const T&, const T&)>
 
     // check if the set is empty
     if (S.empty()){
-        cout << "WARNING: Set is empty. There exist no neighbors inside the given set.\n";
+        c_log << "WARNING: Set is empty. There exist no neighbors inside the given set.\n";
         return S;
     }
 
@@ -155,7 +155,7 @@ set<T> closestN(int N, const set<T>& S, T X, function<float(const T&, const T&)>
 
     // if N is equal to 0 return the empty set
     if (N == 0){
-        cout << "WARNING: N is 0. Returning the empty set.\n";
+        c_log << "WARNING: N is 0. Returning the empty set.\n";
         set<T> nullset;
         return nullset;
     }
@@ -195,7 +195,7 @@ vector<vector<T>> read_vecs(string file_path, int n_vec){
     vector<vector<T>> vectors;
 
     if (!file.is_open()) {
-        cerr << "Error opening file: " << file_path << endl;
+        cerr << "Error opening file: " << file_path << '\n';
         return vectors; // empty
     }
 
@@ -236,19 +236,19 @@ vector<vector<T>> read_vecs(string file_path, int n_vec){
         dim = 0;
     }
 
-    cout << "Total vectors read: " << cnt << endl;
+    c_log << "Total vectors read: " << cnt << '\n';
 
     // Close the file
     file.close();
 
-    cout << file_path << " read successfully, returning vectors." << endl;
+    c_log << file_path << " read successfully, returning vectors." << '\n';
     return vectors;
 }
 
 // prints a vector
 template <typename T>
 void printVector(const vector<T>& v){
-    cout << v;  // overload exists for vector
+    c_log << v;  // overload exists for vector
 }
 
 // Prints all vectors stored in any iterable container
@@ -285,7 +285,6 @@ float k_recall(const Container& c1, const Container& c2){
 // See use example in implementation.
 template <typename Func, typename ...Args>
 double measureTime(const string name, Func func, Args&&... args){
-    OMIT_OUTPUT;
 
     // https://stackoverflow.com/questions/65900218/template-that-measures-elapsed-time-of-any-function
     // https://stackoverflow.com/questions/22387586/measuring-execution-time-of-a-function-in-c
