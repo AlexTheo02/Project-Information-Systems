@@ -37,22 +37,30 @@ template <typename T>
 class DirectedGraph{
 
     private:
-    int n_edges;                            // number of edges present in the graph
-    int n_nodes;                            // number of nodes present in the graph
-    set<T> nodes;                           // a set containing all the nodes in the graph
-    vector<T> _nodes;                       // vector representation of nodes used temporarily for medoid (if parallel approach is chosen)
-    T _medoid;                              // used to avoid recalculation of medoid if we want to access it more than once
-    map<T, set<T>> Nout;                    // key: node, value: set of outgoing neighbors 
-    function<float(const T&, const T&)> d;  // Graph's distance function
-    function<bool(const T&)> isEmpty;       // typename T valid check
+        int n_edges;                            // number of edges present in the graph
+        int n_nodes;                            // number of nodes present in the graph
+        set<T> nodes;                           // a set containing all the nodes in the graph
+        vector<T> _nodes;                       // vector representation of nodes used temporarily for medoid (if parallel approach is chosen)
+        T _medoid;                              // used to avoid recalculation of medoid if we want to access it more than once
+        map<T, set<T>> Nout;                    // key: node, value: set of outgoing neighbors 
+        function<float(const T&, const T&)> d;  // Graph's distance function
+        function<bool(const T&)> isEmpty;       // typename T valid check
 
+        // implements medoid function using serial programming.
+        const T _serial_medoid(void);
+
+        // Implements medoid function using parallel programming with threads. Concurrency is set by the global constant N_THREADS.
+        const T _parallel_medoid(void);
+
+        // Thread function for parallel medoid. Work inside the range defined by [start_index, end_index). Update minima by reference for the merging of the results.
+        void _thread_medoid_fn(int start_index, int end_index, T& local_minimum, float& local_dmin);
     
     public:
 
         // Constructor: Initialize an empty graph
         DirectedGraph(function<float(const T&, const T&)> distance_function, function<bool(const T&)> is_Empty = alwaysValid<T>, vector<T> values = {}) {
             this->n_edges = 0;
-            this->n_nodes = values.size();
+            this->n_nodes = 0;
             this->d = distance_function;
             this->isEmpty = is_Empty;
             this->_medoid.clear();
@@ -93,15 +101,6 @@ class DirectedGraph{
 
         // Calculates the medoid of the nodes in the graph based on the given distance function
         const T medoid(void);
-
-        // implements medoid function using serial programming.
-        const T _serial_medoid(void);
-
-        // Implements medoid function using parallel programming with threads. Concurrency is set by the global constant N_THREADS.
-        const T _parallel_medoid(void);
-
-        // Thread function for parallel medoid. Work inside the range defined by [start_index, end_index). Update minima by reference for the merging of the results.
-        void _thread_medoid_fn(int start_index, int end_index, T& local_minimum, float& local_dmin);
 
         // creates a random R graph with the existing nodes. Return TRUE if successful, FALSE otherwise
         bool Rgraph(int R);

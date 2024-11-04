@@ -29,12 +29,19 @@ using namespace std;
 //
 // For your specified datatype T, you should have the ostream << and istream >> operators overloaded. 
 
+// Default values
+#define DEFAULT_L 100
+#define DEFAULT_R 14
+#define DEFAULT_a 1.0f
+#define DEFAULT_k 100
+#define DEFAULT_N_THREADS 1
+#define DEFAULT_SHOULD_OMIT true
 
 // Some functions are accelerated by leveraging parallelism using N_THREADS threads (eg. DirectedGraph::medoid).
-#define N_THREADS 8 
+static int N_THREADS = DEFAULT_N_THREADS;
 
-// global constant on whether to omit output on tests. Set to non-zero to omit outputs, 0 to allow them.
-#define SHOULD_OMIT 1
+// global flag on whether to omit output on tests. Set to non-zero to omit outputs, 0 to allow them.
+static bool SHOULD_OMIT = DEFAULT_SHOULD_OMIT;
 
 // Custom Cout-like Object that respects the SHOULD_OMIT flag on whether to print or not.
 // Cannot be used with endl. Please use << '\n'; instead of << endl;

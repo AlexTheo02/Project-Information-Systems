@@ -5,7 +5,7 @@ SHELL := /bin/bash
 CC = g++
 
 # Compiler Flags
-CFLAGS = -I./include
+CFLAGS = -I./include -O2
 
 # Linker Flags
 LDFLAGS = -pthread -lm -std=c++17
@@ -54,15 +54,15 @@ DEPENDENCIES_MAIN = $(SRC_MAIN) $(INCLUDE_MAIN)
 EX_MAIN = $(BIN_DIR)/$(MAIN)
 
 # Default target
-default: dirs $(EX_MAIN)
+default: clean dirs $(EX_MAIN)
 
 dirs:
 	@mkdir -p bin
 	@mkdir -p build
 
 run:
-	dirs
-	$(EX_MAIN)
+	make
+	$(EX_MAIN) -L 100 -R 14 -a 1 -k 100 -P 8
 
 all: clean dirs $(EX_MAIN)
 	@echo "Executing $(EX_MAIN):"

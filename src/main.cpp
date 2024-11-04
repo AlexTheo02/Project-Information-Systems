@@ -1,9 +1,45 @@
 #include "interface.hpp"
 using namespace std;
 
+static int L;
+static int R;
+static float a;
+static int k;
+
+void parseArgs(int argc, char*argv[]){
+
+    // Check number of arguments
+    if (argc > 12){ throw invalid_argument("Invalid number of command line arguments\n"); }
+
+    // Load default values
+    L = DEFAULT_L;
+    R = DEFAULT_R;
+    a = DEFAULT_a;
+    k = DEFAULT_k;
+    N_THREADS = DEFAULT_N_THREADS;
+    SHOULD_OMIT = DEFAULT_SHOULD_OMIT;
+
+    // Iterate through given arguments
+    string currentArg,nextArg;
+
+    for (int i=1; i<argc; i++){
+        currentArg = argv[i];
+
+        if (currentArg == "-L"){ L = atoi(argv[++i]); }
+        else if (currentArg == "-R"){ R = atoi(argv[++i]); }
+        else if (currentArg == "-a"){ a = atof(argv[++i]); }
+        else if (currentArg == "-k"){ k = atoi(argv[++i]); }
+        else if (currentArg == "-P"){ N_THREADS = atoi(argv[++i]); }
+        else if (currentArg == "--debug"){ SHOULD_OMIT = false; }
+        else { throw invalid_argument("Invalid command line arguments"); }
+    }
+}
 
 
-int main () {
+int main (int argc, char* argv[]) {
+
+    // Parse command line arguments
+    parseArgs(argc, argv);
 
     // Instantiate a DirectedGraph object DG
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
@@ -28,10 +64,13 @@ int main () {
         DG.createNode(v);
     }
 
-    int L = 100;
-    int R = 14;
-    float a = 1.0f;
-    float k = 100;
+    cout << "Running main program with:" << endl;
+    cout << "L: " << L << endl;
+    cout << "R: " << R << endl;
+    cout << "a: " << a << endl;
+    cout << "k: " << k << endl;
+    cout << "Number of threads: " << N_THREADS << endl;
+    if (!SHOULD_OMIT) { cout << "Debug mode" << endl; }
 
     profileVamana(L,R,a,k,DG,vectors,queries,groundtruth,v2id); // creating the vamana index and querying the groundtruths
 

@@ -31,8 +31,8 @@ void profileVamana(
 
     cout << "Vamana Index Created!" << endl;
 
+    // Initialize total recall variable
     float total_recall = 0;
-
 
     // get the already calculated medoid
     vector<float> medoid = DG.medoid();
@@ -40,18 +40,21 @@ void profileVamana(
     // Greedy search for all queries with start node the medoid of all nodes (already calculated)
     for (int i=0; i<queries.size(); i++){
 
+        // Get neighbors for i-th query
         vector<set<vector<float>>> GS_return =  DG.greedySearch(medoid, queries[i], k, L);
-
         set<vector<float>> neighbors = GS_return[0];
 
+        // Initialize ids vector for comparison with groundtruth
         vector<int> neighborIds;
 
         for (vector<float> v : neighbors){
             neighborIds.push_back(v2id[v]);
         }
 
+        // Calculate the current recall and add it to the sum of all recall scores
         total_recall += k_recall(neighborIds, groundtruth[i]);
 
     }
+    // Print out average recall score
     cout << "FINISHED!\nAverage recall score is: " << total_recall / queries.size() << endl;
 }
