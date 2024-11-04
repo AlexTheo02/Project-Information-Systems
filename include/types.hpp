@@ -3,7 +3,7 @@
 #include <iostream>
 #include <iterator>
 #include <cstdlib>
-#include <unordered_map>
+#include <map>
 #include <vector>
 #include <set>
 #include <cmath>
@@ -11,40 +11,65 @@
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
+#include <thread>
+#include <list>
 
 #include "util.hpp"
 
 using namespace std;
 
+// This file includes forward declarations for type definitions.
+// Their implementations are on a separate .hpp file
+// They are all linked together in the interface.hpp file
+
 // Directed Graph Class Template:
 // This implementation of a Directed Graph Class makes use of dictionaries/maps for adjacency lists.
 // To instantiate such a Directed Graph Object, you will need to specify the Content Type T, as well as provide:
-// 1. Distance Function: T x T -> float => float distance_function(T,T)
-// 2. (Optional) Content type T Valid Check Function: T -> bool => bool isEmpty(T) (Default is an AlwaysValid function that returns true for any input)
+// 1. Distance Function: T x T -> float <=> float distance_function(T,T)
+// 2. (Optional) Content type T Valid Check Function: T -> bool <=> bool isEmpty(T) (Default is an AlwaysValid function that returns false for any input)
 //
-// IMPORTANT: You are also required to specialize the std namespace with an appropriate implementation of std::hash<T> for your specific content type.
-// see more on specializing std::hash<T> on: https://en.cppreference.com/w/cpp/utility/hash/operator()
+// IMPORTANT: If you are planning to use DirectedGraph::store and DirectedGraph::load methods to save an instance of your DirectedGraph class,
+// you must have the operators "<<" and ">>" overloaded FOR I/O OPERATIONS for your specific content type T.
+// See more on: https://stackoverflow.com/questions/476272/how-can-i-properly-overload-the-operator-for-an-ostream
+//              https://stackoverflow.com/questions/69803296/overloading-istream-operator
+// Such overloads already exist in the config.hpp file. More instructions for the implementation can be found there. 
 template <typename T>
 class DirectedGraph{
 
     private:
-    int n_edges;                        // number of edges present in the graph
-    int n_nodes;                        // number of nodes present in the graph
-    set<T> nodes;                       // a set containing all the nodes in the graph
-    unordered_map<T, set<T>> Nout;      // key: node, value: set of outgoing neighbors 
-    unordered_map<T, set<T>> Nin;       // key: node, value: set of incoming neighbors
-    function<float(T, T)> d;            // Graph's distance function
-    function<bool(T)> isEmpty;          // typename T valid check
+        int n_edges;                            // number of edges present in the graph
+        int n_nodes;                            // number of nodes present in the graph
+        set<T> nodes;                           // a set containing all the nodes in the graph
+        vector<T> _nodes;                       // vector representation of nodes used temporarily for medoid (if parallel approach is chosen)
+        T _medoid;                              // used to avoid recalculation of medoid if we want to access it more than once
+        map<T, set<T>> Nout;                    // key: node, value: set of outgoing neighbors 
+        function<float(const T&, const T&)> d;  // Graph's distance function
+        function<bool(const T&)> isEmpty;       // typename T valid check
+
+        // implements medoid function using serial programming.
+        const T _serial_medoid(void);
+
+        // Implements medoid function using parallel programming with threads. Concurrency is set by the global constant N_THREADS.
+        const T _parallel_medoid(void);
+
+        // Thread function for parallel medoid. Work inside the range defined by [start_index, end_index). Update minima by reference for the merging of the results.
+        void _thread_medoid_fn(int start_index, int end_index, T& local_minimum, float& local_dmin);
     
     public:
 
         // Constructor: Initialize an empty graph
-        DirectedGraph(function<float(T, T)> distance_function, function<bool(T)> is_Empty = alwaysValid<T>) {
+        DirectedGraph(function<float(const T&, const T&)> distance_function, function<bool(const T&)> is_Empty = alwaysValid<T>, vector<T> values = {}) {
             this->n_edges = 0;
             this->n_nodes = 0;
             this->d = distance_function;
             this->isEmpty = is_Empty;
-            cout << "Graph created!" << endl;
+            this->_medoid.clear();
+            this->_nodes.clear();
+            c_log << "Graph created!" << '\n';
+
+            for (const T& value : values){
+                this->createNode(value);
+            }
         }
 
         // Return a set of all Nodes in the graph
@@ -57,10 +82,7 @@ class DirectedGraph{
         const int& get_n_nodes() const { return this->n_nodes; }
 
         // Return Nout map
-        const unordered_map<T, set<T>>& get_Nout() const { return this->Nout; }
-
-        // Return Nin map
-        const unordered_map<T, set<T>>& get_Nin() const { return this->Nin; }
+        const map<T, set<T>>& get_Nout() const { return this->Nout; }
 
         // Creates a node, adds it in the graph and returns it
         typename set<T>::iterator createNode(const T& value);
@@ -68,14 +90,17 @@ class DirectedGraph{
         // Adds an directed edge (from->to). Updates outNeighbors(from) and inNeighbors(to)
         bool addEdge(const T& from, const T& to);
 
-        // remove edge
+        // Remove edge
         bool removeEdge(const T& from, const T& to);
 
-        // clears all neighbors for a specific node
+        // Clears all neighbors for a specific node
         bool clearNeighbors(const T& node);
 
-        // clears all edges in the graph
-        bool clearEdges();
+        // Clears all edges in the graph
+        bool clearEdges(void);
+
+        // Calculates the medoid of the nodes in the graph based on the given distance function
+        const T medoid(void);
 
         // creates a random R graph with the existing nodes. Return TRUE if successful, FALSE otherwise
         bool Rgraph(int R);
@@ -85,7 +110,7 @@ class DirectedGraph{
         const vector<set<T>> greedySearch(const T& s, T xq, int k, int L);
 
         // Prunes out-neighbors of node p up until a minimum threshold R of out-neighbors for node p, based on distance criteria with parameter a.
-        void robustPrune(T p, set<T> V, float a, int R);
+        void robustPrune(const T& p, set<T> V, float a, int R);
 
         // Transforms the graph into a Directed Graph such that it makes the finding of nearest neighbors easier.
         // Parameters:
@@ -93,331 +118,13 @@ class DirectedGraph{
         // + L the area parameter for searching (L >= k >= 1, where k is the desired number of neighbors)
         // + a the parameter for robust pruning (a >=1)
         bool vamanaAlgorithm(int L, int R, float a);
+
+
+        // Stores the current state of a graph into the specified file.
+        // IMPORTANT: makes use of overloaded << operator to store the graph into a file.
+        void store(const string& filename) const;
+
+        // Loads a graph state from the specified file. A Graph instance must already be instantiated with the appropriate distance and isEmpty functions.
+        // IMPORTANT: makes use of overloaded >> operator to load the graph from a file
+        void load(const string& filename);
 };
-
-// Implementation of already declared Graph Template: MAIN FUNCTIONALITY ----------------------------------- //
-
-// Creates a node, adds it in the graph and returns it
-template<typename T>
-typename set<T>::iterator DirectedGraph<T>::createNode(const T& value){
-    // https://cplusplus.com/reference/set/set/insert/ - return values of insert
-
-    // Add the value to graph's set of nodes
-    pair<typename set<T>::iterator, bool> ret;
-    ret = this->nodes.insert(value);
-
-    // Increment the number of nodes in graph (if insertion was successful)
-    if (ret.second)
-        this->n_nodes++;
-    
-    // return an iterator to the inserted element (or the already existing one)
-    return ret.first;
-}
-
-// Adds a directed edge (from->to). Updates outNeighbors(from) and inNeighbors(to)
-template <typename T>
-bool DirectedGraph<T>::addEdge(const T& from, const T& to){
-    // At least one of the nodes is not present in nodeSet
-    if (!setIn(from, this->nodes) || !setIn(to, this->nodes)){
-        cout << "Node is not present in nodeSet" << endl;
-        return false;
-    }
-
-    // Verify that both nodes exist in nodeset
-    if (from == to)
-        return false;
-
-    this->Nout[from].insert(to);
-    this->Nin[to].insert(from);
-    this->n_edges++;
-    return true;
-}
-
-// remove edge
-template <typename T>
-bool DirectedGraph<T>::removeEdge(const T& from, const T& to){
-
-    // Check if keys exist before accessing them (and removing them)
-    if (mapKeyExists(from, this->Nout) && mapKeyExists(to, this->Nin)) {
-        // Key exists, access the value, if successfully removed, return true
-        set<T>& nout = this->Nout[from];
-        set<T>& nin = this->Nin[to];
-        if (nout.erase(to) && nin.erase(from)){
-            // Check if outgoing neighbors are empty, if so, remove entry from unordered map
-            if (nout.empty()){
-                this->Nout.erase(from);
-            }
-
-            // Check if incoming neighbors are empty, if so, remove entry from unordered map
-            if (nin.empty()){
-                this->Nin.erase(to);
-            }
-            
-            // Decrement the number of edges in graph
-            this->n_edges--;
-            return true;
-        }
-    }
-    cout << "WARNING: Trying to remove non-existing edge.\n" << endl;
-    return false;
-}
-
-// clears all neighbors for a specific node
-template <typename T>
-bool DirectedGraph<T>::clearNeighbors(const T& node){
-    // Check if node exists before trying to access it
-    if (!setIn(node,this->nodes)){
-        cout << "ERROR: Node does not exist in set" << endl;
-        return false;
-    }
-
-    // Node has outgoing neighbors
-    if (mapKeyExists(node, this->Nout)){
-        // For each outgoing neighbor, remove the edge
-        set<T> noutCopy(this->Nout[node].begin(), this->Nout[node].end());
-        for (const T& n : noutCopy){
-            if (!this->removeEdge(node,n)){
-                cout << "ERROR: Failed to remove edge, something went wrong" << endl;
-                return false;
-            }
-        }
-        // Check if node has been removed from neighbors map
-        if (mapKeyExists(node, this->Nout)){
-            cout << "ERROR: Something went wrong when clearing neighbors" << endl;
-            return false;
-        }
-    }
-    return true;
-}
-
-// clears all edges in the graph
-template <typename T>
-bool DirectedGraph<T>::clearEdges(){
-    for (T n : this->nodes){
-        if (!this->clearNeighbors(n)){
-            cout << "ERROR: Failed to clear neighbors for node" << endl;
-            return false;
-        }
-    }
-
-    if (this->n_edges != 0 || !this->Nout.empty() || !this->Nin.empty()){
-        cout << "ERROR: Failed to clear edges in graph" << endl;
-        return false;
-    }
-    
-    return true;
-}
-
-
-// Implementation of already declared Graph Template: VAMANA INDEXING DEPENDENCIES ------------------------- //
-
-
-// ------------------------------------------------------------------------------------------------ RGRAPH
-
-// creates a random R graph with the existing nodes. Return TRUE if successful, FALSE otherwise
-template <typename T>
-bool DirectedGraph<T>::Rgraph(int R){
-
-    if (R < 0) { throw invalid_argument("R must be a positive integer.\n"); }
-
-    if (R > this->n_nodes - 1){ throw invalid_argument("R cannot exceed N-1 (N = the total number of nodes in the Graph).\n"); }
-
-    if (R <= log(this->n_nodes)){ cout << "WARNING: R <= logn and therefore the graph will not be well connected.\n"; }
-    
-    if (R == 0){ cout << "WARNING: R is set to 0 and therefore all nodes in the graph are cleared.\n"; }
-    
-    // clear all edges in the graph to create an R random graph anew.
-    if (!this->clearEdges())
-        return false;
-
-    set<vector<float>> nodesCopy(this->nodes.begin(), this->nodes.end());
-    for (T n : nodesCopy){
-        
-        // Copy of nodes in the graph
-        set<T> remaining(nodesCopy.begin(), nodesCopy.end());
-        // Remove self from remaining nodes
-        if (remaining.erase(n) <= 0){
-            cout << "ERROR: Failed to remove self from remaining nodes\n" << endl;
-            return false;
-        }
-
-        for (int i = 0; i < R; i++){
-            
-            T nr;
-
-            nr = sampleFromSet(remaining);
-            
-            this->addEdge(n,nr); // add the node as neighbor
-            remaining.erase(nr);
-        }
-    }
-    return true;
-}
-
-// ------------------------------------------------------------------------------------------------ GREEDY SEARCH
-
-// Greedily searches the graph for the k nearest neighbors of query xq (in an area of size L), starting the search from the node s.
-// Returns a set with the k closest neighbors (returned_vector[0]) and a set of all visited nodes (returned_vector[1]).
-template <typename T>
-const vector<set<T>> DirectedGraph<T>::greedySearch(const T& s, T xq, int k, int L) {
-
-    // argument checks
-    if (this->isEmpty(s)){ throw invalid_argument("No start node was provided.\n"); }
-
-    if (!setIn(s, this->nodes)) { throw invalid_argument("Starting node not in nodeSet.\n"); }
-
-    if (this->isEmpty(xq)){ throw invalid_argument("No query was provided.\n"); }
-
-    if (k <= 0){ throw invalid_argument("K must be greater than 0.\n"); }
-
-    if (L < k){ throw invalid_argument("L must be greater or equal to K.\n"); }
-
-
-    // Create empty sets
-    set<T> Lc,V;
-
-    // Initialize Lc with s
-    Lc.insert(s);
-    
-    set<T> diff;
-    while(!(diff = setSubtraction(Lc,V)).empty()){
-        T pmin = myArgMin(diff, xq, this->d);
-
-        // If node has outgoing neighbors
-        if (mapKeyExists(pmin, this->Nout)){
-            Lc = setUnion(Lc, this->Nout[pmin]);
-        }
-        V.insert(pmin);
-    }
-
-    if (Lc.size() > L){
-        Lc = closestN(L, Lc, xq, this->d);    // function: find N closest points from a specific Xq from given set and return them
-    }
-
-    vector<set<T>> ret;
-    
-    ret.insert(ret.begin(), closestN(k, Lc, xq, this->d));
-    ret.insert(ret.end(), V);
-
-    return ret;
-}
-
-// ------------------------------------------------------------------------------------------------ ROBUST PRUNE
-
-// Prunes out-neighbors of node p up until a minimum threshold R of out-neighbors for node p, based on distance criteria with parameter a.
-template <typename T>
-void DirectedGraph<T>::robustPrune(T p, set<T> V, float a, int R){
-
-    // Argument Checks
-    if (this->isEmpty(p)) { throw invalid_argument("No node was provided.\n"); }
-
-    if (!setIn(p, this->nodes)) { throw invalid_argument("Node not in nodeSet\n"); };
-
-    if (a < 1) { throw invalid_argument("Parameter a must be >= 1.\n"); }
-
-    if (R <= 0) {throw invalid_argument("Parameter R must be > 0.\n"); }
-
-
-    if (mapKeyExists(p, this->Nout))
-        V = setUnion(V, this->Nout[p]);
-    
-    V.erase(p);
-    T p_opt;
-    
-    while (!V.empty()){
-        p_opt = myArgMin(V, p, this->d);
-        
-        this->Nout[p].insert(p_opt);
-
-        if (this->Nout[p].size() == R)
-            break;
-        
-        // n = p', p_opt = p*
-        set<T> copyV(V.begin(), V.end());
-        for (T n : copyV){
-            if ( (a * this->d(p_opt, n)) <= this->d(p, n)){
-                V.erase(n);
-            }
-        }
-    }
-}
-
-// ------------------------------------------------------------------------------------------------ VAMANA GRAPH
-
-// Transforms the graph into a Directed Graph such that it makes the finding of nearest neighbors easier.
-// Parameters:
-// + R the out-degree of each node in the graph (R >= 1)
-// + L the area parameter for searching (L >= k >= 1, where k is the desired number of neighbors)
-// + a the parameter for robust pruning (a >=1)
-template <typename T>
-bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){  // should "a" be added as a parameter?
-
-
-    // check parameters if they are in legal range, for example R > 0 
-
-    if (R <= 0){ throw invalid_argument("R must be a positive, non-zero integer.\n"); }
-
-    if (L < 1) { throw invalid_argument("Parameter L must be >= 1.\n"); }
-
-    if (a < 1) { throw invalid_argument("Parameter a must be >= 1.\n"); }
-    
-
-    if (this->Rgraph(R) == false)    // Initializing graph to a random R-Regular Directed Graph
-        return false;
-    
-    // ERROR CHECK
-    cout << "Graph randomized successfully with out-degree: " << R << endl;
-
-    T s = medoid(this->nodes, this->d);
-
-    cout << "Medoid done" << endl;
-
-    vector<T> perm = permutation(this->nodes);
-
-    cout << "Permutation done" << endl;
-
-    for (T si : perm){
-        cout << "Greedy searching 379" << endl;
-        vector<set<T>> rv = greedySearch(s, si, 1, L);
-        cout << "381" << endl;
-        set<T> Lc = rv[0];
-        cout << "383" << endl;
-        set<T> V = rv[1];
-        cout << "Robust pruning" << endl;
-
-        this->robustPrune(si, V, a, R);
-        cout << "Robust prune done" << endl;
-
-        set<T> siNoutCopy;
-        // Create a copy of s1 nout neighbors
-        if (mapKeyExists(si, this->Nout)){
-            siNoutCopy.insert(this->Nout[si].begin(), this->Nout[si].end());
-        }
-
-        for (T j : siNoutCopy){
-            
-            set<T> noutJsi;
-            cout << "396" << endl;
-            if (mapKeyExists(j, this->Nout)){   // if node j has no neighbors the set is the empty set U {σ(i)}
-                noutJsi.insert(siNoutCopy.begin(), siNoutCopy.end());
-            }
-            
-            cout << "401" << endl;
-            noutJsi.insert(si);
-            cout << "403" << endl;
-
-            if (noutJsi.size() > R){
-                cout << "Robust prune 406" << endl;
-                this->robustPrune(j, noutJsi, a, R);
-                cout << "Robust prune done 408" << endl;
-            }
-            
-            else{
-                cout << "412" << endl;
-                this->addEdge(j, si);
-                cout << "414" << endl;
-            }
-        }
-    }
-    return true;
-}

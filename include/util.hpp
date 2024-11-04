@@ -1,31 +1,35 @@
 #pragma once
 
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <vector>
 #include <cmath>
 #include <algorithm>
 #include <functional>
-#include <unordered_map>
+#include <map>
 #include <set>
 #include <cstdlib>
 #include <string>
 #include <cstring>
 #include <random>
+#include <chrono>
+#include <utility>
+#include <type_traits>
+#include <list>
+
+#include "config.hpp"
 
 using namespace std;
 
-// global constant on whether to omit output on tests. Set to non-zero to omit outputs, 0 to allow them.
-#define SHOULD_OMIT 1
-
-// Checks with the SHOULD_OMIT flag on whether to omit or allow output in the specific scope.
-// https://stackoverflow.com/questions/30184998/how-to-disable-cout-output-in-the-runtime
-#define OMIT_OUTPUT if (SHOULD_OMIT) cout.setstate(ios_base::failbit)
+// This file contains several independent utility function templates.
+// Other .hpp files use these functions internally, but they can be used independently.
 
 
 // calculates the euclidean distance between two containers of the same dimension that its elements can be accessed with the [ ] operator.
 template <typename T>
 float euclideanDistance(const T& t1, const T& t2){
+
     int dim1 = t1.size();
     int dim2 = t2.size();
 
@@ -35,10 +39,13 @@ float euclideanDistance(const T& t1, const T& t2){
     
     float sum = 0.0f;
 
-    for (int i = 0; i < dim1; i++)
-        sum += pow((t1[i] - t2[i]), 2);
+    for (int i = 0; i < dim1; i++){
+        float diff = t1[i] - t2[i];
+        sum += diff * diff;         // better performance than pow(diff,2)
+    }
 
-    return sqrt(sum);
+    return sum; 
+    // return sqrt(sum);    // because we only care about comparisons, sqrt is not needed [x1 < x2 <=> sqrt(x1) < sqrt(x2), ∀ x1,x2 > 0]
 }
 
 // Wrapper function that checks for existence of element in the set
@@ -49,23 +56,26 @@ bool setIn(const T& t, const set<T>& s){
 
 // Wrapper function that checks for existence as key in an unordered map
 template <typename T1, typename T2>
-bool mapKeyExists(const T1& key, const unordered_map<T1, T2>& map){
+bool mapKeyExists(const T1& key, const map<T1, T2>& map){
     return (map.find(key) != map.end());
 }
 
-// Subtract set2 from set1
-// https://stackoverflow.com/questions/283977/c-stl-set-difference
+// Subtract set2 from set1. Returns a new set.
 template <typename T>
 set<T> setSubtraction(const set<T>& set1, const set<T>& set2){
-    set<T> result;
-    set_difference(set1.begin(), set1.end(), set2.begin(), set2.end(), inserter(result, result.end()));
+    set<T> result = set1;
+
+    for (auto& elem : set2){
+        result.erase(elem);
+    }
     return result;
 }
 
-// Joins set1 with set1
-// source corresponding to setSubtraction
+// Joins set1 with set1. Returns a new set.
 template <typename T>
 set<T> setUnion(const set<T>& set1, const set<T>& set2){
+    // https://stackoverflow.com/questions/283977/c-stl-set-difference - adapted for setUnion
+
     set<T> result;
     set_union(set1.begin(), set1.end(), set2.begin(), set2.end(), inserter(result, result.end()));
     return result;
@@ -87,67 +97,37 @@ T sampleFromSet(const set<T>& s){
     return *it;                     // dereferencing the iterator to return the pointed element
 }
 
-// Returns the medoid of the set s according to metric distance d
-template<typename T>
-T medoid(const set<T>& s, function<float(T, T)> d){
-
-    // empty set case
-    if (s.empty()){ throw invalid_argument("Set is empty.\n"); }
-
-    // if |s| = 1 or 2, return the first element of the set (metric distance is symmetric)
-    if (s.size() <= 2){ return *(s.begin()); }
-
-
-    T med;
-    float dmin = numeric_limits<float>::max();
-
-    for (const T& t : s){
-        float dsum = 0;
-
-        for (const T& t_other : s)
-            dsum += d(t, t_other);  // we don't need to check if the other element is the same, because one's distance to itself is zero
-
-        // updating best medoid if current total distance is smaller than the minimum total distance yet
-        if (dsum < dmin){
-            dmin = dsum;
-            med = t;
-        }
-    }
-    return med;
-}
-
-
 // returns a vector of a random permutation of the elements beloning in the set s
 template<typename T>
-const vector<T> permutation(const set<T>& s){
-
-    // https://stackoverflow.com/questions/6926433/how-to-shuffle-a-stdvector
-
-    // transforming the set into a vector
+vector<T> permutation(const set<T>& s) {
+    // Transforming the set into a vector
     vector<T> vec(s.begin(), s.end());
 
-    // shuffling the vector
-    auto rd = random_device {};
-    auto rng = default_random_engine { rd() };
+    // Shuffling the vector
+    random_device rd;
+    default_random_engine rng(rd());  // Seed the engine with rd()
+
     shuffle(vec.begin(), vec.end(), rng);
 
     return vec;
 }
 
-
-// Returns the node from given nodeSet with the minimum distance from a specific vector
+// Returns the node from given nodeSet with the minimum distance from a specific point in the nodespace (node is allowed to not exist in the graph)
 template<typename T>
-T myArgMin(set<T> nodeSet, T vec, function<float(T, T)> d){
+T myArgMin(const set<T>& nodeSet, T t, function<float(const T&, const T&)> d, function<bool(const T&)> isEmpty){
 
     if (nodeSet.empty()) { throw invalid_argument("Set is Empty.\n"); }
 
-    if (vec.empty()) { throw invalid_argument("Query container is empty.\n"); }
+    if (isEmpty(t)) { throw invalid_argument("Query container is empty.\n"); }
+
+    if (nodeSet.size() == 1)
+        return *nodeSet.begin();
 
     float minDist = numeric_limits<float>::max(), dist;
     T minNode;
 
-    for (T n : nodeSet){
-        dist = d(n, vec);
+    for (const T& n : nodeSet){
+        dist = d(n, t);
        
         if (dist <= minDist){    // New minimum distance found
             minNode = n;
@@ -157,26 +137,25 @@ T myArgMin(set<T> nodeSet, T vec, function<float(T, T)> d){
     return minNode;
 }
 
-
 // Retains the N closest elements of S to X based on distance d
 template<typename T>
-set<T> closestN(int N, const set<T>& S, T X, function<float(T, T)> d){
+set<T> closestN(int N, const set<T>& S, T X, function<float(const T&, const T&)> d, function<bool(const T&)> isEmpty){
 
     // check if the set is empty
     if (S.empty()){
-        cout << "WARNING: Set is empty. There exist no neighbors inside the given set.\n";
+        c_log << "WARNING: Set is empty. There exist no neighbors inside the given set.\n";
         return S;
     }
 
     // check if the vector is empty
-    if (X.empty()) { throw invalid_argument("Query X is empty.\n"); }
+    if (isEmpty(X)) { throw invalid_argument("Query X is empty.\n"); }
 
     // check if N is a valid number (size of set > N > 0)
     if (N < 0){ throw invalid_argument("N must be greater than 0.\n"); } 
 
     // if N is equal to 0 return the empty set
     if (N == 0){
-        cout << "WARNING: N is 0. Returning the empty set.\n";
+        c_log << "WARNING: N is 0. Returning the empty set.\n";
         set<T> nullset;
         return nullset;
     }
@@ -185,25 +164,25 @@ set<T> closestN(int N, const set<T>& S, T X, function<float(T, T)> d){
     if(S.size() < N)
         return S;
 
-    // transform the set to a vector
+    // transform the set to a vector for partitioning around a pivot
     vector<T> Svec(S.begin(), S.end());
 
+    // partition the vector based on the distance from point X up around the N-th element
+    nth_element(Svec.begin(), Svec.begin() + N, Svec.end(),
+                [X, d] (T p1, T p2) {return (d(X, p1) < d(X, p2));});
+                // lambda(p1,p2) = determines which of the two points is closest to X given distance metric d.
+
+    // the vector after the use of nth_element has the following properties:
+    // the N-th element is in the position that it would've been if the vector was sorted in its entirety
+    // elements before the N-th element are < than the N-th element, and elements after the N-th element are > than the N-th element. (< and > defined by compare function)
+    // the elements in the left and right subvectors are not themselves sorted, but for this task we don't need them sorted. 
+    // https://en.cppreference.com/w/cpp/algorithm/nth_element
+
     // keep N first
-    set<T> closest_nodes;
-
-    // sort the vector based on the distance from point X
-    sort(Svec.begin(), Svec.end(),
-        [X, d] (T p1, T p2) {return (d(X, p1) < d(X, p2));});
-        // lambda(p1,p2) = determines which of the two points is closest to X given distance metric d.
-
-    
-    for (int i = 0; i < N && i < Svec.size(); i++){
-        closest_nodes.insert(Svec[i]);
-    }
+    set<T> closest_nodes(Svec.begin(), Svec.begin() + N);
 
     return closest_nodes;
 }
-
 
 // Returns a vector of vectors from specified .<f|i|b>vecs file
 template <typename T>
@@ -216,7 +195,7 @@ vector<vector<T>> read_vecs(string file_path, int n_vec){
     vector<vector<T>> vectors;
 
     if (!file.is_open()) {
-        cerr << "Error opening file: " << file_path << endl;
+        cerr << "Error opening file: " << file_path << '\n';
         return vectors; // empty
     }
 
@@ -257,67 +236,102 @@ vector<vector<T>> read_vecs(string file_path, int n_vec){
         dim = 0;
     }
 
-    cout << "Total vectors read: " << cnt << endl;
+    c_log << "Total vectors read: " << cnt << '\n';
 
     // Close the file
     file.close();
 
-    cout << file_path << " read successfully, returning vectors." << endl;
+    c_log << file_path << " read successfully, returning vectors." << '\n';
     return vectors;
 }
 
-// always true function for isEmpty default argument
-template<typename T>
-bool alwaysValid(const T& t) { return true; }
-
-template<typename T>
-bool vectorEmpty(const vector<T>& v){ return v.empty(); }
-
-// User Requirement: implement the std::hash<T> for the specific T to be used.
-// In this scenario, Content Type of graph T is a vector<T2>, where T2 can be anything already implemented (or expanded) in the std::hash
-// T2 is the inner type (that inside of the vector: int, float, ..., any other type that std::hash<T> has been expanded for)
-namespace std {
-    // https://en.cppreference.com/w/cpp/container/unordered_map - unordered map hash defaults to std::hash => specialize for given type.
-    // https://stackoverflow.com/questions/10405030/c-unordered-map-fail-when-used-with-a-vector-as-key - Hash Function for vectors.
-    template <typename T2>
-        class hash<vector<T2>>{
-        public:
-            size_t operator()(const vector<T2>& t) const{
-
-                size_t ret = t.size();
-                for (const auto& v : t) {
-                    ret ^=  hash<T2>()(v) + 0x9e3779b9 + (ret << 6) + (ret >> 2);
-                }
-                return ret;
-            }
-    };
-};
-
-
 // prints a vector
 template <typename T>
-void printVector(vector<T> v){
-    cout << "<";
-    for (int i=0; i<v.size(); i++){
-        cout << v[i];
-        if (i < v.size() -1){
-            cout << ", ";
-        }
-    }
-    cout << ">" << endl;
+void printVector(const vector<T>& v){
+    c_log << v;  // overload exists for vector
 }
 
 // Prints all vectors stored in any iterable container
 template <typename T>
-void printVectors(T vs){
-    for (auto& current : vs){   // auto type is vector<ContentType>, int,float,...
-        printVector(current);
-    }
+void printVectors(const T& vs){
+    for (auto& current : vs){ printVector(current); } // auto type is vector<ContentType>, int,float,...
 }
 
 // Returns the index of the requested value inside the given vector
 template <typename T>
-int getIndex(T value, vector<T> v){
+int getIndex(const T& value, const vector<T>& v){
     auto it = find(v.begin(), v.end(), value);
     return distance(v.begin(), it);
 }
+
+
+// Evaluation:
+
+// Returns the k-recall value between 2 Containers that support the .size(), .begin(), .end() methods
+template <typename Container>
+float k_recall(const Container& c1, const Container& c2){
+
+    if (c1.empty()) { return 0.0f; }
+
+    int cnt = 0;
+    for (auto& elem : c1){
+        if (find(c2.begin(), c2.end(), elem) != c2.end()) { cnt++; }
+    }
+    // Typecast return
+    return (float) cnt / c1.size();
+}
+
+// Measures the time it takes for the given function to run. Absorbs any function returns.
+// See use example in implementation.
+template <typename Func, typename ...Args>
+double measureTime(const string name, Func func, Args&&... args){
+
+    // https://stackoverflow.com/questions/65900218/template-that-measures-elapsed-time-of-any-function
+    // https://stackoverflow.com/questions/22387586/measuring-execution-time-of-a-function-in-c
+
+    const auto start = chrono::high_resolution_clock::now();
+
+    cout << "Calculating time for "<< name <<" . . ." << endl;
+
+    forward<Func>(func)(forward<Args>(args)...);
+
+    auto end = chrono::high_resolution_clock::now();
+
+    chrono::duration<double, milli> ms_double = end - start;
+
+    cout << "Elapsed Time for "<< name <<": " << ms_double.count() << "ms | " << ms_double.count()/1000 << 's' << endl;
+
+    return ms_double.count();
+
+    // Use example: need to bind method to instance and add placeholders for arguments
+    // auto boundRgraph = bind(&DirectedGraph<vector<float>>::Rgraph, &DG, placeholders::_1);
+    // measureTime("Medoid", boundRgraph, 14);
+}
+
+// Timing functions 
+// https://www.geeksforgeeks.org/measure-execution-time-function-cpp/
+void printFormatMiliseconds(chrono::milliseconds duration){
+    int hours = duration.count() / 3600000;
+    int minutes = (duration.count() % 3600000) / 60000;
+    int seconds = (duration.count() % 60000) / 1000;
+
+    cout 
+    << setw(2) << setfill('0') << hours << ":"
+    << setw(2) << setfill('0') << minutes << ":"
+    << setw(2) << setfill('0') << seconds << endl;
+}
+
+
+// Requirements and requirement-placeholders
+
+// always false function for DirectedGraph::isEmpty default argument
+template<typename T>
+bool alwaysValid(const T& t) { return false; }
+
+// ValidCheck function specific for vector container of any type.
+template<typename T>
+bool vectorEmpty(const vector<T>& v){ return v.empty(); }
+
+
+
+

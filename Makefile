@@ -5,10 +5,10 @@ SHELL := /bin/bash
 CC = g++
 
 # Compiler Flags
-CFLAGS = -I./include
+CFLAGS = -I./include -O2
 
 # Linker Flags
-LDFLAGS = -pthread -lm
+LDFLAGS = -pthread -lm -std=c++17
 
 # Directory Names
 SRC_DIR = ./src
@@ -20,6 +20,10 @@ INCLUDE_DIR = ./include
 # File Names
 TYPES = types
 UTIL = util
+CONFIG = config
+GRAPH = graph_implementation
+INTERFACE = interface
+EVAL = evaluation
 
 MAIN = main
 
@@ -33,9 +37,13 @@ OBJS_ALL = $(OBJ_MAIN)
 # Header Files
 HEADER_UTIL = $(INCLUDE_DIR)/$(UTIL).hpp
 HEADER_TYPES = $(INCLUDE_DIR)/$(TYPES).hpp
+HEADER_CONFIG = $(INCLUDE_DIR)/$(CONFIG).hpp
+HEADER_GRAPH = $(INCLUDE_DIR)/$(GRAPH).hpp
+HEADER_EVAL = $(INCLUDE_DIR)/$(EVAL).hpp
+HEADER_INTERFACE = $(INCLUDE_DIR)/$(INTERFACE).hpp
 
 # Include
-INCLUDE_MAIN = $(HEADER_UTIL) $(HEADER_TYPES)
+INCLUDE_MAIN = $(HEADER_INTERFACE)
 
 
 # Dependencies
@@ -46,15 +54,15 @@ DEPENDENCIES_MAIN = $(SRC_MAIN) $(INCLUDE_MAIN)
 EX_MAIN = $(BIN_DIR)/$(MAIN)
 
 # Default target
-default: dirs $(EX_MAIN)
+default: clean dirs $(EX_MAIN)
 
 dirs:
 	@mkdir -p bin
 	@mkdir -p build
 
 run:
-	dirs
-	$(EX_MAIN)
+	make
+	$(EX_MAIN) -L 100 -R 14 -a 1 -k 100 -P 8
 
 all: clean dirs $(EX_MAIN)
 	@echo "Executing $(EX_MAIN):"

@@ -1,20 +1,54 @@
-#include <iostream>
-
-#include "util.hpp"
-#include "types.hpp"
-
-
+#include "interface.hpp"
 using namespace std;
 
-int main () {
+static int L;
+static int R;
+static float a;
+static int k;
 
+void parseArgs(int argc, char*argv[]){
+
+    // Check number of arguments
+    if (argc > 12){ throw invalid_argument("Invalid number of command line arguments\n"); }
+
+    // Load default values
+    L = DEFAULT_L;
+    R = DEFAULT_R;
+    a = DEFAULT_a;
+    k = DEFAULT_k;
+    N_THREADS = DEFAULT_N_THREADS;
+    SHOULD_OMIT = DEFAULT_SHOULD_OMIT;
+
+    // Iterate through given arguments
+    string currentArg,nextArg;
+
+    for (int i=1; i<argc; i++){
+        currentArg = argv[i];
+
+        if (currentArg == "-L"){ L = atoi(argv[++i]); }
+        else if (currentArg == "-R"){ R = atoi(argv[++i]); }
+        else if (currentArg == "-a"){ a = atof(argv[++i]); }
+        else if (currentArg == "-k"){ k = atoi(argv[++i]); }
+        else if (currentArg == "-P"){ N_THREADS = atoi(argv[++i]); }
+        else if (currentArg == "--debug"){ SHOULD_OMIT = false; }
+        else { throw invalid_argument("Invalid command line arguments"); }
+    }
+}
+
+
+int main (int argc, char* argv[]) {
+
+    // Parse command line arguments
+    parseArgs(argc, argv);
+
+    // Instantiate a DirectedGraph object DG
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
 
     // Read base vectors file
     vector<vector<float>> vectors = read_vecs<float>("data/siftsmall/siftsmall_base.fvecs", 10000);
 
-    // Create unordered_map key: vector, value: id
-    unordered_map<vector<float>, int> v2id;
+    // Create map key: vector, value: id (for groundtruth)
+    map<vector<float>, int> v2id;
     for (int i=0; i<vectors.size(); i++){
         v2id[vectors[i]] = i;
     }
@@ -25,35 +59,22 @@ int main () {
     // Read groundtruth file
     vector<vector<int>> groundtruth = read_vecs<int>("data/siftsmall/siftsmall_groundtruth.ivecs", 100);
 
-    // Create graph nodes for all vectors
+    // Populate the Graph
     for (auto& v : vectors){
         DG.createNode(v);
     }
 
-    int R = 4, L=50, k=50;
-    float a = 1.0f;
+    cout << "Running main program with:" << endl;
+    cout << "L: " << L << endl;
+    cout << "R: " << R << endl;
+    cout << "a: " << a << endl;
+    cout << "k: " << k << endl;
+    cout << "Number of threads: " << N_THREADS << endl;
+    if (!SHOULD_OMIT) { cout << "Debug mode" << endl; }
 
-    // Vamana indexing
-    DG.vamanaAlgorithm(L, R, a);
+    profileVamana(L,R,a,k,DG,vectors,queries,groundtruth,v2id); // creating the vamana index and querying the groundtruths
 
-    cout << "Vamana Index Created!" << endl;
-
-    // Greedy search
-    vector<set<vector<float>>> GS_return =  DG.greedySearch(vectors[0], queries[0], k, L);
-
-    cout << "Greedy search done!" << endl;
-
-    set<vector<float>> neighbors = GS_return[0];
-
-    // for each neighbor
-    float score = 0;
-    for (vector<float> n : neighbors){
-        int id = v2id[n];
-        int pos = getIndex(id, groundtruth[0]);
-        score += pos;
-    }
-
-    cout << "FINISHED!\nSCORE IS: " << score / 5050 << endl;
+    DG.store("graph_instance.txt"); // store the vamana Index
 
     return 0;
 }
