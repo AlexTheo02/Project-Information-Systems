@@ -57,7 +57,7 @@ class DirectedGraph{
             this->isEmpty = is_Empty;
             this->_medoid.clear();
             this->_nodes.clear();
-            cout << "Graph created!" << endl;
+            c_log << "Graph created!" << '\n';
 
             for (const T& value : values){
                 this->createNode(value);

@@ -4,7 +4,7 @@
 using namespace std;
 
 void test_graphCreation(void){
-    OMIT_OUTPUT;
+    
 
     // Create a directed graph with euclidean distance as the distance function
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
@@ -28,7 +28,6 @@ void test_graphCreation(void){
 }
 
 void test_createNode(void){
-    OMIT_OUTPUT;
 
     // Create graph (should work based on previous tests)
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
@@ -54,8 +53,7 @@ void test_createNode(void){
     
 }
 
-void test_Edges(void){
-    OMIT_OUTPUT;
+void test_Edges(void){ 
 
     // Create graph (should work based on previous tests)
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
@@ -114,7 +112,6 @@ void test_Edges(void){
 }
 
 void test_clear(void){
-    OMIT_OUTPUT;
 
     // Create graph (should work based on previous tests)
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
@@ -171,8 +168,7 @@ void test_clear(void){
     TEST_ASSERT(DG.clearEdges());
 }
 
-void test_medoid(void){
-    OMIT_OUTPUT;
+void test_medoid(void){  
 
     // Create the graph
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
@@ -260,8 +256,7 @@ void test_medoid(void){
     // this case is handled in the euclideanDistance unit test.
 }
 
-void test_Rgraph(void){
-    OMIT_OUTPUT;
+void test_Rgraph(void){ 
 
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
     
@@ -332,8 +327,7 @@ void test_Rgraph(void){
     // https://en.cppreference.com/w/cpp/container/map/operator_cmp
 }
 
-void test_greedySearch(void){
-    OMIT_OUTPUT;
+void test_greedySearch(void){ 
 
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
 
@@ -390,8 +384,7 @@ void test_greedySearch(void){
     return;
 }
 
-void test_robustPrune(void){
-    OMIT_OUTPUT;
+void test_robustPrune(void){  
 
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
 
@@ -442,8 +435,7 @@ void test_robustPrune(void){
     return;
 }
 
-void test_vamanaAlgorithm(void){
-    OMIT_OUTPUT;
+void test_vamanaAlgorithm(void){   
 
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
 

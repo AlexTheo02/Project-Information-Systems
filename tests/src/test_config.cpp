@@ -14,7 +14,6 @@ void clearFileContents(const std::string& filename) {
 }
 
 void test_Store_and_Load(){
-    OMIT_OUTPUT;
 
     string filename = "graph_instance.txt";
 
