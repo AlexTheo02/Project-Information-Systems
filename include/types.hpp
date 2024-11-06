@@ -22,6 +22,23 @@ using namespace std;
 // Their implementations are on a separate .hpp file
 // They are all linked together in the interface.hpp file
 
+// Node structure
+template <typename T>
+struct Node{
+    T value;
+    int id;
+    int category;
+};
+
+// Query Structure
+template <typename T>
+struct Query{
+    T value;
+    int type;   // 0 = ANN, 1 = ANN where Node.category = Query.category 
+    int category;  
+};
+
+
 // Directed Graph Class Template:
 // This implementation of a Directed Graph Class makes use of dictionaries/maps for adjacency lists.
 // To instantiate such a Directed Graph Object, you will need to specify the Content Type T, as well as provide:
