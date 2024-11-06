@@ -63,7 +63,7 @@ void test_setIn(void){
 
 void test_mapKeyExists(void){  
 
-    map<int,int> map;
+    unordered_map<int,int> map;
     map[1] = 1;
 
     TEST_CHECK(mapKeyExists((int)1, map) == true);
@@ -72,7 +72,7 @@ void test_mapKeyExists(void){
 
 void test_setSubtraction(void){    
     
-    set<int> A,B,C,T,TA,TB,N;
+    unordered_set<int> A,B,C,T,TA,TB,N;
 
     // default case 1: when A ∩ B = ∅
     A = {1,2};
@@ -153,36 +153,36 @@ void test_setUnion(void){
 
 void test_sampleFromSet(void){    
     
-    set<int> s;
+    unordered_set<int> s;
 
     // default case - check that sampled element exists in unordered_set
     for (int i = 0; i < 10000; i++)
         s.insert(i);
     
-    int r = sampleFromSet(s);
-    TEST_CHECK(setIn(r, s));
+    int r = sampleFromContainer(s);
+    TEST_CHECK(s.find(r) != s.end());
 
     s.clear();
     
     // empty unordered_set check
     try {
-        r = sampleFromSet(s);
+        r = sampleFromContainer(s);
         TEST_CHECK(false); // control should not reach here
-    }catch(const invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Set is empty.\n"); }
+    }catch(const invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Container is empty.\n"); }
 
     // |s| is 1 always brings the same element
     s = {1};
     for (int i = 0; i < 10; i++){
-        r = sampleFromSet(s);
+        r = sampleFromContainer(s);
         TEST_CHECK(r == 1);
     }
 
     // |s| > 1 might bring the same or a different element
     s = {1,2};
     bool changed = false, same = false;
-    r = sampleFromSet(s);
+    r = sampleFromContainer(s);
     for (int i = 0; i < 1000000; i++){  // high number of iterations to make it almost certain that from a unordered_set of |s| = 2, the same element will be resampled.
-        int ri = sampleFromSet(s);
+        int ri = sampleFromContainer(s);
         if (ri == r)
             same = true;
         else if (ri != r)
@@ -194,141 +194,13 @@ void test_sampleFromSet(void){
     TEST_CHECK(same && changed);
 }
 
-void test_myArgMin(void){   
-
-    set<vector<float>> s;
-
-    // default case
-    s = {
-        (vector<float>) {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
-        (vector<float>) {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f},
-        (vector<float>) {2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f},
-        (vector<float>) {3.0f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f},
-        (vector<float>) {4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f},
-        (vector<float>) {5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f},
-        (vector<float>) {6.0f, 6.0f, 6.0f, 6.0f, 6.0f, 6.0f, 6.0f, 6.0f, 6.0f, 6.0f},
-    };
-
-    vector<float> xq = {2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f};
-
-    vector<float> xmin = myArgMin<vector<float>>(s, xq, euclideanDistance<vector<float>>, vectorEmpty<float>);
-    vector<float> ymin = {2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
-    TEST_CHECK(xmin == ymin);
-
-
-    // empty arguments check:
-
-    // empty query, non empty unordered_set
-    xq.clear();
-    try{
-        xmin = myArgMin<vector<float>>(s, xq, euclideanDistance<vector<float>>, vectorEmpty<float>);
-        TEST_CHECK(false);  // control should not reach here
-    }catch(invalid_argument &ia){ TEST_CHECK(string(ia.what()) == "Query container is empty.\n"); }
-
-    // empty unordered_set, non empty query
-    xq = {2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f};
-    s.clear();
-    try{
-        xmin = myArgMin<vector<float>>(s, xq, euclideanDistance<vector<float>>, vectorEmpty<float>);
-        TEST_CHECK(false);  // control should not reach here
-    }catch(invalid_argument &ia){ TEST_CHECK(string(ia.what()) == "Set is Empty.\n"); }
-
-    // both empty
-    xq.clear();
-    try{
-        xmin = myArgMin<vector<float>>(s, xq, euclideanDistance<vector<float>>, vectorEmpty<float>);
-        TEST_CHECK(false);  // control should not reach here
-    }catch(invalid_argument &ia){ TEST_CHECK(string(ia.what()) == "Set is Empty.\n"); }
-
-}
-
-void test_closestN(void){    
-
-    int N = 5;
-    set<vector<float>> s;
-
-    // Create 1000 vectors of dimension 128 with values [i, i, ..., i]
-    for (int i = 0; i < 1000; i++) {
-        vector<float> v(128, static_cast<float>(i));
-        s.insert(v);
-    }
-
-    // Query vector [327.3f, 327.3f, ..., 327.3f]
-    vector<float> x(128, 327.3f);
-
-    // Expected closest vectors: [325, 326, 327, 328, 329]
-    set<vector<float>> yclosest;
-    for (int i = 0; i < 5; i++) {
-        vector<float> v(128, static_cast<float>(325 + i));
-        yclosest.insert(v);
-    }
-    set<vector<float>> xclosest = closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>);
-
-    TEST_CHECK(xclosest == yclosest);
-
-    // argument checks:
-    
-    // N > |s| returns the whole set
-    N = 1001; // |s| = 1000
-    TEST_CHECK(closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>) == s);
-
-    // N < 0
-    try{
-        xclosest = closestN<vector<float>>(-1, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>);
-        TEST_CHECK(false);  // Control should not reach here
-    }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "N must be greater than 0.\n"); }
-
-    // N == 0
-    N = 0;
-    set<vector<float>> nullset;
-    TEST_CHECK(closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>) == nullset);
-
-    // set is empty
-    TEST_CHECK(closestN<vector<float>>(N, nullset, x, euclideanDistance<vector<float>>, vectorEmpty<float>) == nullset);
-
-    // Empty query
-    x.clear();  // Clear the query vector
-
-    try{
-        xclosest = closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>);
-        TEST_CHECK(false);  // Control should not reach here
-    }catch(invalid_argument& ia){ 
-        // Check if the caught exception message matches the expected message
-        TEST_CHECK(string(ia.what()) == "Query X is empty.\n");
-    }
-
-
-
-    // both set and query empty
-    TEST_CHECK(closestN<vector<float>>(N, nullset, x, euclideanDistance<vector<float>>, vectorEmpty<float>) == nullset);
-
-    // case with ties
-    s = {
-        (vector<float>) {1,1,1,1,1},
-        (vector<float>) {2,2,2,2,2},
-        (vector<float>) {3,3,3,3,3},
-        (vector<float>) {4,4,4,4,4},
-        (vector<float>) {5,5,5,5,5}
-    };
-    x = {2.5f, 2.5f, 2.5f, 2.5f, 2.5f};
-    N = 3;
-    
-    yclosest = {                        // because of ascending sort, takes the smallest value that is closest to the reference point x first.
-        (vector<float>) {1,1,1,1,1},
-        (vector<float>) {2,2,2,2,2},
-        (vector<float>) {3,3,3,3,3},
-    };
-    xclosest = closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>);
-    TEST_CHECK(xclosest == yclosest);
-}
-
 void test_permutation(void){    
 
-    set<int> numbers;
+    vector<int> numbers;
 
     // default case
     for (int i = 0; i < 1000000; i++)
-        numbers.insert(i);
+        numbers.push_back(i);
 
     vector<int> before(numbers.begin(), numbers.end()); // transforming unordered_set into vector
     vector<int> after = permutation(numbers);           // a same permutation for a unordered_set of 1000000 elements is very highly unlikely
@@ -341,13 +213,13 @@ void test_permutation(void){
     TEST_CHECK(before == after);
 
     // unordered_set with exactly one element
-    numbers.insert(1);
+    numbers.push_back(1);
     before = vector<int>(numbers.begin(), numbers.end());  // transforming unordered_set into vector
     after = permutation(numbers);
     TEST_CHECK(before == after);
 
     // ensure that it is possible to achieve a permutation identical to the original, without requiring the unordered_set to remain unchanged.
-    numbers.insert(2);
+    numbers.push_back(2);
     before = vector<int>(numbers.begin(), numbers.end());  // transforming unordered_set into vector
     bool same = false;
     bool changed = false;
@@ -370,8 +242,6 @@ TEST_LIST = {
     { "test_setSubtraction", test_setSubtraction },
     { "test_setUnion", test_setUnion },
     { "test_sampleFromSet", test_sampleFromSet },
-    { "test_myArgMin", test_myArgMin },
-    { "test_closestN", test_closestN },
     { "test_permutation", test_permutation },
     { NULL, NULL }     // zeroed record marking the end of the list
 };

@@ -6,11 +6,11 @@
 
     // overloads the less operator <
     template <typename T>    
-    bool Node<T>::operator<(const Node& n){ return (this->value < n.value); }// less is defined by the value of the Node
+    bool Node<T>::operator<(const Node& n) const{ return (this->value < n.value); }// less is defined by the value of the Node
 
     // overloads the equality operator ==
     template <typename T>      
-    bool Node<T>::operator==(const Node& n){ return ((this->value == n.value) && (this->category == n.category)); }// same value and same category is considered the same  
+    bool Node<T>::operator==(const Node& n) const { return ((this->value == n.value) && (this->category == n.category)); }// same value and same category is considered the same  
 
     // overloads the ostream operator <<        Node: [int|int|T]
     template <typename T>

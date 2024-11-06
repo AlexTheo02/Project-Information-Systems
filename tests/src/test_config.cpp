@@ -38,15 +38,15 @@ void test_Store_and_Load(){
     TEST_CHECK(DG.get_n_nodes() == DG2.get_n_nodes());
 
     // Retrieve the nodes of the two DGs
-    set<vector<float>> nodes1 = DG.getNodes();
-    set<vector<float>> nodes2 = DG2.getNodes();
+    vector<Node<vector<float>>> nodes1 = DG.getNodes();
+    vector<Node<vector<float>>> nodes2 = DG2.getNodes();
 
     // Compare the two nodes if they are similar
     TEST_CHECK(nodes1 == nodes2);
 
     // Retrieve the two maps containing the neighbors
-    map<vector<float>, set<vector<float>>> m1 = DG.get_Nout();
-    map<vector<float>, set<vector<float>>> m2 = DG2.get_Nout();
+    unordered_map<int, unordered_set<int>> m1 = DG.get_Nout();
+    unordered_map<int, unordered_set<int>> m2 = DG2.get_Nout();
 
     // Compare the two maps if they are equal
     TEST_CHECK(m1 == m2);
@@ -68,16 +68,16 @@ void test_Store_and_Load(){
     vector<float> v10 = vector<float>{7.7f, 8.8f, 3.3f, 9.9f, 0.5f, 1.2f};
 
     // Create nodes in the graph
-    vector<float> n1 = *DG.createNode(v1);
-    vector<float> n2 = *DG.createNode(v2);
-    vector<float> n3 = *DG.createNode(v3);
-    vector<float> n4 = *DG.createNode(v4);
-    vector<float> n5 = *DG.createNode(v5);
-    vector<float> n6 = *DG.createNode(v6);
-    vector<float> n7 = *DG.createNode(v7);
-    vector<float> n8 = *DG.createNode(v8);
-    vector<float> n9 = *DG.createNode(v9);
-    vector<float> n10 = *DG.createNode(v10);
+    int n1 = DG.createNode(v1);
+    int n2 = DG.createNode(v2);
+    int n3 = DG.createNode(v3);
+    int n4 = DG.createNode(v4);
+    int n5 = DG.createNode(v5);
+    int n6 = DG.createNode(v6);
+    int n7 = DG.createNode(v7);
+    int n8 = DG.createNode(v8);
+    int n9 = DG.createNode(v9);
+    int n10 = DG.createNode(v10);
 
     // Store the graph in a textfile
     DG.store(filename);

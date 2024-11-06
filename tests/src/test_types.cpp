@@ -7,7 +7,7 @@ void test_graphCreation(void){
     
 
     // Create a directed graph with euclidean distance as the distance function
-    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
+    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
 
     // Address is not null
     TEST_ASSERT(&DG != NULL);
@@ -30,13 +30,13 @@ void test_graphCreation(void){
 void test_createNode(void){
 
     // Create graph (should work based on previous tests)
-    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
+    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
 
     // Value for node
     vector<float> value = vector<float>{1.2f,2.4f,3.64f,4.234f,5.8f,6.0f};
     
     // Create a node inside the graph
-    set<vector<float>>::iterator it = DG.createNode(value);
+    int id = DG.createNode(value);
 
     // Check that node creation was successful
     TEST_ASSERT(DG.get_n_nodes() == 1);
@@ -47,7 +47,7 @@ void test_createNode(void){
     TEST_MSG("NodeSet is empty after node creation");
 
     // Ensure that nodeSet includes the node
-    vector<float> retValue = *it;
+    vector<float> retValue = DG.getNodes()[id].value;
     TEST_ASSERT(retValue == value);
     TEST_MSG("Inserted node = Node");
     
@@ -56,26 +56,26 @@ void test_createNode(void){
 void test_Edges(void){ 
 
     // Create graph (should work based on previous tests)
-    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
+    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
 
     // Add nodes to graph (should work based on previous tests)
     vector<float> v1 = vector<float>{1.2f,2.4f,3.64f,4.234f,5.8f,6.0f};
     vector<float> v2 = vector<float>{2.1f,4.2f,6.63f,3.232f,8.5f,0.6f};
     vector<float> v3 = vector<float>{0.1f,0.2f,0.63f,0.232f,0.5f,0.6f};
 
-    vector<float> n1 = *DG.createNode(v1);
-    vector<float> n2 = *DG.createNode(v2);
-    vector<float> n3 = *DG.createNode(v3);
+    int id1 = DG.createNode(v1);
+    int id2 = DG.createNode(v2);
+    int id3 = DG.createNode(v3);
 
     // Add edge
-    TEST_ASSERT(DG.addEdge(n1, n2));
+    TEST_ASSERT(DG.addEdge(id1, id2));
 
     // Verify that edge exists
-    TEST_ASSERT(mapKeyExists(n1, DG.get_Nout()));
+    TEST_ASSERT(mapKeyExists(id1, DG.get_Nout()));
     TEST_MSG("Add edge, nout key does not exist");
 
-    set<vector<float>> n1out = DG.get_Nout().at(n1);
-    TEST_ASSERT(*n1out.begin() == n2);
+    unordered_set<int> n1out = DG.get_Nout().at(id1);
+    TEST_ASSERT(*n1out.begin() == id2);
     TEST_MSG("Add edge verification nout");
     
     DG.get_Nout();
@@ -83,30 +83,30 @@ void test_Edges(void){
     TEST_ASSERT(DG.get_n_edges() == 1);
     TEST_MSG("Failed to increment n_edges");
 
-    DG.addEdge(n1,n3);
+    DG.addEdge(id1,id3);
 
     TEST_ASSERT(DG.get_n_edges() == 2);
     TEST_MSG("Failed to increment n_edges 2");
 
     // Remove edge
-    DG.removeEdge(n1,n2);
+    DG.removeEdge(id1,id2);
 
     // Remove non-existing edge, on self loop
-    TEST_ASSERT(DG.removeEdge(n1,n1) == false);
+    TEST_ASSERT(DG.removeEdge(id1,id1) == false);
 
     // Verify that edge has been removed
-    TEST_ASSERT(mapKeyExists(n1, DG.get_Nout()));
+    TEST_ASSERT(mapKeyExists(id1, DG.get_Nout()));
     TEST_MSG("Remove edge, nout key removed");
 
     TEST_ASSERT(DG.get_n_edges() == 1);
     TEST_MSG("Failed to ddecrement n_edges");
 
-    DG.removeEdge(n1,n3);
-    TEST_ASSERT(!mapKeyExists(n1, DG.get_Nout()));
+    DG.removeEdge(id1,id3);
+    TEST_ASSERT(!mapKeyExists(id1, DG.get_Nout()));
     TEST_MSG("Remove edge, failed to remove nout key");
 
     // CHECK SELF-LOOP (edge a -> a)
-    TEST_ASSERT(DG.addEdge(n1,n1) == false);
+    TEST_ASSERT(DG.addEdge(id1,id1) == false);
     TEST_MSG("Add edge on same node should decline adding the edge");
     
 }
@@ -114,7 +114,7 @@ void test_Edges(void){
 void test_clear(void){
 
     // Create graph (should work based on previous tests)
-    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
+    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
 
     // Add nodes to graph (should work based on previous tests)
     vector<float> v1 = vector<float>{1.2f,2.4f,3.64f,4.234f,5.8f,6.0f};
@@ -122,35 +122,35 @@ void test_clear(void){
     vector<float> v3 = vector<float>{0.1f,0.2f,0.63f,0.232f,0.5f,0.6f};
     vector<float> v4 = vector<float>{4.1f,4.2f,4.63f,4.232f,4.5f,4.6f};
 
-    vector<float> n1 = *DG.createNode(v1);
-    vector<float> n2 = *DG.createNode(v2);
-    vector<float> n3 = *DG.createNode(v3);
-    vector<float> n4 = *DG.createNode(v4);
+    int id1 = DG.createNode(v1);
+    int id2 = DG.createNode(v2);
+    int id3 = DG.createNode(v3);
+    int id4 = DG.createNode(v4);
 
     // Create edges between nodes (should work based on previous tests)
-    DG.addEdge(n1, n2);
-    DG.addEdge(n1, n3);
-    DG.addEdge(n1, n4);
+    DG.addEdge(id1, id2);
+    DG.addEdge(id1, id3);
+    DG.addEdge(id1, id4);
 
-    DG.addEdge(n2, n1);
-    DG.addEdge(n2, n3);
+    DG.addEdge(id2, id1);
+    DG.addEdge(id2, id3);
 
     TEST_ASSERT(DG.get_n_edges() == 5);
     TEST_MSG("Number of edges is wrong");
 
     // Check remove edge function for wrong arguments -> edge that does not exist
-    TEST_ASSERT(!DG.removeEdge(n2,n4));
+    TEST_ASSERT(!DG.removeEdge(id2,id4));
     TEST_MSG("Removed edge that does not exist");
 
     // Check remove edge function for appropriate args
-    TEST_ASSERT(DG.removeEdge(n1,n2));
+    TEST_ASSERT(DG.removeEdge(id1,id2));
 
-    TEST_ASSERT(mapKeyExists(n1,DG.get_Nout()));
+    TEST_ASSERT(mapKeyExists(id1,DG.get_Nout()));
 
-    TEST_ASSERT(DG.clearNeighbors(n1));
+    TEST_ASSERT(DG.clearNeighbors(id1));
 
     // Verify that Nout key is removed
-    TEST_ASSERT(!mapKeyExists(n1, DG.get_Nout()));
+    TEST_ASSERT(!mapKeyExists(id1, DG.get_Nout()));
 
     // Verify that number of edges is reduced to 2
     TEST_ASSERT(DG.get_n_edges() == 2);
@@ -159,7 +159,7 @@ void test_clear(void){
     DG.clearEdges();
 
     // Verify that no in-out neighbors are present
-    TEST_ASSERT(!mapKeyExists(n2, DG.get_Nout()));
+    TEST_ASSERT(!mapKeyExists(id2, DG.get_Nout()));
 
     // Verify that counter of edges is reduced to 0
     TEST_ASSERT(DG.get_n_edges() == 0);
@@ -171,7 +171,7 @@ void test_clear(void){
 void test_medoid(void){  
 
     // Create the graph
-    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
+    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
 
     // Add nodes
     vector<float> v1 = {1.f, 1.f, 1.f, 1.f, 1.f, 1.f};
@@ -184,63 +184,54 @@ void test_medoid(void){
     TEST_EXCEPTION(DG.medoid(), invalid_argument);  // Should throw an exception for empty graph
 
     // ------------------------------------------------------------------------------------------- Graph with one or two nodes check
-    DirectedGraph<vector<float>> smallGraph(euclideanDistance<vector<float>>);
+    DirectedGraph<vector<float>> smallGraph(euclideanDistance<vector<float>>, vectorEmpty<float>);
     smallGraph.createNode(v1);
-    TEST_CHECK(smallGraph.medoid() == v1);  // Medoid should be v1 in single-node graph
+    TEST_CHECK(smallGraph.medoid().value == v1);  // Medoid should be v1 in single-node graph
 
-    DirectedGraph<vector<float>> smallGraph2(euclideanDistance<vector<float>>);
+    DirectedGraph<vector<float>> smallGraph2(euclideanDistance<vector<float>>, vectorEmpty<float>);
     smallGraph2.createNode(v1);
     smallGraph2.createNode(v2);
-    TEST_CHECK(smallGraph2.medoid() == v1);  // With two nodes, should return the first node
+    TEST_CHECK(smallGraph2.medoid().value == v1);  // With two nodes, should return the first node
 
     // ------------------------------------------------------------------------------------------- Graph with multiple nodes
 
     // Create a second graph
-    DirectedGraph<vector<float>> DG2(euclideanDistance<vector<float>>);
+    DirectedGraph<vector<float>> DG2(euclideanDistance<vector<float>>, vectorEmpty<float>);
 
     // Add the same nodes to the two graphs
-    DG.createNode(v1);
-    DG.createNode(v2);
-    DG.createNode(v3);
-    DG.createNode(v4);
-    DG.createNode(v5);
+    int id_11 = DG.createNode(v1);
+    int id_12 = DG.createNode(v2);
+    int id_13 = DG.createNode(v3);
+    int id_14 = DG.createNode(v4);
+    int id_15 = DG.createNode(v5);
 
-    DG2.createNode(v1);
-    DG2.createNode(v2);
-    DG2.createNode(v3);
-    DG2.createNode(v4);
-    DG2.createNode(v5);
+    int id_21 = DG2.createNode(v1);
+    int id_22 = DG2.createNode(v2);
+    int id_23 = DG2.createNode(v3);
+    int id_24 = DG2.createNode(v4);
+    int id_25 = DG2.createNode(v5);
     
     // Add the same edges to the two graphs
-    DG.addEdge(v1, v2);
-    DG.addEdge(v1, v3);
-    DG.addEdge(v1, v4);
-    DG.addEdge(v2, v1);
-    DG.addEdge(v2, v3);
+    DG.addEdge(id_11, id_12);
+    DG.addEdge(id_11, id_13);
+    DG.addEdge(id_11, id_14);
+    DG.addEdge(id_12, id_11);
+    DG.addEdge(id_12, id_13);
 
-    DG2.addEdge(v1, v2);
-    DG2.addEdge(v1, v3);
-    DG2.addEdge(v1, v4);
-    DG2.addEdge(v2, v1);
-    DG2.addEdge(v2, v3);
-
-    // Save the original value of N_THREADS
-    #ifdef N_THREADS
-        const int originalNThreads = N_THREADS; // Store original number of threads
-    #else
-        const int originalNThreads = 1; // Default if N_THREADS is not defined
-    #endif
+    DG2.addEdge(id_21, id_22);
+    DG2.addEdge(id_21, id_23);
+    DG2.addEdge(id_21, id_24);
+    DG2.addEdge(id_22, id_21);
+    DG2.addEdge(id_22, id_23);
 
     // Test Serial Medoid
-    #undef N_THREADS
-    #define N_THREADS 1  // Set N_THREADS to 1 for serial execution
-    vector<float> computedMedoidSerial = DG.medoid(); // Call medoid in serial mode
+    N_THREADS = 1;  // Set N_THREADS to 1 for serial execution
+    vector<float> computedMedoidSerial = DG.medoid().value; // Call medoid in serial mode
     TEST_CHECK(computedMedoidSerial == v3); // Check against expected medoid
 
     // Test Parallel Medoid
-    #undef N_THREADS
-    #define N_THREADS originalNThreads  // Restore original N_THREADS for parallel execution
-    vector<float> computedMedoidParallel = DG2.medoid(); // Call medoid in parallel mode
+    N_THREADS = 8;  // Set N_THREADS to 8 for parallel execution
+    vector<float> computedMedoidParallel = DG2.medoid().value; // Call medoid in parallel mode
     TEST_CHECK(computedMedoidParallel == v3); // Check against expected medoid
 
     // Ensure both methods yield the same result
@@ -258,16 +249,16 @@ void test_medoid(void){
 
 void test_Rgraph(void){ 
 
-    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>);
+    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
     
     vector<float> v[100];
-    vector<float> nodes[100];
+    int nodes[100];
 
     for (int i = 0; i < 100; i++){
         for (int j = 0; j < 128; j++){
             v[i].push_back((float)i);
         }
-        nodes[i] = *DG.createNode(v[i]);
+        nodes[i] = DG.createNode(v[i]);
     }
 
     TEST_ASSERT(DG.get_n_nodes() == 100);
@@ -277,9 +268,9 @@ void test_Rgraph(void){
     TEST_CHECK(DG.get_n_edges() == 100*10);
 
     int c = 0;
-    map<vector<float>, set<vector<float>>> m = DG.get_Nout();
+    unordered_map<int, unordered_set<int>> m = DG.get_Nout();
 
-    for (vector<float>& n : nodes){
+    for (int n : nodes){
         c+= m[n].size();
     }
 
@@ -317,15 +308,158 @@ void test_Rgraph(void){
     // Each of the 100 nodes can make one out of 99 possible connections => 99^{100} different ways (cycles are allowed to exist in the directed graph).
     // The probability for each specific set of edges (assuming uniform) is 1/99^{100}.
     // For this test to fail, it would mean that we drew the same number twice in a row from a uniform distribution among 99^{100} numbers.
-    map<vector<float>, set<vector<float>>> before = DG.get_Nout();
+     unordered_map<int, unordered_set<int>> before = DG.get_Nout();
     TEST_CHECK(DG.Rgraph(1));
     TEST_CHECK(DG.get_n_edges() == 100*1);
-    map<vector<float>, set<vector<float>>> after = DG.get_Nout();
+     unordered_map<int, unordered_set<int>> after = DG.get_Nout();
     TEST_CHECK(DG.Rgraph(1));
     TEST_CHECK(DG.get_n_edges() == 100*1);
     TEST_CHECK((before == after) == false); // map equality operator == is by default overloaded to them containing exactly the same items
     // https://en.cppreference.com/w/cpp/container/map/operator_cmp
 }
+
+
+// void test_myArgMin(void){   
+
+//     set<vector<float>> s;
+
+//     // default case
+//     s = {
+//         (vector<float>) {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+//         (vector<float>) {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f},
+//         (vector<float>) {2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f},
+//         (vector<float>) {3.0f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f},
+//         (vector<float>) {4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f},
+//         (vector<float>) {5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f},
+//         (vector<float>) {6.0f, 6.0f, 6.0f, 6.0f, 6.0f, 6.0f, 6.0f, 6.0f, 6.0f, 6.0f},
+//     };
+
+//     vector<float> xq = {2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f};
+
+//     vector<float> xmin = myArgMin<vector<float>>(s, xq, euclideanDistance<vector<float>>, vectorEmpty<float>);
+//     vector<float> ymin = {2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
+//     TEST_CHECK(xmin == ymin);
+
+
+//     // empty arguments check:
+
+//     // empty query, non empty unordered_set
+//     xq.clear();
+//     try{
+//         xmin = myArgMin<vector<float>>(s, xq, euclideanDistance<vector<float>>, vectorEmpty<float>);
+//         TEST_CHECK(false);  // control should not reach here
+//     }catch(invalid_argument &ia){ TEST_CHECK(string(ia.what()) == "Query container is empty.\n"); }
+
+//     // empty unordered_set, non empty query
+//     xq = {2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f};
+//     s.clear();
+//     try{
+//         xmin = myArgMin<vector<float>>(s, xq, euclideanDistance<vector<float>>, vectorEmpty<float>);
+//         TEST_CHECK(false);  // control should not reach here
+//     }catch(invalid_argument &ia){ TEST_CHECK(string(ia.what()) == "Set is Empty.\n"); }
+
+//     // both empty
+//     xq.clear();
+//     try{
+//         xmin = myArgMin<vector<float>>(s, xq, euclideanDistance<vector<float>>, vectorEmpty<float>);
+//         TEST_CHECK(false);  // control should not reach here
+//     }catch(invalid_argument &ia){ TEST_CHECK(string(ia.what()) == "Set is Empty.\n"); }
+
+// }
+
+// void test_closestN(void){    
+
+//     int N = 5;
+//     set<vector<float>> s;
+
+//     // Create 1000 vectors of dimension 128 with values [i, i, ..., i]
+//     for (int i = 0; i < 1000; i++) {
+//         vector<float> v(128, static_cast<float>(i));
+//         s.insert(v);
+//     }
+
+//     // Query vector [327.3f, 327.3f, ..., 327.3f]
+//     vector<float> x(128, 327.3f);
+
+//     // Expected closest vectors: [325, 326, 327, 328, 329]
+//     set<vector<float>> yclosest;
+//     for (int i = 0; i < 5; i++) {
+//         vector<float> v(128, static_cast<float>(325 + i));
+//         yclosest.insert(v);
+//     }
+//     set<vector<float>> xclosest = closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>);
+
+//     TEST_CHECK(xclosest == yclosest);
+
+//     // argument checks:
+    
+//     // N > |s| returns the whole set
+//     N = 1001; // |s| = 1000
+//     TEST_CHECK(closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>) == s);
+
+//     // N < 0
+//     try{
+//         xclosest = closestN<vector<float>>(-1, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>);
+//         TEST_CHECK(false);  // Control should not reach here
+//     }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "N must be greater than 0.\n"); }
+
+//     // N == 0
+//     N = 0;
+//     set<vector<float>> nullset;
+//     TEST_CHECK(closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>) == nullset);
+
+//     // set is empty
+//     TEST_CHECK(closestN<vector<float>>(N, nullset, x, euclideanDistance<vector<float>>, vectorEmpty<float>) == nullset);
+
+//     // Empty query
+//     x.clear();  // Clear the query vector
+
+//     try{
+//         xclosest = closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>);
+//         TEST_CHECK(false);  // Control should not reach here
+//     }catch(invalid_argument& ia){ 
+//         // Check if the caught exception message matches the expected message
+//         TEST_CHECK(string(ia.what()) == "Query X is empty.\n");
+//     }
+
+
+
+//     // both set and query empty
+//     TEST_CHECK(closestN<vector<float>>(N, nullset, x, euclideanDistance<vector<float>>, vectorEmpty<float>) == nullset);
+
+//     // case with ties
+//     s = {
+//         (vector<float>) {1,1,1,1,1},
+//         (vector<float>) {2,2,2,2,2},
+//         (vector<float>) {3,3,3,3,3},
+//         (vector<float>) {4,4,4,4,4},
+//         (vector<float>) {5,5,5,5,5}
+//     };
+//     x = {2.5f, 2.5f, 2.5f, 2.5f, 2.5f};
+//     N = 3;
+    
+//     yclosest = {                        // because of ascending sort, takes the smallest value that is closest to the reference point x first.
+//         (vector<float>) {1,1,1,1,1},
+//         (vector<float>) {2,2,2,2,2},
+//         (vector<float>) {3,3,3,3,3},
+//     };
+//     xclosest = closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>);
+//     TEST_CHECK(xclosest == yclosest);
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void test_greedySearch(void){ 
 
@@ -346,38 +480,38 @@ void test_greedySearch(void){
     // Argument checks:
 
     // Empty starting node s
-    vector<float> startingNode;
+    Node<vector<float>> startingNode;
     try{
-        vector<set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 4, 5);
+        pair<unordered_set<int>, unordered_set<int>> ret = DG.greedySearch(startingNode, vectors[0], 4, 5);
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "No start node was provided.\n")); }
     
     // Starting node not in Graph's nodeSet
     for (int i=0; i<128; i++){
-        startingNode.push_back(-i);
+        startingNode.value.push_back(-i);
     }
     try {
-        vector<set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 4, 5);
+        pair<unordered_set<int>, unordered_set<int>> ret = DG.greedySearch(startingNode, vectors[0], 4, 5);
         TEST_CHECK(false);
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Starting node not in nodeSet.\n")); }
 
     // Empty query point xq
-    startingNode = vectors[129];
+    startingNode = DG.getNodes()[129];
     vector<float> xq;
     try{
-        vector<set<vector<float>>> ret = DG.greedySearch(startingNode, xq, 4, 5);
+        pair<unordered_set<int>, unordered_set<int>> ret = DG.greedySearch(startingNode, xq, 4, 5);
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "No query was provided.\n")); }
 
     // if k <= 0
     try{
-        vector<set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 0, 5);
+        pair<unordered_set<int>, unordered_set<int>> ret = DG.greedySearch(startingNode, vectors[0], 0, 5);
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "K must be greater than 0.\n")); }
 
     // if L < k
     try{
-        vector<set<vector<float>>> ret = DG.greedySearch(startingNode, vectors[0], 2, 1);
+        pair<unordered_set<int>, unordered_set<int>> ret = DG.greedySearch(startingNode, vectors[0], 2, 1);
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "L must be greater or equal to K.\n")); }
 
@@ -397,15 +531,15 @@ void test_robustPrune(void){
     }
     // Verify that 10000 nodes have been added
     TEST_ASSERT(DG.get_n_nodes() == 10000);
-    set<vector<float>> nullset;
+    unordered_set<int> nullset;
 
     // Valid
-    DG.robustPrune(vectors[0], nullset, 1, 5);
+    DG.robustPrune(DG.getNodes()[0], nullset, 1, 5);
 
     // Argument checks:
 
     // Empty Node
-    vector<float> startingNode;
+    Node<vector<float>> startingNode;
     try{
         DG.robustPrune(startingNode, nullset, 1, 5);
         TEST_CHECK(false);  // Control should not reach here 
@@ -413,7 +547,7 @@ void test_robustPrune(void){
 
     // Node not in Graph's nodeSet
     for (int i=0; i<128; i++){
-        startingNode.push_back(-i);
+        startingNode.value.push_back(-i);
     }
     try{
         DG.robustPrune(startingNode, nullset, 1, 5);
@@ -421,14 +555,14 @@ void test_robustPrune(void){
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Node not in nodeSet\n")); }
     // a < 1
     try{
-        DG.robustPrune(vectors[43], nullset, 0, 5);
+        DG.robustPrune(DG.getNodes()[43], nullset, 0, 5);
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Parameter a must be >= 1.\n")); }
 
     // R <= 0
     try{
         // test goes here
-        DG.robustPrune(vectors[43], nullset, 1, 0);
+        DG.robustPrune(DG.getNodes()[43], nullset, 1, 0);
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Parameter R must be > 0.\n")); }
 
@@ -469,6 +603,8 @@ TEST_LIST = {
     { "test_Edges", test_Edges },
     { "test_clear", test_clear },
     { "test_medoid", test_medoid},
+    // { "test_myArgMin", test_myArgMin },
+    // { "test_closestN", test_closestN },
     { "test_Rgraph", test_Rgraph},
     { "test_greedySearch", test_greedySearch},
     { "test_robustPrune", test_robustPrune},

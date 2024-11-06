@@ -206,8 +206,8 @@ istream& operator>>(istream& stream, unordered_map<T, unordered_set<T>>& m){
         return stream;
     }
         
-    T key;
-    set<T> value;
+    int key;
+    unordered_set<int> value;
 
     // how the map string representation is formatted (BNF syntax)
     // pair ::= ε

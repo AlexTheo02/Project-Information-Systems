@@ -46,12 +46,11 @@ class Node{
             this->isEmpty = isEmpty;
         }
 
-        bool operator<(const Node& n);
-        bool operator==(const Node& n);
+        bool operator<(const Node& n) const;
+        bool operator==(const Node& n) const;
 
         bool empty();
 };
-
 
 // Query class
 template <typename T>
@@ -131,7 +130,7 @@ class DirectedGraph{
         }
 
         // Return a set of all Nodes in the graph
-        const set<T>& getNodes() const { return this->nodes; }
+        vector<Node<T>>& getNodes() { return this->nodes; }
 
         // Return the number of edges in the graph
         const int& get_n_edges() const { return this->n_edges; }
@@ -140,7 +139,7 @@ class DirectedGraph{
         const int& get_n_nodes() const { return this->n_nodes; }
 
         // Return Nout map
-        const unordered_map<T, unordered_set<T>>& get_Nout() const { return this->Nout; }
+        const unordered_map<int, unordered_set<int>>& get_Nout() const { return this->Nout; }
 
         // Creates a node, adds it in the graph and returns it
         int createNode(const T& value, int category = -1);

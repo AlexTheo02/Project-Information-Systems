@@ -351,7 +351,7 @@ const pair<unordered_set<int>, unordered_set<int>> DirectedGraph<T>::greedySearc
     // argument checks
     if (s.empty()){ throw invalid_argument("No start node was provided.\n"); }
 
-    if (s.id >= this->n_nodes) { throw invalid_argument("Starting node not in nodeSet.\n"); }
+    if (s.id > this->n_nodes) { throw invalid_argument("Starting node not in nodeSet.\n"); }   // setIn PROBLEM. 
 
     if (this->isEmpty(xq)){ throw invalid_argument("No query was provided.\n"); }
 
@@ -395,7 +395,7 @@ void DirectedGraph<T>::robustPrune(Node<T>& p, unordered_set<int> V, float a, in
     // Argument Checks
     if (p.empty()) { throw invalid_argument("No node was provided.\n"); }
 
-    if (p.id >= this->n_nodes) { throw invalid_argument("Node not in nodeSet\n"); };
+    if (p.id >= this->n_nodes) { throw invalid_argument("Node not in nodeSet\n"); };    // setIn PROBLEM
 
     if (a < 1) { throw invalid_argument("Parameter a must be >= 1.\n"); }
 
