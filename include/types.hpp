@@ -22,30 +22,43 @@ using namespace std;
 // Their implementations are on a separate .hpp file
 // They are all linked together in the interface.hpp file
 
-// Node structure
 template <typename T>
-struct Node{
-    int id;
-    int category;
-    T value;
+class DirectedGraph;    // forward declaration for nodes and queries
 
-    bool operator<(const Node& n);
-    bool operator==(const Node& n);
+
+// Node class
+template <typename T>
+class Node{
+    
+    public:
+        int id;
+        int category;
+        T value;
+        DirectedGraph<T>* belongsIn;   // pointer to the graph instance the query belongs in (to find isEmpty method)
+
+        bool operator<(const Node& n);
+        bool operator==(const Node& n);
+
+        bool empty();
 };
 
 
-// Query Structure
+// Query class
 template <typename T>
-struct Query{
-    int type;   // 0 = ANN, 1 = ANN where Node.category = Query.category 
-    int category; 
-    T value;
+class Query{
 
-    bool operator<(const Query& q);
-    bool operator==(const Query& q);
+    public:
+        int id;
+        int category;
+        bool filtered;   // 0(false) = ANN, 1(true) = ANN where Node.category == Query.category
+        T value;
+        DirectedGraph<T>* belongsIn;   // pointer to the graph instance the query belongs in (to find isEmpty method)
+
+        bool operator<(const Query& q);
+        bool operator==(const Query& q);
+
+        bool empty();
 };
-
-
 
 // Directed Graph Class Template:
 // This implementation of a Directed Graph Class makes use of dictionaries/maps for adjacency lists.
