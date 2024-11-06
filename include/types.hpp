@@ -36,13 +36,14 @@ class Node{
         int id;
         int category;
         T value;
-        DirectedGraph<T>* belongsIn;   // pointer to the graph instance the query belongs in (to find isEmpty method)
+        function<bool(const T&)> isEmpty;   // pointer to the isEmpty method
 
-        Node(int id, int cat, T value, DirectedGraph<T>* belongsIn){
+        // Constructor
+        Node(int id = -1, int cat = -1, T value = {}, function<bool(const T&)> isEmpty = alwaysEmpty<T>){
             this->id = id;
             this->category = category;
             this->value = value;
-            this->belongsIn = belongsIn;
+            this->isEmpty = isEmpty;
         }
 
         bool operator<(const Node& n);
@@ -61,7 +62,16 @@ class Query{
         int category;
         bool filtered;   // 0(false) = ANN, 1(true) = ANN where Node.category == Query.category
         T value;
-        DirectedGraph<T>* belongsIn;   // pointer to the graph instance the query belongs in (to find isEmpty method)
+        function<bool(const T&)> isEmpty;   // pointer to the isEmpty method
+
+        // Constructor
+        Query(int id = -1, int cat = -1, bool fil = -1, T value = {}, function<bool(const T&)> isEmpty = alwaysEmpty<T>){
+            this->id = id;
+            this->filtered = fil;
+            this->category = category;
+            this->value = value;
+            this->isEmpty = isEmpty;
+        }
 
         bool operator<(const Query& q);
         bool operator==(const Query& q);
@@ -108,7 +118,7 @@ class DirectedGraph{
     public:
 
         // Constructor: Initialize an empty graph
-        DirectedGraph(function<float(const T&, const T&)> distance_function, function<bool(const T&)> is_Empty = alwaysValid<T>, vector<T> values = {}) {
+        DirectedGraph(function<float(const T&, const T&)> distance_function, function<bool(const T&)> is_Empty, vector<T> values = {}) {
             this->n_edges = 0;
             this->n_nodes = 0;
             this->d = distance_function;
@@ -133,7 +143,7 @@ class DirectedGraph{
         const unordered_map<T, unordered_set<T>>& get_Nout() const { return this->Nout; }
 
         // Creates a node, adds it in the graph and returns it
-        int createNode(const T& value);
+        int createNode(const T& value, int category = -1);
 
         // Adds an directed edge (from->to). Updates outNeighbors(from) and inNeighbors(to)
         bool addEdge(const int from, const int to);
@@ -158,7 +168,7 @@ class DirectedGraph{
         const pair<unordered_set<int>, unordered_set<int>> greedySearch(Node<T>& s, T xq, int k, int L);
 
         // Prunes out-neighbors of node p up until a minimum threshold R of out-neighbors for node p, based on distance criteria with parameter a.
-        void robustPrune(const Node<T>& p, unordered_set<int> V, float a, int R);
+        void robustPrune(Node<T>& p, unordered_set<int> V, float a, int R);
 
         // Transforms the graph into a Directed Graph such that it makes the finding of nearest neighbors easier.
         // Parameters:

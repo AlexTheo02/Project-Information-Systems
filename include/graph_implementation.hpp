@@ -6,21 +6,19 @@
 
 // Creates a node, adds it in the graph and returns it
 template<typename T>
-int DirectedGraph<T>::createNode(const T& value){
+int DirectedGraph<T>::createNode(const T& value, int category){
     // https://cplusplus.com/reference/set/set/insert/ - return values of insert
 
-    Node<T> node(this->n_nodes++, -1, value, this);
+    Node<T> node(this->n_nodes, category, value, this->isEmpty);
 
     // Add the value to graph's set of nodes
-    pair<typename set<int>::iterator, bool> ret;
-    ret = this->nodes.insert(value);
+    this->nodes.push_back(node);
 
     // Increment the number of nodes in graph (if insertion was successful)
-    if (ret.second)
-        this->n_nodes++;
+    this->n_nodes++;
     
-    // return an iterator to the inserted element (or the already existing one)
-    return ret.first;
+    // return the node's id
+    return node.id;
 }
 
 // Adds a directed edge (from->to). Updates outNeighbors(from) and inNeighbors(to)
@@ -103,8 +101,8 @@ bool DirectedGraph<T>::clearNeighbors(const int id){
 // clears all edges in the graph
 template <typename T>
 bool DirectedGraph<T>::clearEdges(void){
-    for (Node<T> n : this->nodes){
-        if (!this->clearNeighbors(n.value)){
+    for (Node<T> node : this->nodes){
+        if (!this->clearNeighbors(node.id)){
             c_log << "ERROR: Failed to clear neighbors for node" << '\n';
             return false;
         }
@@ -234,6 +232,8 @@ const Node<T> DirectedGraph<T>::_parallel_medoid(void){
     int min_index = getIndex(dmin, local_dmin);
 
     // return the corresponding total minimum element of type T from the parallel vector.
+    c_log << local_minima[min_index];
+    c_log << "\n\n\n\n\n\n\n\n";
     return local_minima[min_index];
 }
 
@@ -245,21 +245,21 @@ Node<T> DirectedGraph<T>::myArgMin(const unordered_set<int>& nodeSet, T t){
 
     if (isEmpty(t)) { throw invalid_argument("Query container is empty.\n"); }
 
-    if (nodeSet.size() == 1)
-        return *nodeSet.begin();
+    if (nodeSet.size() == 1) { return this->nodes[*nodeSet.begin()]; }
 
     float minDist = numeric_limits<float>::max(), dist;
-    T minNode;
+    int minId;
 
-    for (const T& n : nodeSet){
-        dist = this->d(n, t);
+    for (const int id : nodeSet){
+        dist = this->d(this->nodes[id].value, t);
+
        
         if (dist <= minDist){    // New minimum distance found
-            minNode = n;
+            minId = id;
             minDist = dist;
         }
     }
-    return minNode;
+    return this->nodes[minId];
 }
 
 // Retains the N closest elements of S to X based on distance d
@@ -360,6 +360,8 @@ const pair<unordered_set<int>, unordered_set<int>> DirectedGraph<T>::greedySearc
     if (L < k){ throw invalid_argument("L must be greater or equal to K.\n"); }
 
     // Create empty sets
+    c_log << s.id;
+
     unordered_set<int> Lc = {s.id}, V, diff; // Initialize Lc with s
     
     while(!(diff = setSubtraction(Lc,V)).empty()){
@@ -388,12 +390,12 @@ const pair<unordered_set<int>, unordered_set<int>> DirectedGraph<T>::greedySearc
 
 // Prunes out-neighbors of node p up until a minimum threshold R of out-neighbors for node p, based on distance criteria with parameter a.
 template <typename T>
-void DirectedGraph<T>::robustPrune(const Node<T>& p, unordered_set<int> V, float a, int R){
+void DirectedGraph<T>::robustPrune(Node<T>& p, unordered_set<int> V, float a, int R){
 
     // Argument Checks
     if (p.empty()) { throw invalid_argument("No node was provided.\n"); }
 
-    if (p.id >= this->n_nodeds) { throw invalid_argument("Node not in nodeSet\n"); };
+    if (p.id >= this->n_nodes) { throw invalid_argument("Node not in nodeSet\n"); };
 
     if (a < 1) { throw invalid_argument("Parameter a must be >= 1.\n"); }
 
@@ -418,7 +420,7 @@ void DirectedGraph<T>::robustPrune(const Node<T>& p, unordered_set<int> V, float
         
         // *it = n = p', p_opt = p*
         for (auto it = V.begin(); it != V.end(); /*no increment here*/){    // safe set iteration with mutable set during the iteration
-            if ( (a * this->d(p_opt.value, *it)) <= this->d(p.value, *it)){ 
+            if ( (a * this->d(p_opt.value, this->nodes[*it].value)) <= this->d(p.value, this->nodes[*it].value)){ 
                 it = V.erase(it);
             }
             else { it++; }  // incrementing here because V.erase() returns the next iterator on successful deletion
@@ -457,11 +459,12 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){
     c_log << "Finalizing Vamana Index using the Vamana Algorithm . . ." << '\n';
     vector<Node<T>> perm = permutation(this->nodes);
 
-    for (const Node<T>& si : perm){
+    for (Node<T>& si : perm){
         pair<unordered_set<int>, unordered_set<int>> rv = greedySearch(s, si.value, 1, L);
+
         unordered_set<int> Lc = rv.first;
         unordered_set<int> V = rv.second;
-  
+
         this->robustPrune(si, V, a, R);
         
         if (mapKeyExists(si.id, this->Nout)){
@@ -483,7 +486,6 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){
 // Make sure SHOULD_OMIT flag in config.hpp file is set to 0
 template<typename T>
 void DirectedGraph<T>::store(const string& filename) const{
-
     fstream file;
 
     // create a new file if it did not exist, or replace any contents existing before
@@ -495,30 +497,7 @@ void DirectedGraph<T>::store(const string& filename) const{
     file << '\n';
     file << this->nodes;
     file << '\n';
-
-    // Map each element to its corresponding index
-    int index = 0;
-    map<T, int> elemIndexMap;
-    for (const T& elem: this->nodes){
-        elemIndexMap[elem] = index++; 
-    }
-
-    // Create output map
-    map<int, set<int>> outNout;
-
-    for (auto& pair : this->Nout){
-
-        // Get element's index
-        index = elemIndexMap[pair.first];
-
-        // Out neighbours set
-        for (const T& neighbor : pair.second){
-            outNout[index].insert(elemIndexMap[neighbor]);
-        }
-    }
-
-    file << outNout;
-
+    file << this->Nout;
     file.close();
 
     c_log << "Graph Instance stored successfully in \"" << filename << '\"' << '\n';
@@ -528,7 +507,6 @@ void DirectedGraph<T>::store(const string& filename) const{
 // IMPORTANT: makes use of overloaded >> operator to load the graph from a file
 template<typename T>
 void DirectedGraph<T>::load(const string& filename){
-
     fstream file;
 
     file.open(filename, ios::in);
@@ -539,29 +517,7 @@ void DirectedGraph<T>::load(const string& filename){
     file.ignore(1);         // ignores \n
     file >> this->nodes;
     file.ignore(1);         // ignores \n
-
-    // Map each index to its corresponding element
-    int index = 0;
-    map<int, T> indexElemMap;
-    for (const T& elem: this->nodes){
-        indexElemMap[index++] = elem;
-    }
-
-    map <int, set<int>> inNout;
-
-    file >> inNout;
-
-    T elem;
-    // Translate int key to T
-    for (auto& pair : inNout){
-        elem = indexElemMap[pair.first];
-
-        // Translate int neighbors to T
-        for (int neighbor: pair.second){
-            this->Nout[elem].insert(indexElemMap[neighbor]);
-        }
-    }
-
+    file >> this->Nout;
     file.close();
     c_log << "Graph Instance loaded successfully from \"" << filename << '\"' << '\n';
 }

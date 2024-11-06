@@ -51,7 +51,7 @@
 
     // a Node is empty when its value is empty
     template <typename T>
-    bool Node<T>::empty(){ return (this->belongsIn->isEmpty(this->value)); }
+    bool Node<T>::empty(){ return (this->isEmpty(this->value)); }
 
 
 // Query Overloads:
@@ -108,4 +108,4 @@
 
     // a Query is empty when either the category is -1 or the value is empty
     template <typename T>
-    bool Query<T>::empty(){ return (this->category == -1 || this->belongsIn->isEmpty(this->value)); }
+    bool Query<T>::empty(){ return (this->category == -1 || this->isEmpty(this->value)); }

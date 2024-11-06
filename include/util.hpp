@@ -258,6 +258,9 @@ void printFormatMiliseconds(chrono::milliseconds duration){
 template<typename T>
 bool alwaysValid(const T& t) { return false; }
 
+template<typename T>
+bool alwaysEmpty(const T& t) { return true; }
+
 // ValidCheck function specific for vector container of any type.
 template<typename T>
 bool vectorEmpty(const vector<T>& v){ return v.empty(); }
