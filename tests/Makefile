@@ -5,7 +5,7 @@ SHELL := /bin/bash
 CC = g++
 
 # Compiler Flags
-CFLAGS = -I./include -I../include -O2
+CFLAGS = -I./include -I../include
 
 # Linker Flags
 LDFLAGS = -pthread -lm -std=c++17
@@ -16,6 +16,7 @@ BUILD_DIR = ./build
 BIN_DIR = ./bin
 INCLUDE_DIR = ./include
 PARENT_DIR = ..
+PARENT_INCLUDE_DIR = $(PARENT_DIR)/include
 
 # File Names
 TYPES = types
@@ -45,6 +46,8 @@ EX_t_UTIL = $(BIN_DIR)/$(t_UTIL)
 EX_t_CONFIG = $(BIN_DIR)/$(t_CONFIG)
 EX_ALL = $(EX_t_TYPES) $(EX_t_UTIL) $(EX_t_CONFIG)
 
+DEPENDENCIES = $(INCLUDE_DIR)/acutest.h $(PARENT_INCLUDE_DIR)/interface.hpp
+
 # Default target
 default: dirs $(EX_ALL)
 
@@ -60,16 +63,16 @@ rebuild:
 	dirs
 	make
 
-run_u:
-	dirs
+u: $(EX_t_UTIL)
+
+
+run_u: dirs $(EX_t_UTIL)
 	$(EX_t_UTIL)
 
-run_t:
-	dirs
+run_t: dirs $(EX_t_TYPES)
 	$(EX_t_TYPES)
 
-run_c:
-	dirs
+run_c: dirs $(EX_t_CONFIG)
 	$(EX_t_CONFIG)
 
 # rebuild and run specific test
@@ -107,17 +110,17 @@ $(EX_t_CONFIG): $(OBJ_t_CONFIG)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 # Rules to build test_Types.o
-$(OBJ_t_TYPES): $(SRC_t_TYPES) $(INCLUDE_DIR)/acutest.h
+$(OBJ_t_TYPES): $(SRC_t_TYPES) $(DEPENDENCIES)
 	@echo "Building $(t_TYPES) . . . "
 	$(CC) $(CFLAGS) -c $< -o $@ $(LDFLAGS)
 
 # Rules to build test_Util.o
-$(OBJ_t_UTIL): $(SRC_t_UTIL) $(INCLUDE_DIR)/acutest.h
+$(OBJ_t_UTIL): $(SRC_t_UTIL) $(DEPENDENCIES)
 	@echo "Building $(t_UTIL) . . . "
 	$(CC) $(CFLAGS) -c $< -o $@ $(LDFLAGS)
 
 # Rules to build test_Util.o
-$(OBJ_t_CONFIG): $(SRC_t_CONFIG) $(INCLUDE_DIR)/acutest.h
+$(OBJ_t_CONFIG): $(SRC_t_CONFIG) $(DEPENDENCIES)
 	@echo "Building $(t_CONFIG) . . . "
 	$(CC) $(CFLAGS) -c $< -o $@ $(LDFLAGS)
 

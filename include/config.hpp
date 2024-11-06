@@ -7,7 +7,9 @@
 #include <algorithm>
 #include <functional>
 #include <map>
+#include <unordered_map>
 #include <set>
+#include <unordered_set>
 #include <cstdlib>
 #include <string>
 #include <cstring>
@@ -105,6 +107,10 @@ struct is_supported_container<list<T>> : true_type {};
 template <typename T>
 struct is_supported_container<set<T>> : true_type {};
 
+// Specialization for unordered_set                                   unordered_set is enabled
+template <typename T>
+struct is_supported_container<unordered_set<T>> : true_type {};
+
 
 // template overload for printing any iterable container (of the above specialized), containing any printable type 
 template<typename Container>
@@ -164,9 +170,9 @@ operator>>(istream& stream, Container& container) {  // container is updated by 
 
 // Operator Overloading for Map<T, set<T>>. Works for any printable type T.
 
-// template overload for printing a map of T,set<T>
+// template overload for printing a unordered_map of T,set<T>
 template <typename T>
-ostream& operator<<(ostream& stream, const map<T, set<T>>& m){
+ostream& operator<<(ostream& stream, const unordered_map<T, unordered_set<T>>& m){
 
     stream << "{";
 
@@ -188,7 +194,7 @@ ostream& operator<<(ostream& stream, const map<T, set<T>>& m){
 
 // template overload for reading a map of T,set<T>
 template <typename T>
-istream& operator>>(istream& stream, map<T, set<T>>& m){
+istream& operator>>(istream& stream, unordered_map<T, unordered_set<T>>& m){
 
     m.clear();
 
@@ -200,8 +206,8 @@ istream& operator>>(istream& stream, map<T, set<T>>& m){
         return stream;
     }
         
-    T key;
-    set<T> value;
+    int key;
+    unordered_set<int> value;
 
     // how the map string representation is formatted (BNF syntax)
     // pair ::= ε

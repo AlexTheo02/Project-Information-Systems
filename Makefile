@@ -22,8 +22,9 @@ TYPES = types
 UTIL = util
 CONFIG = config
 GRAPH = graph_implementation
-INTERFACE = interface
+NQ = node_and_query
 EVAL = evaluation
+INTERFACE = interface
 
 MAIN = main
 
@@ -39,6 +40,7 @@ HEADER_UTIL = $(INCLUDE_DIR)/$(UTIL).hpp
 HEADER_TYPES = $(INCLUDE_DIR)/$(TYPES).hpp
 HEADER_CONFIG = $(INCLUDE_DIR)/$(CONFIG).hpp
 HEADER_GRAPH = $(INCLUDE_DIR)/$(GRAPH).hpp
+HEADER_NQ = $(INCLUDE_DIR)/$(NQ).hpp
 HEADER_EVAL = $(INCLUDE_DIR)/$(EVAL).hpp
 HEADER_INTERFACE = $(INCLUDE_DIR)/$(INTERFACE).hpp
 
