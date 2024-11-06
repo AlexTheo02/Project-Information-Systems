@@ -17,6 +17,8 @@
 #include <utility>
 #include <type_traits>
 #include <list>
+#include <unordered_set>
+#include <unordered_map>
 
 #include "config.hpp"
 
@@ -56,14 +58,14 @@ bool setIn(const T& t, const set<T>& s){
 
 // Wrapper function that checks for existence as key in an unordered map
 template <typename T1, typename T2>
-bool mapKeyExists(const T1& key, const map<T1, T2>& map){
+bool mapKeyExists(const T1& key, const unordered_map<T1, T2>& map){
     return (map.find(key) != map.end());
 }
 
 // Subtract set2 from set1. Returns a new set.
 template <typename T>
-set<T> setSubtraction(const set<T>& set1, const set<T>& set2){
-    set<T> result = set1;
+unordered_set<T> setSubtraction(const unordered_set<T>& set1, const unordered_set<T>& set2){
+    unordered_set<T> result = set1;
 
     for (auto& elem : set2){
         result.erase(elem);
@@ -71,7 +73,7 @@ set<T> setSubtraction(const set<T>& set1, const set<T>& set2){
     return result;
 }
 
-// Joins set1 with set1. Returns a new set.
+// Joins set1 with set2. Returns a new set.
 template <typename T>
 set<T> setUnion(const set<T>& set1, const set<T>& set2){
     // https://stackoverflow.com/questions/283977/c-stl-set-difference - adapted for setUnion
@@ -82,25 +84,25 @@ set<T> setUnion(const set<T>& set1, const set<T>& set2){
 }
 
 // Returns an element from the set, chosen uniformly at random
-template <typename T>
-T sampleFromSet(const set<T>& s){
+template <typename Container>
+typename Container::value_type sampleFromContainer(const Container& s){
 
     // https://stackoverflow.com/questions/3052788/how-to-select-a-random-element-in-stdset
 
-    if (s.empty()){ throw invalid_argument("Set is empty.\n"); }
+    if (s.empty()){ throw invalid_argument("Container is empty.\n"); }
 
-    if (s.size() == 1){ return *(s.begin()); }  // directly return the singular element from the set if |s| is 1.
+    if (s.size() == 1){ return *(s.begin()); }  // directly return the singular element from the container if |s| is 1.
 
     auto it = s.begin();
-    advance(it, rand() % s.size()); // iterator moves to a random position between 0 and set_size
+    advance(it, rand() % s.size()); // iterator moves to a random position between 0 and container_size
 
     return *it;                     // dereferencing the iterator to return the pointed element
 }
 
 // returns a vector of a random permutation of the elements beloning in the set s
 template<typename T>
-vector<T> permutation(const set<T>& s) {
-    // Transforming the set into a vector
+vector<T> permutation(const vector<T>& s) {
+    // Copy of the vector to shuffle
     vector<T> vec(s.begin(), s.end());
 
     // Shuffling the vector
@@ -110,78 +112,6 @@ vector<T> permutation(const set<T>& s) {
     shuffle(vec.begin(), vec.end(), rng);
 
     return vec;
-}
-
-// Returns the node from given nodeSet with the minimum distance from a specific point in the nodespace (node is allowed to not exist in the graph)
-template<typename T>
-T myArgMin(const set<T>& nodeSet, T t, function<float(const T&, const T&)> d, function<bool(const T&)> isEmpty){
-
-    if (nodeSet.empty()) { throw invalid_argument("Set is Empty.\n"); }
-
-    if (isEmpty(t)) { throw invalid_argument("Query container is empty.\n"); }
-
-    if (nodeSet.size() == 1)
-        return *nodeSet.begin();
-
-    float minDist = numeric_limits<float>::max(), dist;
-    T minNode;
-
-    for (const T& n : nodeSet){
-        dist = d(n, t);
-       
-        if (dist <= minDist){    // New minimum distance found
-            minNode = n;
-            minDist = dist;
-        }
-    }
-    return minNode;
-}
-
-// Retains the N closest elements of S to X based on distance d
-template<typename T>
-set<T> closestN(int N, const set<T>& S, T X, function<float(const T&, const T&)> d, function<bool(const T&)> isEmpty){
-
-    // check if the set is empty
-    if (S.empty()){
-        c_log << "WARNING: Set is empty. There exist no neighbors inside the given set.\n";
-        return S;
-    }
-
-    // check if the vector is empty
-    if (isEmpty(X)) { throw invalid_argument("Query X is empty.\n"); }
-
-    // check if N is a valid number (size of set > N > 0)
-    if (N < 0){ throw invalid_argument("N must be greater than 0.\n"); } 
-
-    // if N is equal to 0 return the empty set
-    if (N == 0){
-        c_log << "WARNING: N is 0. Returning the empty set.\n";
-        set<T> nullset;
-        return nullset;
-    }
-    
-    // if N is greater than the set size, return the whole set
-    if(S.size() < N)
-        return S;
-
-    // transform the set to a vector for partitioning around a pivot
-    vector<T> Svec(S.begin(), S.end());
-
-    // partition the vector based on the distance from point X up around the N-th element
-    nth_element(Svec.begin(), Svec.begin() + N, Svec.end(),
-                [X, d] (T p1, T p2) {return (d(X, p1) < d(X, p2));});
-                // lambda(p1,p2) = determines which of the two points is closest to X given distance metric d.
-
-    // the vector after the use of nth_element has the following properties:
-    // the N-th element is in the position that it would've been if the vector was sorted in its entirety
-    // elements before the N-th element are < than the N-th element, and elements after the N-th element are > than the N-th element. (< and > defined by compare function)
-    // the elements in the left and right subvectors are not themselves sorted, but for this task we don't need them sorted. 
-    // https://en.cppreference.com/w/cpp/algorithm/nth_element
-
-    // keep N first
-    set<T> closest_nodes(Svec.begin(), Svec.begin() + N);
-
-    return closest_nodes;
 }
 
 // Returns a vector of vectors from specified .<f|i|b>vecs file
@@ -268,8 +198,8 @@ int getIndex(const T& value, const vector<T>& v){
 // Evaluation:
 
 // Returns the k-recall value between 2 Containers that support the .size(), .begin(), .end() methods
-template <typename Container>
-float k_recall(const Container& c1, const Container& c2){
+template <typename Container1, typename Container2>
+float k_recall(const Container1& c1, const Container2& c2){
 
     if (c1.empty()) { return 0.0f; }
 
