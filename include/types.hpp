@@ -25,18 +25,26 @@ using namespace std;
 // Node structure
 template <typename T>
 struct Node{
-    T value;
     int id;
     int category;
+    T value;
+
+    bool operator<(const Node& n);
+    bool operator==(const Node& n);
 };
+
 
 // Query Structure
 template <typename T>
 struct Query{
-    T value;
     int type;   // 0 = ANN, 1 = ANN where Node.category = Query.category 
-    int category;  
+    int category; 
+    T value;
+
+    bool operator<(const Query& q);
+    bool operator==(const Query& q);
 };
+
 
 
 // Directed Graph Class Template:
