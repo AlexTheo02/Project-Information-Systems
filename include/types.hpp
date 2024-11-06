@@ -109,10 +109,6 @@ class DirectedGraph{
 
         // Thread function for parallel medoid. Work inside the range defined by [start_index, end_index). Update minima by reference for the merging of the results.
         void _thread_medoid_fn(int start_index, int end_index, Node<T>& local_minimum, float& local_dmin);
-
-        Node<T> myArgMin(const unordered_set<int>& nodeSet, T t);
-
-        unordered_set<int> closestN(int N, const unordered_set<int>& S, T X);
     
     public:
 
@@ -158,6 +154,10 @@ class DirectedGraph{
 
         // Calculates the medoid of the nodes in the graph based on the given distance function
         const Node<T> medoid(void);
+
+        Node<T> _myArgMin(const unordered_set<int>& nodeSet, T t);
+
+        unordered_set<int> _closestN(int N, const unordered_set<int>& S, T X);
 
         // creates a random R graph with the existing nodes. Return TRUE if successful, FALSE otherwise
         bool Rgraph(int R);

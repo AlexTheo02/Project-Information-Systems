@@ -239,7 +239,7 @@ const Node<T> DirectedGraph<T>::_parallel_medoid(void){
 
 // Returns the node from given nodeSet with the minimum distance from a specific point in the nodespace (node is allowed to not exist in the graph)
 template<typename T>
-Node<T> DirectedGraph<T>::myArgMin(const unordered_set<int>& nodeSet, T t){
+Node<T> DirectedGraph<T>::_myArgMin(const unordered_set<int>& nodeSet, T t){
 
     if (nodeSet.empty()) { throw invalid_argument("Set is Empty.\n"); }
 
@@ -264,7 +264,7 @@ Node<T> DirectedGraph<T>::myArgMin(const unordered_set<int>& nodeSet, T t){
 
 // Retains the N closest elements of S to X based on distance d
 template<typename T>
-unordered_set<int> DirectedGraph<T>::closestN(int N, const unordered_set<int>& S, T X){
+unordered_set<int> DirectedGraph<T>::_closestN(int N, const unordered_set<int>& S, T X){
 
     // check if the set is empty
     if (S.empty()){
@@ -351,8 +351,6 @@ const pair<unordered_set<int>, unordered_set<int>> DirectedGraph<T>::greedySearc
     // argument checks
     if (s.empty()){ throw invalid_argument("No start node was provided.\n"); }
 
-    if (s.id > this->n_nodes) { throw invalid_argument("Starting node not in nodeSet.\n"); }   // setIn PROBLEM. 
-
     if (this->isEmpty(xq)){ throw invalid_argument("No query was provided.\n"); }
 
     if (k <= 0){ throw invalid_argument("K must be greater than 0.\n"); }
@@ -365,7 +363,7 @@ const pair<unordered_set<int>, unordered_set<int>> DirectedGraph<T>::greedySearc
     unordered_set<int> Lc = {s.id}, V, diff; // Initialize Lc with s
     
     while(!(diff = setSubtraction(Lc,V)).empty()){
-        Node<T> pmin = this->myArgMin(diff, xq);    // pmin is the node with the minimum distance from query xq
+        Node<T> pmin = this->_myArgMin(diff, xq);    // pmin is the node with the minimum distance from query xq
 
         // If node has outgoing neighbors
         if (mapKeyExists(pmin.id, this->Nout)){
@@ -374,13 +372,13 @@ const pair<unordered_set<int>, unordered_set<int>> DirectedGraph<T>::greedySearc
         V.insert(pmin.id);
 
         if (Lc.size() > L){
-            Lc = closestN(L, Lc, xq);    // function: find N closest points from a specific xq from given set and return them
+            Lc = _closestN(L, Lc, xq);    // function: find N closest points from a specific xq from given set and return them
         }
     }
 
     pair<unordered_set<int>, unordered_set<int>> ret;
     
-    ret.first = closestN(k, Lc, xq);
+    ret.first = _closestN(k, Lc, xq);
     ret.second = V;
 
     return ret;
@@ -394,8 +392,6 @@ void DirectedGraph<T>::robustPrune(Node<T>& p, unordered_set<int> V, float a, in
 
     // Argument Checks
     if (p.empty()) { throw invalid_argument("No node was provided.\n"); }
-
-    if (p.id >= this->n_nodes) { throw invalid_argument("Node not in nodeSet\n"); };    // setIn PROBLEM
 
     if (a < 1) { throw invalid_argument("Parameter a must be >= 1.\n"); }
 
@@ -411,7 +407,7 @@ void DirectedGraph<T>::robustPrune(Node<T>& p, unordered_set<int> V, float a, in
     Node<T> p_opt;
     
     while (!V.empty()){
-        p_opt = this->myArgMin(V, p.value);
+        p_opt = this->_myArgMin(V, p.value);
         
         this->addEdge(p.id, p_opt.id);
 

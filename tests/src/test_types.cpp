@@ -319,146 +319,145 @@ void test_Rgraph(void){
 }
 
 
-// void test_myArgMin(void){   
+void test_myArgMin(void){   
 
-//     set<vector<float>> s;
+    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
 
-//     // default case
-//     s = {
-//         (vector<float>) {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
-//         (vector<float>) {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f},
-//         (vector<float>) {2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f},
-//         (vector<float>) {3.0f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f},
-//         (vector<float>) {4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f},
-//         (vector<float>) {5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f},
-//         (vector<float>) {6.0f, 6.0f, 6.0f, 6.0f, 6.0f, 6.0f, 6.0f, 6.0f, 6.0f, 6.0f},
-//     };
+    unordered_set<int> s;
 
-//     vector<float> xq = {2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f};
+    vector<vector<float>> vec;
 
-//     vector<float> xmin = myArgMin<vector<float>>(s, xq, euclideanDistance<vector<float>>, vectorEmpty<float>);
-//     vector<float> ymin = {2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
-//     TEST_CHECK(xmin == ymin);
+    // default case
+    vec = {
+        (vector<float>) {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+        (vector<float>) {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f},
+        (vector<float>) {2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f},
+        (vector<float>) {3.0f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f},
+        (vector<float>) {4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f, 4.0f},
+        (vector<float>) {5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f, 5.0f},
+        (vector<float>) {6.0f, 6.0f, 6.0f, 6.0f, 6.0f, 6.0f, 6.0f, 6.0f, 6.0f, 6.0f},
+    };
+
+    for( vector<float> v : vec){
+        s.insert(DG.createNode(v));
+    }
+
+    vector<float> xq = {2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f};
+
+    Node<vector<float>> xmin = DG._myArgMin(s, xq);
+    vector<float> ymin = {2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
+    TEST_CHECK(xmin.value == ymin);
 
 
-//     // empty arguments check:
+    // empty arguments check:
 
-//     // empty query, non empty unordered_set
-//     xq.clear();
-//     try{
-//         xmin = myArgMin<vector<float>>(s, xq, euclideanDistance<vector<float>>, vectorEmpty<float>);
-//         TEST_CHECK(false);  // control should not reach here
-//     }catch(invalid_argument &ia){ TEST_CHECK(string(ia.what()) == "Query container is empty.\n"); }
+    // empty query, non empty unordered_set
+    xq.clear();
+    try{
+        xmin = DG._myArgMin(s, xq);
+        TEST_CHECK(false);  // control should not reach here
+    }catch(invalid_argument &ia){ TEST_CHECK(string(ia.what()) == "Query container is empty.\n"); }
 
-//     // empty unordered_set, non empty query
-//     xq = {2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f};
-//     s.clear();
-//     try{
-//         xmin = myArgMin<vector<float>>(s, xq, euclideanDistance<vector<float>>, vectorEmpty<float>);
-//         TEST_CHECK(false);  // control should not reach here
-//     }catch(invalid_argument &ia){ TEST_CHECK(string(ia.what()) == "Set is Empty.\n"); }
+    // empty unordered_set, non empty query
+    xq = {2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f};
+    s.clear();
+    try{
+        xmin = DG._myArgMin(s, xq);
+        TEST_CHECK(false);  // control should not reach here
+    }catch(invalid_argument &ia){ TEST_CHECK(string(ia.what()) == "Set is Empty.\n"); }
 
-//     // both empty
-//     xq.clear();
-//     try{
-//         xmin = myArgMin<vector<float>>(s, xq, euclideanDistance<vector<float>>, vectorEmpty<float>);
-//         TEST_CHECK(false);  // control should not reach here
-//     }catch(invalid_argument &ia){ TEST_CHECK(string(ia.what()) == "Set is Empty.\n"); }
+    // both empty
+    xq.clear();
+    try{
+        xmin = DG._myArgMin(s, xq);
+        TEST_CHECK(false);  // control should not reach here
+    }catch(invalid_argument &ia){ TEST_CHECK(string(ia.what()) == "Set is Empty.\n"); }
 
-// }
+}
 
-// void test_closestN(void){    
+void test_closestN(void){    
 
-//     int N = 5;
-//     set<vector<float>> s;
+    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
 
-//     // Create 1000 vectors of dimension 128 with values [i, i, ..., i]
-//     for (int i = 0; i < 1000; i++) {
-//         vector<float> v(128, static_cast<float>(i));
-//         s.insert(v);
-//     }
+    int N = 5;
 
-//     // Query vector [327.3f, 327.3f, ..., 327.3f]
-//     vector<float> x(128, 327.3f);
+    unordered_set<int> s;
 
-//     // Expected closest vectors: [325, 326, 327, 328, 329]
-//     set<vector<float>> yclosest;
-//     for (int i = 0; i < 5; i++) {
-//         vector<float> v(128, static_cast<float>(325 + i));
-//         yclosest.insert(v);
-//     }
-//     set<vector<float>> xclosest = closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>);
+    // Create 1000 vectors of dimension 128 with values [i, i, ..., i]
+    for (int i = 0; i < 1000; i++) {
+        vector<float> v(128, (float)(i));
+        s.insert(DG.createNode(v));
+    }
 
-//     TEST_CHECK(xclosest == yclosest);
+    // Query vector [327.3f, 327.3f, ..., 327.3f]
+    vector<float> x(128, 327.3f);
 
-//     // argument checks:
+    // Expected closest vectors: [325, 326, 327, 328, 329]
+    unordered_set<int> yclosest = { 325, 326, 327, 328 , 329};
     
-//     // N > |s| returns the whole set
-//     N = 1001; // |s| = 1000
-//     TEST_CHECK(closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>) == s);
+    unordered_set<int> xclosest = DG._closestN(N, s, x);
 
-//     // N < 0
-//     try{
-//         xclosest = closestN<vector<float>>(-1, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>);
-//         TEST_CHECK(false);  // Control should not reach here
-//     }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "N must be greater than 0.\n"); }
+    TEST_CHECK(xclosest == yclosest);
 
-//     // N == 0
-//     N = 0;
-//     set<vector<float>> nullset;
-//     TEST_CHECK(closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>) == nullset);
-
-//     // set is empty
-//     TEST_CHECK(closestN<vector<float>>(N, nullset, x, euclideanDistance<vector<float>>, vectorEmpty<float>) == nullset);
-
-//     // Empty query
-//     x.clear();  // Clear the query vector
-
-//     try{
-//         xclosest = closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>);
-//         TEST_CHECK(false);  // Control should not reach here
-//     }catch(invalid_argument& ia){ 
-//         // Check if the caught exception message matches the expected message
-//         TEST_CHECK(string(ia.what()) == "Query X is empty.\n");
-//     }
-
-
-
-//     // both set and query empty
-//     TEST_CHECK(closestN<vector<float>>(N, nullset, x, euclideanDistance<vector<float>>, vectorEmpty<float>) == nullset);
-
-//     // case with ties
-//     s = {
-//         (vector<float>) {1,1,1,1,1},
-//         (vector<float>) {2,2,2,2,2},
-//         (vector<float>) {3,3,3,3,3},
-//         (vector<float>) {4,4,4,4,4},
-//         (vector<float>) {5,5,5,5,5}
-//     };
-//     x = {2.5f, 2.5f, 2.5f, 2.5f, 2.5f};
-//     N = 3;
+    // argument checks:
     
-//     yclosest = {                        // because of ascending sort, takes the smallest value that is closest to the reference point x first.
-//         (vector<float>) {1,1,1,1,1},
-//         (vector<float>) {2,2,2,2,2},
-//         (vector<float>) {3,3,3,3,3},
-//     };
-//     xclosest = closestN<vector<float>>(N, s, x, euclideanDistance<vector<float>>, vectorEmpty<float>);
-//     TEST_CHECK(xclosest == yclosest);
-// }
+    // N > |s| returns the whole set
+    N = 1001; // |s| = 1000
+    TEST_CHECK(DG._closestN(N, s, x) == s);
 
+    // N < 0
+    try{
+        xclosest = DG._closestN(-1, s, x);
+        TEST_CHECK(false);  // Control should not reach here
+    }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "N must be greater than 0.\n"); }
 
+    // N == 0
+    N = 0;
+    unordered_set<int> nullset;
+    TEST_CHECK(DG._closestN(N, s, x) == nullset);
 
+    // set is empty
+    TEST_CHECK(DG._closestN(N, nullset, x) == nullset);
 
+    // Empty query
+    x.clear();  // Clear the query vector
 
+    try{
+        xclosest = DG._closestN(N, s, x);
+        TEST_CHECK(false);  // Control should not reach here
+    }catch(invalid_argument& ia){ 
+        // Check if the caught exception message matches the expected message
+        TEST_CHECK(string(ia.what()) == "Query X is empty.\n");
+    }
 
+    // both set and query empty
+    TEST_CHECK(DG._closestN(N, nullset, x) == nullset);
 
+    DirectedGraph<vector<float>> DG2(euclideanDistance<vector<float>>, vectorEmpty<float>);
 
+    // case with ties
+    vector<vector<float>> vec = {
+        (vector<float>) {1,1,1,1,1},
+        (vector<float>) {2,2,2,2,2},
+        (vector<float>) {3,3,3,3,3},
+        (vector<float>) {4,4,4,4,4},
+        (vector<float>) {5,5,5,5,5}
+    };
 
+    s.clear();
 
+    for(vector<float> v : vec){
+        s.insert(DG2.createNode(v));
+    }
 
+    x = {2.5f, 2.5f, 2.5f, 2.5f, 2.5f};
+    N = 3;
+    
+    yclosest = {1,2,0};
 
-
+    xclosest = DG2._closestN(N, s, x);
+    TEST_CHECK(xclosest == yclosest);
+}
 
 
 void test_greedySearch(void){ 
@@ -482,18 +481,10 @@ void test_greedySearch(void){
     // Empty starting node s
     Node<vector<float>> startingNode;
     try{
-        pair<unordered_set<int>, unordered_set<int>> ret = DG.greedySearch(startingNode, vectors[0], 4, 5);
+        pair<unordered_set<int>, unordered_set<int>> ret = DG.greedySearch(startingNode, DG.getNodes()[0].value, 4, 5);
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "No start node was provided.\n")); }
     
-    // Starting node not in Graph's nodeSet
-    for (int i=0; i<128; i++){
-        startingNode.value.push_back(-i);
-    }
-    try {
-        pair<unordered_set<int>, unordered_set<int>> ret = DG.greedySearch(startingNode, vectors[0], 4, 5);
-        TEST_CHECK(false);
-    }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Starting node not in nodeSet.\n")); }
 
     // Empty query point xq
     startingNode = DG.getNodes()[129];
@@ -515,7 +506,6 @@ void test_greedySearch(void){
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "L must be greater or equal to K.\n")); }
 
-    return;
 }
 
 void test_robustPrune(void){  
@@ -545,14 +535,6 @@ void test_robustPrune(void){
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "No node was provided.\n")); }
 
-    // Node not in Graph's nodeSet
-    for (int i=0; i<128; i++){
-        startingNode.value.push_back(-i);
-    }
-    try{
-        DG.robustPrune(startingNode, nullset, 1, 5);
-        TEST_CHECK(false); // Control should not reach here
-    }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Node not in nodeSet\n")); }
     // a < 1
     try{
         DG.robustPrune(DG.getNodes()[43], nullset, 0, 5);
@@ -603,8 +585,8 @@ TEST_LIST = {
     { "test_Edges", test_Edges },
     { "test_clear", test_clear },
     { "test_medoid", test_medoid},
-    // { "test_myArgMin", test_myArgMin },
-    // { "test_closestN", test_closestN },
+    { "test_myArgMin", test_myArgMin },
+    { "test_closestN", test_closestN },
     { "test_Rgraph", test_Rgraph},
     { "test_greedySearch", test_greedySearch},
     { "test_robustPrune", test_robustPrune},
