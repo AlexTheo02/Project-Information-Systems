@@ -15,6 +15,7 @@
 #include <list>
 #include <unordered_map>
 #include <unordered_set>
+#include <mutex>
 
 #include "util.hpp"
 
@@ -93,14 +94,15 @@ template <typename T>
 class DirectedGraph{
 
     private:
-        int n_edges;                            // number of edges present in the graph
-        int n_nodes;                            // number of nodes present in the graph
-        vector<Node<T>> nodes;                  // vector containing all the nodes in the graph
-        int _medoid;                            // medoid node's id. Used to avoid recalculation of medoid if we want to access it more than once
-        unordered_map<int, unordered_set<int>> categories;          // a map containing all unique categories in the data and their corresponding nodes that belong to each
-        unordered_map<int, unordered_set<int>> Nout;                    // key: node, value: set of outgoing neighbors 
-        function<float(const T&, const T&)> d;  // Graph's distance function
-        function<bool(const T&)> isEmpty;       // typename T valid check
+        int n_edges;                                            // number of edges present in the graph
+        int n_nodes;                                            // number of nodes present in the graph
+        vector<Node<T>> nodes;                                  // vector containing all the nodes in the graph
+        int _medoid;                                            // medoid node's id. Used to avoid recalculation of medoid if we want to access it more than once
+        unordered_map<int, int> filteredMedoids;                // map containing each category key and its corresponding medoid node
+        unordered_map<int, unordered_set<int>> categories;      // a map containing all unique categories in the data and their corresponding nodes that belong to each
+        unordered_map<int, unordered_set<int>> Nout;            // key: node, value: set of outgoing neighbors 
+        function<float(const T&, const T&)> d;                  // Graph's distance function
+        function<bool(const T&)> isEmpty;                       // typename T valid check
 
         // implements medoid function using serial programming.
         const int _serial_medoid(void);
@@ -158,7 +160,24 @@ class DirectedGraph{
         const int medoid(void);
 
         // calculates the Filtered Medoids
-        const unordered_map<int, int> filteredMedoids(int threshold);
+        const unordered_map<int, int> findMedoids(float threshold);
+
+        // implements filtered medoid function using serial programming.
+        const unordered_map<int, int> _filtered_serial_medoid(float threshold);
+
+        // Implements filtered medoid function using parallel programming with threads. Concurrency is set by the global constant N_THREADS.
+        const unordered_map<int, int> _filtered_parallel_medoid(float threshold);
+
+        // Thread function for parallel filtered medoid.
+        void _filtered_thread_medoid_fn(
+            mutex& T_counterMutex,
+            mutex& categoryMutex,
+            vector<int>& T_counter,
+            int& categoryIndex,
+            int maxCategoryIndex,
+            vector<pair<int, unordered_set<int>>>& categoryPairs,
+            int threshold
+        );
 
         int _myArgMin(const unordered_set<int>& nodeSet, T t);
 
