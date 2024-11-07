@@ -352,6 +352,8 @@ template <typename T>
 const pair<unordered_set<int>, unordered_set<int>> DirectedGraph<T>::greedySearch(int s, T xq, int k, int L) {
 
     // argument checks
+    if (s < 0 || s >= this->n_nodes){ throw invalid_argument("Invalid Index was provided.\n"); }
+
     if (this->nodes[s].empty()){ throw invalid_argument("No start node was provided.\n"); }
 
     if (this->isEmpty(xq)){ throw invalid_argument("No query was provided.\n"); }
