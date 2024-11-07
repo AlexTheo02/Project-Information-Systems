@@ -54,7 +54,7 @@ void test_euclideanDistance(void){
 
 void test_setIn(void){  
 
-    set<int> s;
+    unordered_set<int> s;
     s.insert((int)1);
 
     TEST_CHECK(setIn((int)1, s) == true);
