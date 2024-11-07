@@ -96,19 +96,19 @@ class DirectedGraph{
         int n_edges;                            // number of edges present in the graph
         int n_nodes;                            // number of nodes present in the graph
         vector<Node<T>> nodes;                  // vector containing all the nodes in the graph
-        Node<T> _medoid;                        // used to avoid recalculation of medoid if we want to access it more than once
+        int _medoid;                            // medoid node's id. Used to avoid recalculation of medoid if we want to access it more than once
         unordered_map<int, unordered_set<int>> Nout;                    // key: node, value: set of outgoing neighbors 
         function<float(const T&, const T&)> d;  // Graph's distance function
         function<bool(const T&)> isEmpty;       // typename T valid check
 
         // implements medoid function using serial programming.
-        const Node<T> _serial_medoid(void);
+        const int _serial_medoid(void);
 
         // Implements medoid function using parallel programming with threads. Concurrency is set by the global constant N_THREADS.
-        const Node<T> _parallel_medoid(void);
+        const int _parallel_medoid(void);
 
         // Thread function for parallel medoid. Work inside the range defined by [start_index, end_index). Update minima by reference for the merging of the results.
-        void _thread_medoid_fn(int start_index, int end_index, Node<T>& local_minimum, float& local_dmin);
+        void _thread_medoid_fn(int start_index, int end_index, int& local_minimum, float& local_dmin);
     
     public:
 
@@ -118,6 +118,7 @@ class DirectedGraph{
             this->n_nodes = 0;
             this->d = distance_function;
             this->isEmpty = is_Empty;
+            this->_medoid = -1;
             c_log << "Graph created!" << '\n';
 
             for (const T& value : values){
@@ -153,9 +154,9 @@ class DirectedGraph{
         bool clearEdges(void);
 
         // Calculates the medoid of the nodes in the graph based on the given distance function
-        const Node<T> medoid(void);
+        const int medoid(void);
 
-        Node<T> _myArgMin(const unordered_set<int>& nodeSet, T t);
+        int _myArgMin(const unordered_set<int>& nodeSet, T t);
 
         unordered_set<int> _closestN(int N, const unordered_set<int>& S, T X);
 
@@ -167,13 +168,15 @@ class DirectedGraph{
 
         // Greedily searches the graph for the k nearest neighbors of query xq (in an area of size L), starting the search from the node s.
         // Returns a set with the k closest neighbors (returned.first) and a set of all visited nodes (returned.second).
-        const pair<unordered_set<int>, unordered_set<int>> greedySearch(Node<T>& s, T xq, int k, int L);
+        const pair<unordered_set<int>, unordered_set<int>> greedySearch(int s, T xq, int k, int L);
 
         // Returns a set with the k closest neighbors (returned.first) and a set of all visited nodes (returned.second).
         const pair<unordered_set<int>, unordered_set<int>> filteredGreedySearch(unordered_set<int>& S, Query<T> q, int k, int L);
 
         // Prunes out-neighbors of node p up until a minimum threshold R of out-neighbors for node p, based on distance criteria with parameter a.
-        void robustPrune(Node<T>& p, unordered_set<int> V, float a, int R);
+        void robustPrune(int p, unordered_set<int> V, float a, int R);
+
+        // void filteredRobustPrune(Node<T>& p, )
 
         // Transforms the graph into a Directed Graph such that it makes the finding of nearest neighbors easier.
         // Parameters:

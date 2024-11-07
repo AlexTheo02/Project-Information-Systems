@@ -35,7 +35,7 @@ void profileVamana(
     float total_recall = 0;
 
     // get the already calculated medoid
-    Node<vector<float>> medoid = DG.medoid();
+    int medoid = DG.medoid();
 
     // Greedy search for all queries with start node the medoid of all nodes (already calculated)
     for (int i=0; i<queries.size(); i++){

@@ -45,11 +45,11 @@ const pair<unordered_set<int>, unordered_set<int>> DirectedGraph<T>::filteredGre
         }
 
         while (!(diff = setSubtraction(Lc,V)).empty()){
-            Node<T> pmin = _myArgMin(diff, q.value);     // pmin is the node with the minimum distance from query xq
+            int pmin = _myArgMin(diff, q.value);     // pmin is the node with the minimum distance from query xq
 
-            V.insert(pmin.id);
+            V.insert(pmin);
 
-            unordered_set<int> filteredNoutPmin = this->filterSet(setSubtraction(this->Nout[pmin.id], V), q.category);
+            unordered_set<int> filteredNoutPmin = this->filterSet(setSubtraction(this->Nout[pmin], V), q.category);
 
             Lc.insert(filteredNoutPmin.begin(), filteredNoutPmin.end());
 
