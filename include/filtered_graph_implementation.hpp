@@ -116,8 +116,8 @@ const unordered_map<int, int> DirectedGraph<T>::_filtered_parallel_medoid(float 
     int maxCategoryIndex = categoryPairs.size() -1;
 
     // Create mutexes for shared resources
-    mutex& categoryMutex;
-    mutex& T_counterMutex;
+    mutex categoryMutex;
+    mutex T_counterMutex;
 
     // Create the threads
     for (int i=0; i<N_THREADS; i++){
@@ -238,7 +238,7 @@ bool DirectedGraph<T>::filteredVamanaAlgorithm(int L, int R, float a, float t){
         return false;
 
     // what is a good value of T for filteredMedoids?
-    unordered_map<int, int> st = this->filteredMedoids(t);  // paper says starting points should be the medoids found in [algorithm 2]
+    unordered_map<int, int> st = this->findMedoids(t);  // paper says starting points should be the medoids found in [algorithm 2]
 
     vector<Node<T>> perm = permutation(this->nodes);
 
@@ -262,4 +262,5 @@ bool DirectedGraph<T>::filteredVamanaAlgorithm(int L, int R, float a, float t){
             }
         }
     }
+    return true;
 }
