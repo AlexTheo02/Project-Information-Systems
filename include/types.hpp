@@ -159,12 +159,18 @@ class DirectedGraph{
 
         unordered_set<int> _closestN(int N, const unordered_set<int>& S, T X);
 
+        // Returns a filtered set
+        unordered_set<int> filterSet(unordered_set<int> S, int filter);
+
         // creates a random R graph with the existing nodes. Return TRUE if successful, FALSE otherwise
         bool Rgraph(int R);
 
         // Greedily searches the graph for the k nearest neighbors of query xq (in an area of size L), starting the search from the node s.
-        // Returns a set with the k closest neighbors (returned_vector[0]) and a set of all visited nodes (returned_vector[1]).
+        // Returns a set with the k closest neighbors (returned.first) and a set of all visited nodes (returned.second).
         const pair<unordered_set<int>, unordered_set<int>> greedySearch(Node<T>& s, T xq, int k, int L);
+
+        // Returns a set with the k closest neighbors (returned.first) and a set of all visited nodes (returned.second).
+        const pair<unordered_set<int>, unordered_set<int>> filteredGreedySearch(unordered_set<int>& S, Query<T> q, int k, int L);
 
         // Prunes out-neighbors of node p up until a minimum threshold R of out-neighbors for node p, based on distance criteria with parameter a.
         void robustPrune(Node<T>& p, unordered_set<int> V, float a, int R);

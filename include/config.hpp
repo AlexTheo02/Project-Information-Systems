@@ -107,7 +107,7 @@ struct is_supported_container<list<T>> : true_type {};
 template <typename T>
 struct is_supported_container<set<T>> : true_type {};
 
-// Specialization for unordered_set                                   unordered_set is enabled
+// Specialization for unordered_set                         unordered_set is enabled
 template <typename T>
 struct is_supported_container<unordered_set<T>> : true_type {};
 

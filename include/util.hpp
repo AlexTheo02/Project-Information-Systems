@@ -52,7 +52,7 @@ float euclideanDistance(const T& t1, const T& t2){
 
 // Wrapper function that checks for existence of element in the set
 template <typename T>
-bool setIn(const T& t, const set<T>& s){
+bool setIn(const T& t, const unordered_set<T>& s){
     return (s.find(t) != s.end());
 }
 

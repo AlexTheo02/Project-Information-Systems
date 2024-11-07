@@ -286,7 +286,7 @@ unordered_set<int> DirectedGraph<T>::_closestN(int N, const unordered_set<int>& 
     }
     
     // if N is greater than the set size, return the whole set
-    if(S.size() < N)
+    if(S.size() <= N)
         return S;
 
     // transform the set to a vector for partitioning around a pivot
@@ -358,8 +358,6 @@ const pair<unordered_set<int>, unordered_set<int>> DirectedGraph<T>::greedySearc
     if (L < k){ throw invalid_argument("L must be greater or equal to K.\n"); }
 
     // Create empty sets
-    c_log << s.id;
-
     unordered_set<int> Lc = {s.id}, V, diff; // Initialize Lc with s
     
     while(!(diff = setSubtraction(Lc,V)).empty()){
