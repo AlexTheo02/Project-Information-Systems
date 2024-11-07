@@ -5,11 +5,12 @@ static int L;
 static int R;
 static float a;
 static int k;
+static float t;
 
 void parseArgs(int argc, char*argv[]){
 
     // Check number of arguments
-    if (argc > 12){ throw invalid_argument("Invalid number of command line arguments\n"); }
+    if (argc > 14){ throw invalid_argument("Invalid number of command line arguments\n"); }
 
     // Load default values
     L = DEFAULT_L;
@@ -17,6 +18,7 @@ void parseArgs(int argc, char*argv[]){
     a = DEFAULT_a;
     k = DEFAULT_k;
     N_THREADS = DEFAULT_N_THREADS;
+    t = DEFAULT_t;
     SHOULD_OMIT = DEFAULT_SHOULD_OMIT;
 
     // Iterate through given arguments
@@ -30,6 +32,7 @@ void parseArgs(int argc, char*argv[]){
         else if (currentArg == "-a"){ a = atof(argv[++i]); }
         else if (currentArg == "-k"){ k = atoi(argv[++i]); }
         else if (currentArg == "-P"){ N_THREADS = atoi(argv[++i]); }
+        else if (currentArg == "-t"){ t = atof(argv[++i]); }
         else if (currentArg == "--debug"){ SHOULD_OMIT = false; }
         else { throw invalid_argument("Invalid command line arguments"); }
     }

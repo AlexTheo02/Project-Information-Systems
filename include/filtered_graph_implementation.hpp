@@ -7,9 +7,10 @@
 
 // medoids
 template <typename T>
-const unordered_map<int, int> DirectedGraph<T>::filteredMedoids(int threshold){
+const unordered_map<int, int> DirectedGraph<T>::filteredMedoids(float threshold){ // threshold is (0 - 1]
 
     // argument checks
+    if (threshold <= 0 || threshold > 1){ throw invalid_argument("threshold must be in (0,1]\n"); }
 
     // check Nthreads and pass to _serialFilteredMedoids or _parallelFilteredMedoids
 
@@ -18,8 +19,13 @@ const unordered_map<int, int> DirectedGraph<T>::filteredMedoids(int threshold){
 
     for (pair<int, unordered_set<int>> cpair : this->categories){
     
-        unordered_set<int> Rf;
-        while (Rf.size() < threshold){ Rf.insert(sampleFromContainer(cpair.second)); }
+        unordered_set<int> Rf, remaining(cpair.second.begin(), cpair.second.end()); // remaining is a copy that holds all the remaining values to be sampled from
+
+        while (!remaining.empty() && Rf.size() < (threshold * cpair.second.size())){
+            int sample = sampleFromContainer(remaining);
+            Rf.insert(sample);
+            remaining.erase(sample);
+        }
 
         // pmin = argmin p \in Rf (T[p])
         int min_val = numeric_limits<int>::max();
@@ -129,13 +135,35 @@ void DirectedGraph<T>::filteredRobustPrune(int p, unordered_set<int> V, float a,
 }
 
 template <typename T>
-bool DirectedGraph<T>::filteredVamanaAlgorithm(int L, int R, float a){
+bool DirectedGraph<T>::filteredVamanaAlgorithm(int L, int R, float a, float t){
 
     // initialize G as an empty graph => clear all edges
     if(this->clearEdges() == false)
         return false;
 
-    // int all_medoid = this->medoid();
-    unordered_map<int, int> st = this->filteredMedoids(L);
+    // what is a good value of T for filteredMedoids?
+    unordered_map<int, int> st = this->filteredMedoids(t);  // paper says starting points should be the medoids found in [algorithm 2]
 
+    vector<Node<T>> perm = permutation(this->nodes);
+
+    for (Node<T>& si : perm){
+        unordered_set<int> starting_nodes_i = (unordered_set<int>) {st[si.category]};   // because each node belongs to at most one category.
+
+        // create query with si value to pass to filteredGreedySearch
+        Query<T> q(si.id, si.category, true, si.value, this->isEmpty);
+
+        unordered_set<int> Vi = this->filteredGreedySearch(starting_nodes_i, q, 0, L).second;
+
+        filteredRobustPrune(si.id, Vi, a, R);
+
+        if (mapKeyExists(si.id, this->Nout)){
+        
+            for (const int j : this->Nout[si.id]){  // for every neighbor j of si
+
+                this->addEdge(j, si.id);   // does it in either case (simpler code, robust prune clears all neighbors after copying to candidate set V anyway)
+                if (this->Nout[j].size() > R)
+                    filteredRobustPrune(j, this->Nout[j], a, R);
+            }
+        }
+    }
 }

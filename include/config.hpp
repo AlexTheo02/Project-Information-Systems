@@ -37,6 +37,7 @@ using namespace std;
 #define DEFAULT_a 1.0f
 #define DEFAULT_k 100
 #define DEFAULT_N_THREADS 1
+#define DEFAULT_t 0.5f
 #define DEFAULT_SHOULD_OMIT true
 
 // Some functions are accelerated by leveraging parallelism using N_THREADS threads (eg. DirectedGraph::medoid).
