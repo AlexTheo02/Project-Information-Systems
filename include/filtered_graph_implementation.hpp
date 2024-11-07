@@ -4,6 +4,44 @@
 
 // This file implements member functions of the DirectedGraph class template declared in the types.hpp header file.
 
+
+// medoids
+template <typename T>
+const unordered_map<int, int> DirectedGraph<T>::filteredMedoids(int threshold){
+
+    // argument checks
+
+    // check Nthreads and pass to _serialFilteredMedoids or _parallelFilteredMedoids
+
+    unordered_map<int, int> M;
+    vector<int> T_counter(this->n_nodes, 0);
+
+    for (pair<int, unordered_set<int>> cpair : this->categories){
+    
+        unordered_set<int> Rf;
+        while (Rf.size() < threshold){ Rf.insert(sampleFromContainer(cpair.second)); }
+
+        // pmin = argmin p \in Rf (T[p])
+        int min_val = numeric_limits<int>::max();
+        int pmin = -1;
+
+        for (int p : Rf){
+            if (T_counter[p] < min_val){
+                pmin = p;
+                min_val = T_counter[p];
+            }
+        }
+
+        M[cpair.first] = pmin;  // medoid candidate for specific category
+        T_counter[pmin]++;      // incremenet pmin's counter (it has been found as the min that much times)
+    }
+
+    return M;
+}
+
+
+
+
 // Returns a filtered set
 template <typename T>
 unordered_set<int> DirectedGraph<T>::filterSet(unordered_set<int> S, int filter){
@@ -15,7 +53,6 @@ unordered_set<int> DirectedGraph<T>::filterSet(unordered_set<int> S, int filter)
     }
     return filtered;
 }
-
 
 template <typename T>
 const pair<unordered_set<int>, unordered_set<int>> DirectedGraph<T>::filteredGreedySearch(unordered_set<int>& S, Query<T> q, int k, int L){
@@ -69,6 +106,7 @@ const pair<unordered_set<int>, unordered_set<int>> DirectedGraph<T>::filteredGre
 template <typename T>
 void DirectedGraph<T>::filteredRobustPrune(int p, unordered_set<int> V, float a, int R){
 
+
     V.insert(this->Nout[p].begin(), this->Nout[p].end());
     V.erase(p);
     this->clearNeighbors(p);
@@ -88,4 +126,16 @@ void DirectedGraph<T>::filteredRobustPrune(int p, unordered_set<int> V, float a,
             }
         }
     }
+}
+
+template <typename T>
+bool DirectedGraph<T>::filteredVamanaAlgorithm(int L, int R, float a){
+
+    // initialize G as an empty graph => clear all edges
+    if(this->clearEdges() == false)
+        return false;
+
+    // int all_medoid = this->medoid();
+    unordered_map<int, int> st = this->filteredMedoids(L);
+
 }

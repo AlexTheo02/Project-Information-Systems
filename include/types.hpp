@@ -97,6 +97,7 @@ class DirectedGraph{
         int n_nodes;                            // number of nodes present in the graph
         vector<Node<T>> nodes;                  // vector containing all the nodes in the graph
         int _medoid;                            // medoid node's id. Used to avoid recalculation of medoid if we want to access it more than once
+        unordered_map<int, unordered_set<int>> categories;          // a map containing all unique categories in the data and their corresponding nodes that belong to each
         unordered_map<int, unordered_set<int>> Nout;                    // key: node, value: set of outgoing neighbors 
         function<float(const T&, const T&)> d;  // Graph's distance function
         function<bool(const T&)> isEmpty;       // typename T valid check
@@ -156,6 +157,9 @@ class DirectedGraph{
         // Calculates the medoid of the nodes in the graph based on the given distance function
         const int medoid(void);
 
+        // calculates the Filtered Medoids
+        const unordered_map<int, int> filteredMedoids(int threshold);
+
         int _myArgMin(const unordered_set<int>& nodeSet, T t);
 
         unordered_set<int> _closestN(int N, const unordered_set<int>& S, T X);
@@ -184,6 +188,8 @@ class DirectedGraph{
         // + L the area parameter for searching (L >= k >= 1, where k is the desired number of neighbors)
         // + a the parameter for robust pruning (a >=1)
         bool vamanaAlgorithm(int L, int R, float a);
+
+        bool filteredVamanaAlgorithm(int L, int R, float a);
 
 
         // Stores the current state of a graph into the specified file.

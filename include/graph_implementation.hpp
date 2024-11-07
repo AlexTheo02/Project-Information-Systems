@@ -14,6 +14,9 @@ int DirectedGraph<T>::createNode(const T& value, int category){
     // Add the value to graph's set of nodes
     this->nodes.push_back(node);
 
+    // if is valid category, add node belonging to it to corresponding map entry
+    if (category >= 0) this->categories[category].insert(node.id);
+
     // Increment the number of nodes in graph (if insertion was successful)
     this->n_nodes++;
     

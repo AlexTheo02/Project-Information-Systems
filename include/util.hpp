@@ -94,11 +94,26 @@ typename Container::value_type sampleFromContainer(const Container& s){
 
     if (s.size() == 1){ return *(s.begin()); }  // directly return the singular element from the container if |s| is 1.
 
+    if constexpr (is_same< vector<typename Container::value_type>, Container >::value)
+        return s[rand() % s.size()];            // leverage vector's instant access for optimization if Container is Vector
+
     auto it = s.begin();
     advance(it, rand() % s.size()); // iterator moves to a random position between 0 and container_size
 
     return *it;                     // dereferencing the iterator to return the pointed element
 }
+
+// // sample from Container but optimized for vector structure
+// template <typename T>
+// T sampleFromVector(const vector<T> vec){
+
+//     if (vec.empty()){ throw invalid_argument("Vector is empty.\n"); }
+
+//     if (vec.size() == 1){ return vec[0]; }  // directly return the singular element from the vector if |vec| is 1.
+    
+    
+//     return vec[rand() % vec.size()];
+// }
 
 // returns a vector of a random permutation of the elements beloning in the set s
 template<typename T>
