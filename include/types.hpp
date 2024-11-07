@@ -65,7 +65,7 @@ class Query{
         function<bool(const T&)> isEmpty;   // pointer to the isEmpty method
 
         // Constructor
-        Query(int id = -1, int cat = -1, bool fil = -1, T value = {}, function<bool(const T&)> isEmpty = alwaysEmpty<T>){
+        Query(int id = -1, int cat = -1, bool fil = false, T value = {}, function<bool(const T&)> isEmpty = alwaysEmpty<T>){
             this->id = id;
             this->filtered = fil;
             this->category = category;
@@ -169,15 +169,7 @@ class DirectedGraph{
         const unordered_map<int, int> _filtered_parallel_medoid(float threshold);
 
         // Thread function for parallel filtered medoid.
-        void _filtered_thread_medoid_fn(
-            mutex& T_counterMutex,
-            mutex& categoryMutex,
-            vector<int>& T_counter,
-            int& categoryIndex,
-            int maxCategoryIndex,
-            vector<pair<int, unordered_set<int>>>& categoryPairs,
-            int threshold
-        );
+        void _filtered_thread_medoid_fn(mutex& T_counterMutex, mutex& categoryMutex, vector<int>& T_counter, int& categoryIndex, int maxCategoryIndex, vector<pair<int, unordered_set<int>>>& categoryPairs, int threshold);
 
         int _myArgMin(const unordered_set<int>& nodeSet, T t);
 
@@ -208,7 +200,8 @@ class DirectedGraph{
         // + a the parameter for robust pruning (a >=1)
         bool vamanaAlgorithm(int L, int R, float a);
 
-        bool filteredVamanaAlgorithm(int L, int R, float a);
+        // float t threshold is a value in (0,1] that represents a fraction of the data in a specific category to be accounted for when searching for the medoid of that specific category
+        bool filteredVamanaAlgorithm(int L, int R, float a, float t); // + t = threshold.
 
 
         // Stores the current state of a graph into the specified file.
