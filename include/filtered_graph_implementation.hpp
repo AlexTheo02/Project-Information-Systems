@@ -65,3 +65,27 @@ const pair<unordered_set<int>, unordered_set<int>> DirectedGraph<T>::filteredGre
 
     return ret;
 }
+
+template <typename T>
+void DirectedGraph<T>::filteredRobustPrune(int p, unordered_set<int> V, float a, int R){
+
+    V.insert(this->Nout[p].begin(), this->Nout[p].end());
+    V.erase(p);
+    this->clearNeighbors(p);
+
+    while (!V.empty()){
+        int pmin = this->_myArgMin(V, this->nodes[p].value);
+        this->addEdge(p, pmin);
+
+        if (this->Nout[p].size() == R)  break;
+
+        // pmin = p*, pv = p', p = p (as seen in paper)
+        for (int pv : V){
+            if (this->nodes[pv].category != this->nodes[pmin].category && this->nodes[p].category != this->nodes[pmin].category) continue;
+
+            if (a * this->d(this->nodes[pmin].value, this->nodes[pv].value) <= this->d(this->nodes[p].value, this->nodes[pv].value)){
+                V.erase(pv);
+            }
+        }
+    }
+}

@@ -176,7 +176,7 @@ class DirectedGraph{
         // Prunes out-neighbors of node p up until a minimum threshold R of out-neighbors for node p, based on distance criteria with parameter a.
         void robustPrune(int p, unordered_set<int> V, float a, int R);
 
-        // void filteredRobustPrune(Node<T>& p, )
+        void filteredRobustPrune(int p, unordered_set<int> V, float a, int R);
 
         // Transforms the graph into a Directed Graph such that it makes the finding of nearest neighbors easier.
         // Parameters:
