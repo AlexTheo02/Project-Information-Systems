@@ -35,14 +35,14 @@ void profileVamana(
     float total_recall = 0;
 
     // get the already calculated medoid
-    int medoid = DG.medoid();
+    Id medoid = DG.medoid();
 
     // Greedy search for all queries with start node the medoid of all nodes (already calculated)
     for (int i=0; i<queries.size(); i++){
 
         // Get neighbors for i-th query
-        pair<unordered_set<int>, unordered_set<int>> GS_return =  DG.greedySearch(medoid, queries[i], k, L);
-        unordered_set<int> neighbors = GS_return.first;
+        pair<unordered_set<Id>, unordered_set<Id>> GS_return =  DG.greedySearch(medoid, queries[i], k, L);
+        unordered_set<Id> neighbors = GS_return.first;
         
         // Calculate the current recall and add it to the sum of all recall scores
         total_recall += k_recall(neighbors, groundtruth[i]);

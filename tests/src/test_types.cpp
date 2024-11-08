@@ -63,9 +63,9 @@ void test_Edges(void){
     vector<float> v2 = vector<float>{2.1f,4.2f,6.63f,3.232f,8.5f,0.6f};
     vector<float> v3 = vector<float>{0.1f,0.2f,0.63f,0.232f,0.5f,0.6f};
 
-    int id1 = DG.createNode(v1);
-    int id2 = DG.createNode(v2);
-    int id3 = DG.createNode(v3);
+    Id id1 = DG.createNode(v1);
+    Id id2 = DG.createNode(v2);
+    Id id3 = DG.createNode(v3);
 
     // Add edge
     TEST_ASSERT(DG.addEdge(id1, id2));
@@ -74,7 +74,7 @@ void test_Edges(void){
     TEST_ASSERT(mapKeyExists(id1, DG.get_Nout()));
     TEST_MSG("Add edge, nout key does not exist");
 
-    unordered_set<int> n1out = DG.get_Nout().at(id1);
+    unordered_set<Id> n1out = DG.get_Nout().at(id1);
     TEST_ASSERT(*n1out.begin() == id2);
     TEST_MSG("Add edge verification nout");
     
@@ -122,10 +122,10 @@ void test_clear(void){
     vector<float> v3 = vector<float>{0.1f,0.2f,0.63f,0.232f,0.5f,0.6f};
     vector<float> v4 = vector<float>{4.1f,4.2f,4.63f,4.232f,4.5f,4.6f};
 
-    int id1 = DG.createNode(v1);
-    int id2 = DG.createNode(v2);
-    int id3 = DG.createNode(v3);
-    int id4 = DG.createNode(v4);
+    Id id1 = DG.createNode(v1);
+    Id id2 = DG.createNode(v2);
+    Id id3 = DG.createNode(v3);
+    Id id4 = DG.createNode(v4);
 
     // Create edges between nodes (should work based on previous tests)
     DG.addEdge(id1, id2);
@@ -236,9 +236,7 @@ void test_medoid(void){
 
     // Ensure both methods yield the same result
     TEST_CHECK(computedMedoidSerialId == computedMedoidParallelId); // Ensure both methods return the same result
-
-    // Output the results for verification
-    TEST_MSG("Expected Medoid [%d], Got (Serial): [%d] and Got (Parallel): [%d]", DG.medoid(), computedMedoidSerialId, computedMedoidParallelId);
+    TEST_MSG("Ids are not equal\n");
     // dimension mismatch will not be tested, as we assume that all elements in the set must be able to be passed on to the given distance function without error.
     // this case is handled in the euclideanDistance unit test.
 }
@@ -264,7 +262,7 @@ void test_Rgraph(void){
     TEST_CHECK(DG.get_n_edges() == 100*10);
 
     int c = 0;
-    unordered_map<int, unordered_set<int>> m = DG.get_Nout();
+    unordered_map<Id, unordered_set<Id>> m = DG.get_Nout();
 
     for (int n : nodes){
         c+= m[n].size();
@@ -304,10 +302,10 @@ void test_Rgraph(void){
     // Each of the 100 nodes can make one out of 99 possible connections => 99^{100} different ways (cycles are allowed to exist in the directed graph).
     // The probability for each specific set of edges (assuming uniform) is 1/99^{100}.
     // For this test to fail, it would mean that we drew the same number twice in a row from a uniform distribution among 99^{100} numbers.
-     unordered_map<int, unordered_set<int>> before = DG.get_Nout();
+     unordered_map<Id, unordered_set<Id>> before = DG.get_Nout();
     TEST_CHECK(DG.Rgraph(1));
     TEST_CHECK(DG.get_n_edges() == 100*1);
-     unordered_map<int, unordered_set<int>> after = DG.get_Nout();
+     unordered_map<Id, unordered_set<Id>> after = DG.get_Nout();
     TEST_CHECK(DG.Rgraph(1));
     TEST_CHECK(DG.get_n_edges() == 100*1);
     TEST_CHECK((before == after) == false); // map equality operator == is by default overloaded to them containing exactly the same items
@@ -319,7 +317,7 @@ void test_myArgMin(void){
 
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
 
-    unordered_set<int> s;
+    unordered_set<Id> s;
 
     vector<vector<float>> vec;
 
@@ -340,7 +338,7 @@ void test_myArgMin(void){
 
     vector<float> xq = {2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f, 2.3f};
 
-    int xmin = DG._myArgMin(s, xq);
+    Id xmin = DG._myArgMin(s, xq);
     vector<float> ymin = {2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
     TEST_CHECK(DG.getNodes()[xmin].value == ymin);
 
@@ -377,7 +375,7 @@ void test_closestN(void){
 
     int N = 5;
 
-    unordered_set<int> s;
+    unordered_set<Id> s;
 
     // Create 1000 vectors of dimension 128 with values [i, i, ..., i]
     for (int i = 0; i < 1000; i++) {
@@ -389,9 +387,9 @@ void test_closestN(void){
     vector<float> x(128, 327.3f);
 
     // Expected closest vectors: [325, 326, 327, 328, 329]
-    unordered_set<int> yclosest = { 325, 326, 327, 328 , 329};
+    unordered_set<Id> yclosest = { 325, 326, 327, 328 , 329};
     
-    unordered_set<int> xclosest = DG._closestN(N, s, x);
+    unordered_set<Id> xclosest = DG._closestN(N, s, x);
 
     TEST_CHECK(xclosest == yclosest);
 
@@ -409,7 +407,7 @@ void test_closestN(void){
 
     // N == 0
     N = 0;
-    unordered_set<int> nullset;
+    unordered_set<Id> nullset;
     TEST_CHECK(DG._closestN(N, s, x) == nullset);
 
     // set is empty
@@ -474,31 +472,31 @@ void test_greedySearch(void){
 
     // Argument checks:
 
-    // // Unitialized id TODO
-    int s;
-    // try{
-    //     pair<unordered_set<int>, unordered_set<int>> ret = DG.greedySearch(s, DG.getNodes()[0].value, 4, 5);
-    //     TEST_CHECK(false);  // Control should not reach here 
-    // }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Invalid Index was provided.\n")); }
+    // // Unitialized id
+    Id s;
+    try{
+        pair<unordered_set<Id>, unordered_set<Id>> ret = DG.greedySearch(s, DG.getNodes()[0].value, 4, 5);
+        TEST_CHECK(false);  // Control should not reach here 
+    }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Invalid Index was provided.\n")); }
     
 
     // Empty query point xq
     s = 129;
     vector<float> xq;
     try{
-        pair<unordered_set<int>, unordered_set<int>> ret = DG.greedySearch(s, xq, 4, 5);
+        pair<unordered_set<Id>, unordered_set<Id>> ret = DG.greedySearch(s, xq, 4, 5);
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "No query was provided.\n")); }
 
     // if k <= 0
     try{
-        pair<unordered_set<int>, unordered_set<int>> ret = DG.greedySearch(s, vectors[0], 0, 5);
+        pair<unordered_set<Id>, unordered_set<Id>> ret = DG.greedySearch(s, vectors[0], 0, 5);
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "K must be greater than 0.\n")); }
 
     // if L < k
     try{
-        pair<unordered_set<int>, unordered_set<int>> ret = DG.greedySearch(s, vectors[0], 2, 1);
+        pair<unordered_set<Id>, unordered_set<Id>> ret = DG.greedySearch(s, vectors[0], 2, 1);
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "L must be greater or equal to K.\n")); }
 
@@ -517,7 +515,7 @@ void test_robustPrune(void){
     }
     // Verify that 10000 nodes have been added
     TEST_ASSERT(DG.get_n_nodes() == 10000);
-    unordered_set<int> nullset;
+    unordered_set<Id> nullset;
 
     // Valid
     DG.robustPrune(0, nullset, 1, 5);
@@ -525,11 +523,11 @@ void test_robustPrune(void){
     // Argument checks:
 
     // Unitialized id TODO
-    int s;
-    // try{
-    //     DG.robustPrune(startingNode, nullset, 1, 5); 
-    //     TEST_CHECK(false);  // Control should not reach here 
-    // }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "No node was provided.\n")); }
+    Id s;
+    try{
+        DG.robustPrune(s, nullset, 1, 5); 
+        TEST_CHECK(false);  // Control should not reach here 
+    }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "Invalid Index was provided.\n")); }
 
     // a < 1
     try{
@@ -585,7 +583,7 @@ TEST_LIST = {
     { "test_closestN", test_closestN },
     { "test_Rgraph", test_Rgraph},
     { "test_greedySearch", test_greedySearch},
-    // { "test_robustPrune", test_robustPrune},
-    // { "test_vamanaAlgorithm", test_vamanaAlgorithm},
+    { "test_robustPrune", test_robustPrune},
+    { "test_vamanaAlgorithm", test_vamanaAlgorithm},
     { NULL, NULL }     // zeroed record marking the end of the list
 };

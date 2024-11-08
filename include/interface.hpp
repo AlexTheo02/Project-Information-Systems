@@ -7,6 +7,7 @@
 #include "graph_implementation.hpp"
 #include "filtered_graph_implementation.hpp"
 #include "evaluation.hpp"
+#include "id.hpp"
 
 using namespace std;
 

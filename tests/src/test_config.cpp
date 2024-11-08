@@ -45,8 +45,8 @@ void test_Store_and_Load(){
     TEST_CHECK(nodes1 == nodes2);
 
     // Retrieve the two maps containing the neighbors
-    unordered_map<int, unordered_set<int>> m1 = DG.get_Nout();
-    unordered_map<int, unordered_set<int>> m2 = DG2.get_Nout();
+    unordered_map<Id, unordered_set<Id>> m1 = DG.get_Nout();
+    unordered_map<Id, unordered_set<Id>> m2 = DG2.get_Nout();
 
     // Compare the two maps if they are equal
     TEST_CHECK(m1 == m2);
