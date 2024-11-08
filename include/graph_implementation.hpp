@@ -6,8 +6,10 @@
 
 // Creates a node, adds it in the graph and returns it
 template<typename T>
-int DirectedGraph<T>::createNode(const T& value, int category){
+Id DirectedGraph<T>::createNode(const T& value, int category){
     // https://cplusplus.com/reference/set/set/insert/ - return values of insert
+
+    c_log << category << '\n';
 
     Node<T> node(this->n_nodes, category, value, this->isEmpty);
 
@@ -26,7 +28,7 @@ int DirectedGraph<T>::createNode(const T& value, int category){
 
 // Adds a directed edge (from->to). Updates outNeighbors(from) and inNeighbors(to)
 template <typename T>
-bool DirectedGraph<T>::addEdge(const int from, const int to){
+bool DirectedGraph<T>::addEdge(const Id from, const Id to){
     
     // At least one of the nodes is not present in nodeSet
     if (from >= this->n_nodes || to >= this->n_nodes){
@@ -54,7 +56,9 @@ bool DirectedGraph<T>::addEdge(const int from, const int to){
 
 // remove edge
 template <typename T>
-bool DirectedGraph<T>::removeEdge(const int from, const int to){
+bool DirectedGraph<T>::removeEdge(const Id from, const Id to){
+
+    c_log << "From = " << from << "\nTo = " << to << "\n";
 
     // Check if keys exist before accessing them (and removing them)
     if (mapKeyExists(from, this->Nout)) {
@@ -63,6 +67,7 @@ bool DirectedGraph<T>::removeEdge(const int from, const int to){
             // Check if outgoing neighbors are empty, if so, remove entry from unordered map
             if(this->Nout[from].empty()){
                 this->Nout.erase(from);
+                c_log << from << "|||" << this->Nout << '\n';
             }
             // Decrement the number of edges in graph
             this->n_edges--;
@@ -75,7 +80,7 @@ bool DirectedGraph<T>::removeEdge(const int from, const int to){
 
 // clears all neighbors for a specific node
 template <typename T>
-bool DirectedGraph<T>::clearNeighbors(const int id){
+bool DirectedGraph<T>::clearNeighbors(const Id id){
     // Check if node exists before trying to access it
     if (id >= this->n_nodes){
         c_log << "ERROR: Node does not exist in the graph" << '\n';
@@ -85,8 +90,13 @@ bool DirectedGraph<T>::clearNeighbors(const int id){
     // Node has outgoing neighbors
     if (mapKeyExists(id, this->Nout)){
         // For each outgoing neighbor, remove the edge
-        unordered_set<int> noutCopy(this->Nout[id].begin(), this->Nout[id].end());
-        for (const int n : noutCopy){      
+        c_log << id << '\n';
+        unordered_set<Id> noutCopy(this->Nout[id].begin(), this->Nout[id].end());
+
+        c_log << this->Nout << '\n';
+        c_log << noutCopy << '\n';
+
+        for (const Id n : noutCopy){      
             if (!this->removeEdge(id,n)){
                 c_log << "ERROR: Failed to remove edge, something went wrong" << '\n';
                 return false;
@@ -94,6 +104,7 @@ bool DirectedGraph<T>::clearNeighbors(const int id){
         }      
         // Check if node has been removed from neighbors map
         if (mapKeyExists(id, this->Nout)){
+            
             c_log << "ERROR: Something went wrong when clearing neighbors" << '\n';
             return false;
         }
@@ -127,13 +138,13 @@ bool DirectedGraph<T>::clearEdges(void){
 
 // Calculates the medoid of the nodes in the graph based on the given distance function
 template<typename T>
-const int DirectedGraph<T>::medoid(void){
+const Id DirectedGraph<T>::medoid(void){
 
     // empty set case
     if (this->nodes.empty()){ throw invalid_argument("Vector is empty.\n"); }
 
     // if |s| = 1 or 2, return the first element of the set (metric distance is symmetric)
-    if (this->nodes.size() <= 2){ return 0; }
+    if (this->nodes.size() <= 2){ return Id{0}; }
 
     // Invalid N_THREADS
     if (N_THREADS <= 0) throw invalid_argument("N_THREADS constant is invalid. Value must be N_THREADS >= 1.\n");
@@ -149,9 +160,9 @@ const int DirectedGraph<T>::medoid(void){
 
 // Implements medoid function using serial programming.
 template<typename T>
-const int DirectedGraph<T>::_serial_medoid(void){
+const Id DirectedGraph<T>::_serial_medoid(void){
 
-    int med;
+    Id med;
     float dmin = numeric_limits<float>::max(), dsum, dist;
 
     for (const Node<T>& node : this->nodes){
@@ -173,7 +184,7 @@ const int DirectedGraph<T>::_serial_medoid(void){
 
 // Thread function for parallel medoid. Work inside the range defined by [start_index, end_index). Update minima by reference for the merging of the results.
 template<typename T>
-void DirectedGraph<T>::_thread_medoid_fn(int start_index, int end_index, int& local_minimum, float& local_dmin){
+void DirectedGraph<T>::_thread_medoid_fn(int start_index, int end_index, Id& local_minimum, float& local_dmin){
 
     // There is no need for synchronization between threads, as the shared resources (this->nodes) is accessed in a read-only manner.
 
@@ -197,7 +208,7 @@ void DirectedGraph<T>::_thread_medoid_fn(int start_index, int end_index, int& lo
 
 // Implements medoid function using parallel programming with threads. Concurrency is set by the global constant N_THREADS.
 template<typename T>
-const int DirectedGraph<T>::_parallel_medoid(void){
+const Id DirectedGraph<T>::_parallel_medoid(void){
 
     int chunk_size = (int) this->nodes.size() / N_THREADS;          // how many nodes each thread will handle
     int remainder = this->nodes.size() - N_THREADS*chunk_size;      // amount of remaining nodes to be distributed evenly among threads
@@ -210,7 +221,7 @@ const int DirectedGraph<T>::_parallel_medoid(void){
 
     // initializing the threads
     vector<thread> threads(N_THREADS);                                  // a vector of size N_THREADS holding all the threads
-    vector<int> local_minima(N_THREADS);                                // a vector of size N_THREADS to hold ids of local medoids
+    vector<Id> local_minima(N_THREADS);                                 // a vector of size N_THREADS to hold ids of local medoids
     vector<float> local_dmin(N_THREADS, numeric_limits<float>::max());  // a vector of size N_THREADS all initialized with float_max
 
     for (int i = 0; i < N_THREADS; i++){
@@ -242,7 +253,7 @@ const int DirectedGraph<T>::_parallel_medoid(void){
 
 // Returns the node from given nodeSet with the minimum distance from a specific point in the nodespace (node is allowed to not exist in the graph)
 template<typename T>
-int DirectedGraph<T>::_myArgMin(const unordered_set<int>& nodeSet, T t){
+Id DirectedGraph<T>::_myArgMin(const unordered_set<Id>& nodeSet, T t){
 
     if (nodeSet.empty()) { throw invalid_argument("Set is Empty.\n"); }
 
@@ -251,9 +262,9 @@ int DirectedGraph<T>::_myArgMin(const unordered_set<int>& nodeSet, T t){
     if (nodeSet.size() == 1) { return *nodeSet.begin(); }
 
     float minDist = numeric_limits<float>::max(), dist;
-    int minId;
+    Id minId;
 
-    for (const int id : nodeSet){
+    for (const Id id : nodeSet){
         dist = this->d(this->nodes[id].value, t);
 
        
@@ -267,7 +278,7 @@ int DirectedGraph<T>::_myArgMin(const unordered_set<int>& nodeSet, T t){
 
 // Retains the N closest elements of S to X based on distance d
 template<typename T>
-unordered_set<int> DirectedGraph<T>::_closestN(int N, const unordered_set<int>& S, T X){
+unordered_set<Id> DirectedGraph<T>::_closestN(int N, const unordered_set<Id>& S, T X){
 
     // check if the set is empty
     if (S.empty()){
@@ -284,7 +295,7 @@ unordered_set<int> DirectedGraph<T>::_closestN(int N, const unordered_set<int>& 
     // if N is equal to 0 return the empty set
     if (N == 0){
         c_log << "WARNING: N is 0. Returning the empty set.\n";
-        unordered_set<int> nullset;
+        unordered_set<Id> nullset;
         return nullset;
     }
     
@@ -293,7 +304,7 @@ unordered_set<int> DirectedGraph<T>::_closestN(int N, const unordered_set<int>& 
         return S;
 
     // transform the set to a vector for partitioning around a pivot
-    vector<int> Svec(S.begin(), S.end());
+    vector<Id> Svec(S.begin(), S.end());
 
     // partition the vector based on the distance from point X up around the N-th element
     nth_element(Svec.begin(), Svec.begin() + N, Svec.end(),
@@ -307,7 +318,7 @@ unordered_set<int> DirectedGraph<T>::_closestN(int N, const unordered_set<int>& 
     // https://en.cppreference.com/w/cpp/algorithm/nth_element
 
     // keep N first
-    unordered_set<int> closest_nodes(Svec.begin(), Svec.begin() + N);
+    unordered_set<Id> closest_nodes(Svec.begin(), Svec.begin() + N);
 
     return closest_nodes;
 }
@@ -349,7 +360,7 @@ bool DirectedGraph<T>::Rgraph(int R){
 // Greedily searches the graph for the k nearest neighbors of query xq (in an area of size L), starting the search from the node s.
 // Returns a set with the k closest neighbors (returned_vector[0]) and a set of all visited nodes (returned_vector[1]).
 template <typename T>
-const pair<unordered_set<int>, unordered_set<int>> DirectedGraph<T>::greedySearch(int s, T xq, int k, int L) {
+const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(Id s, T xq, int k, int L) {
 
     // argument checks
     if (s < 0 || s >= this->n_nodes){ throw invalid_argument("Invalid Index was provided.\n"); }
@@ -363,10 +374,10 @@ const pair<unordered_set<int>, unordered_set<int>> DirectedGraph<T>::greedySearc
     if (L < k){ throw invalid_argument("L must be greater or equal to K.\n"); }
 
     // Create empty sets
-    unordered_set<int> Lc = {s}, V, diff; // Initialize Lc with s
+    unordered_set<Id> Lc = {s}, V, diff; // Initialize Lc with s
     
     while(!(diff = setSubtraction(Lc,V)).empty()){
-        int pmin = this->_myArgMin(diff, xq);    // pmin is the node with the minimum distance from query xq
+        Id pmin = this->_myArgMin(diff, xq);    // pmin is the node with the minimum distance from query xq
 
         // If node has outgoing neighbors
         if (mapKeyExists(pmin, this->Nout)){
@@ -379,7 +390,7 @@ const pair<unordered_set<int>, unordered_set<int>> DirectedGraph<T>::greedySearc
         }
     }
 
-    pair<unordered_set<int>, unordered_set<int>> ret;
+    pair<unordered_set<Id>, unordered_set<Id>> ret;
     
     ret.first = _closestN(k, Lc, xq);
     ret.second = V;
@@ -391,9 +402,11 @@ const pair<unordered_set<int>, unordered_set<int>> DirectedGraph<T>::greedySearc
 
 // Prunes out-neighbors of node p up until a minimum threshold R of out-neighbors for node p, based on distance criteria with parameter a.
 template <typename T>
-void DirectedGraph<T>::robustPrune(int p, unordered_set<int> V, float a, int R){
+void DirectedGraph<T>::robustPrune(Id p, unordered_set<Id> V, float a, int R){
 
-    // Argument Checks
+    // argument checks
+    if (p < 0 || p >= this->n_nodes){ throw invalid_argument("Invalid Index was provided.\n"); }
+
     if (this->nodes[p].empty()) { throw invalid_argument("No node was provided.\n"); }
 
     if (a < 1) { throw invalid_argument("Parameter a must be >= 1.\n"); }
@@ -407,7 +420,7 @@ void DirectedGraph<T>::robustPrune(int p, unordered_set<int> V, float a, int R){
 
     this->clearNeighbors(p);    // calls remove edge
 
-    int p_opt;
+    Id p_opt;
     
     while (!V.empty()){
         p_opt = this->_myArgMin(V, this->nodes[p].value);
@@ -452,23 +465,23 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){
 
 
     c_log << "Searching for medoid node . . ." << '\n';
-    int s = this->medoid();
+    Id s = this->medoid();
     c_log << "Medoid node found successfully!" << '\n';
 
     c_log << "Finalizing Vamana Index using the Vamana Algorithm . . ." << '\n';
     vector<Node<T>> perm = permutation(this->nodes);
 
     for (Node<T>& si : perm){
-        pair<unordered_set<int>, unordered_set<int>> rv = greedySearch(s, si.value, 1, L);
+        pair<unordered_set<Id>, unordered_set<Id>> rv = greedySearch(s, si.value, 1, L);
 
-        unordered_set<int> Lc = rv.first;
-        unordered_set<int> V = rv.second;
+        unordered_set<Id> Lc = rv.first;
+        unordered_set<Id> V = rv.second;
 
         this->robustPrune(si.id, V, a, R);
         
         if (mapKeyExists(si.id, this->Nout)){
         
-            for (const int j : this->Nout[si.id]){  // for every neighbor j of si
+            for (const Id j : this->Nout[si.id]){  // for every neighbor j of si
 
                 this->addEdge(j, si.id);   // does it in either case (simpler code, robust prune clears all neighbors after copying to candidate set V anyway)
                 if (this->Nout[j].size() > R)
