@@ -52,7 +52,7 @@ const unordered_map<int, Id> DirectedGraph<T>::_filtered_serial_medoid(float thr
         this->filteredMedoids[cpair.first] = pmin;  // medoid candidate for specific category
         T_counter[pmin]++;      // incremenet pmin's counter (it has been found as the min that much times)
     }
-
+    cout << "MEDOIDS FOUND" << endl;
     return this->filteredMedoids;
 }
 
@@ -70,6 +70,7 @@ void DirectedGraph<T>::_filtered_thread_medoid_fn(
     categoryMutex.lock();
     while (categoryIndex <= maxCategoryIndex){
         int myCategory = categoryIndex++; // save and increment
+        cout << "Thread assigned category: " << myCategory << endl;
         categoryMutex.unlock();
 
         // Sampling
@@ -100,6 +101,7 @@ void DirectedGraph<T>::_filtered_thread_medoid_fn(
         T_counterMutex.unlock();
 
         categoryMutex.lock();
+        cout << "Thread exiting category: " << myCategory << endl;
     }
     categoryMutex.unlock();
 }
@@ -124,7 +126,7 @@ const unordered_map<int, Id> DirectedGraph<T>::_filtered_parallel_medoid(float t
     mutex T_counterMutex;
 
     // Create the threads
-    for (int i=0; i<N_THREADS; i++){
+    for (int i=0; i< min(N_THREADS, maxCategoryIndex); i++){
 
         threads[i] = thread(
             &DirectedGraph<T>::_filtered_thread_medoid_fn,
@@ -137,11 +139,14 @@ const unordered_map<int, Id> DirectedGraph<T>::_filtered_parallel_medoid(float t
             ref(categoryPairs),
             threshold
         );
+
+        cout << "Created thread " << i << endl;
     }
 
     // Join the threads
     for (thread& th : threads){ th.join(); }
 
+    cout << "MEDOIDS FOUND" << endl;
     return this->filteredMedoids;
 }
 
@@ -187,21 +192,21 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::filteredGreed
         if (sNode.category == q.category) {
             Lc.insert(s);
         }
+    }
 
-        while (!(diff = setSubtraction(Lc,V)).empty()){
-            Id pmin = _myArgMin(diff, q.value);     // pmin is the node with the minimum distance from query xq
+    while (!(diff = setSubtraction(Lc,V)).empty()){
+        Id pmin = _myArgMin(diff, q.value);     // pmin is the node with the minimum distance from query xq
 
-            V.insert(pmin);
+        V.insert(pmin);
 
-            unordered_set<Id> filteredNoutPmin;
-            if (mapKeyExists(pmin, this->Nout))
-                filteredNoutPmin = this->filterSet(setSubtraction(this->Nout[pmin], V), q.category);
+        unordered_set<Id> filteredNoutPmin;
+        if (mapKeyExists(pmin, this->Nout))
+            filteredNoutPmin = this->filterSet(setSubtraction(this->Nout[pmin], V), q.category);
 
-            Lc.insert(filteredNoutPmin.begin(), filteredNoutPmin.end());
+        Lc.insert(filteredNoutPmin.begin(), filteredNoutPmin.end());
 
-            if (Lc.size() > L){
-                Lc = _closestN(L, Lc, q.value); // function: find N closest points from a specific xq from given set and return them
-            }
+        if (Lc.size() > L){
+            Lc = _closestN(L, Lc, q.value); // function: find N closest points from a specific xq from given set and return them
         }
     }
     pair<unordered_set<Id>, unordered_set<Id>> ret;
@@ -256,7 +261,6 @@ bool DirectedGraph<T>::filteredVamanaAlgorithm(int L, int R, float a, float t){
 
     // what is a good value of T for filteredMedoids?
     unordered_map<int, Id> st = this->findMedoids(t);  // paper says starting points should be the medoids found in [algorithm 2]
-    
     vector<Node<T>> perm = permutation(this->nodes);
     
 

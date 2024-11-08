@@ -147,6 +147,10 @@ operator>>(istream& stream, Container& container) {  // container is updated by 
     container.clear();  // ensure container will be replaced if it was non empty
 
     stream.ignore(1);   // reads and consumes "<"
+    if (stream.peek() == '>'){
+        stream.ignore(1);
+        return stream;
+    }
 
     typename Container::value_type value;   // value is of type Container::value_type which is the type of the elements in the container
     // maybe auto could work, but we assume this is safer when reading from a stream
@@ -168,7 +172,7 @@ operator>>(istream& stream, Container& container) {  // container is updated by 
         // consume delimiter: ", " (= consume 2 characters)
         stream.ignore(2);
     }
-
+    
     return stream;
 }
 
@@ -273,3 +277,43 @@ istream& operator>>(istream& stream, unordered_map<Key, Value>& m){
 //     };
 // };
 // 
+
+
+// // Overload >> operator for reading in a vector<vector<T>> variable
+// template <typename T>
+// istream& operator>>(istream& stream, vector<vector<T>>& container) {
+//     container.clear();
+
+//     // Read and ignore the initial "<"
+//     stream.ignore(1);
+
+//     while (stream.peek() != '>') {
+//         vector<T> inner_vector;
+
+//         // Read and ignore the initial "<"
+//         stream.ignore(1);
+
+//         T value;
+//         while (stream >> value) {
+//             inner_vector.push_back(value);
+
+//             if (stream.peek() == '>') {  // End of the inner vector
+//                 stream.ignore(1);  // Consume '>'
+//                 break;
+//             }
+
+//             stream.ignore(2);  // Consume ", "
+//         }
+
+//         container.push_back(inner_vector);
+
+//         if (stream.peek() == '>') {  // End of the outer vector
+//             stream.ignore(2);  // Consume ">>"
+//             break;
+//         }
+
+//         stream.ignore(2);  // Consume ", "
+//     }
+
+//     return stream;
+// }

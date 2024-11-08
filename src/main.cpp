@@ -27,7 +27,7 @@ vector<vector<Id>> generateGroundtruth(vector<vector<float>>& data, vector<vecto
     vector<vector<Id>> queryNeighbors;
 
     for(int i = 0; i < queries.size(); i++){
-
+        cout << "Generating groundtruth for query: " << i << endl;
         dataSameCategory.clear();
 
         vector<float> queryValue(queries[i].begin() + 4, queries[i].end());
@@ -60,8 +60,8 @@ vector<vector<Id>> generateGroundtruth(vector<vector<float>>& data, vector<vecto
         // Extract sorted Ids based on distances and store in sortedIds
         vector<Id> neighbors;
         int minimum = (distancesVec.size() > 100) ? 100 : distancesVec.size();
-        for (int i = 0; i < minimum; i++){
-            auto& p = distancesVec[i];
+        for (int k = 0; k < minimum; k++){
+            auto& p = distancesVec[k];
             neighbors.push_back(p.first);
         }
 
@@ -123,14 +123,17 @@ void filteredVamana(){
     ReadBin(F_QUERIES_PATH, F_QUERY_DIM, queries);
 
     // Generate groundtruth
-    vector<vector<Id>> groundtruth = generateGroundtruth(data, queries);
-
     fstream file;
+    file.open(F_GROUNDTRUTH_PATH, ios::in);  // mode flags: https://cplusplus.com/reference/fstream/fstream/open/
+    vector<vector<Id>> groundtruth; // = generateGroundtruth(data, queries);
+    file >> groundtruth;
 
     // create a new file if it did not exist, or replace any contents existing before
-    file.open(F_GROUNDTRUTH_PATH, ios::out | ios::trunc);  // mode flags: https://cplusplus.com/reference/fstream/fstream/open/
 
-    file << generateGroundtruth << "/n";
+    // file << groundtruth;
+
+    file.close();
+    // cout << groundtruth;
 
     // Create and initialize graph
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>, data, true);
