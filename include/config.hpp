@@ -19,8 +19,6 @@
 #include <type_traits>
 #include <list>
 
-#include "id.hpp"
-
 using namespace std;
 
 // This is the configuration file for this Project.
@@ -171,18 +169,6 @@ operator>>(istream& stream, Container& container) {  // container is updated by 
     return stream;
 }
 
-// Overload the >> operator for Id
-std::istream& operator>>(std::istream& in, Id& id) {
-    in >> id.value;  // Read an integer from the stream and assign it to id.value
-    return in;
-}
-
-// Overload the >> operator for Id
-ostream& operator<<(ostream& on, Id& id) {
-    on << id.value;  // Read an integer from the stream and assign it to id.value
-    return on;
-}
-
 // Operator Overloading for Map<T, set<T>>. Works for any printable type T.
 
 // template overload for printing a unordered_map of T,set<T>
@@ -221,8 +207,8 @@ istream& operator>>(istream& stream, unordered_map<T, unordered_set<T>>& m){
         return stream;
     }
         
-    Id key;
-    unordered_set<Id> value;
+    T key;
+    unordered_set<T> value;
 
     // how the map string representation is formatted (BNF syntax)
     // pair ::= ε

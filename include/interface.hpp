@@ -3,11 +3,12 @@
 #include "config.hpp"
 #include "util.hpp"
 #include "types.hpp"
+#include "id.hpp"
 #include "node_and_query.hpp"
 #include "graph_implementation.hpp"
 #include "filtered_graph_implementation.hpp"
 #include "evaluation.hpp"
-#include "id.hpp"
+
 
 using namespace std;
 

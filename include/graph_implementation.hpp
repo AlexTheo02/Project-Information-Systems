@@ -149,9 +149,9 @@ const Id DirectedGraph<T>::medoid(void){
 
 // Implements medoid function using serial programming.
 template<typename T>
-const int DirectedGraph<T>::_serial_medoid(void){
+const Id DirectedGraph<T>::_serial_medoid(void){
 
-    int med;
+    Id med;
     float dmin = numeric_limits<float>::max(), dsum, dist;
 
     for (const Node<T>& node : this->nodes){
@@ -173,7 +173,7 @@ const int DirectedGraph<T>::_serial_medoid(void){
 
 // Thread function for parallel medoid. Work inside the range defined by [start_index, end_index). Update minima by reference for the merging of the results.
 template<typename T>
-void DirectedGraph<T>::_thread_medoid_fn(int start_index, int end_index, int& local_minimum, float& local_dmin){
+void DirectedGraph<T>::_thread_medoid_fn(int start_index, int end_index, Id& local_minimum, float& local_dmin){
 
     // There is no need for synchronization between threads, as the shared resources (this->nodes) is accessed in a read-only manner.
 
@@ -197,7 +197,7 @@ void DirectedGraph<T>::_thread_medoid_fn(int start_index, int end_index, int& lo
 
 // Implements medoid function using parallel programming with threads. Concurrency is set by the global constant N_THREADS.
 template<typename T>
-const int DirectedGraph<T>::_parallel_medoid(void){
+const Id DirectedGraph<T>::_parallel_medoid(void){
 
     int chunk_size = (int) this->nodes.size() / N_THREADS;          // how many nodes each thread will handle
     int remainder = this->nodes.size() - N_THREADS*chunk_size;      // amount of remaining nodes to be distributed evenly among threads
@@ -210,7 +210,7 @@ const int DirectedGraph<T>::_parallel_medoid(void){
 
     // initializing the threads
     vector<thread> threads(N_THREADS);                                  // a vector of size N_THREADS holding all the threads
-    vector<int> local_minima(N_THREADS);                                // a vector of size N_THREADS to hold ids of local medoids
+    vector<Id> local_minima(N_THREADS);                                 // a vector of size N_THREADS to hold ids of local medoids
     vector<float> local_dmin(N_THREADS, numeric_limits<float>::max());  // a vector of size N_THREADS all initialized with float_max
 
     for (int i = 0; i < N_THREADS; i++){

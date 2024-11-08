@@ -18,7 +18,6 @@
 #include <mutex>
 
 #include "util.hpp"
-#include "id.hpp"
 
 using namespace std;
 
@@ -26,7 +25,35 @@ using namespace std;
 // Their implementations are on a separate .hpp file
 // They are all linked together in the interface.hpp file
 
+struct Id {
+    int value;
+    Id() : value(-1) {}
+    Id(int newValue) : value(newValue) {}
 
+    operator int() const { return value; } // Used to convert id to int in array indexing
+
+    Id& operator=(int newValue);
+
+    bool operator==(const Id& other) const;
+
+    bool operator==(const int other) const;
+
+    bool operator<(const Id& other) const;
+
+    bool operator<(const int other) const;
+
+    bool operator>=(const int other) const;
+};
+
+// Specialize std::hash for the Id struct
+namespace std {
+    template <>
+    struct hash<Id> {
+        size_t operator()(const Id& id) const noexcept {
+            return hash<int>()(id.value);  // Hash based on the integer value
+        }
+    };
+}
 
 template <typename T>
 class DirectedGraph;    // forward declaration for nodes and queries
@@ -108,13 +135,13 @@ class DirectedGraph{
         function<bool(const T&)> isEmpty;                       // typename T valid check
 
         // implements medoid function using serial programming.
-        const int _serial_medoid(void);
+        const Id _serial_medoid(void);
 
         // Implements medoid function using parallel programming with threads. Concurrency is set by the global constant N_THREADS.
-        const int _parallel_medoid(void);
+        const Id _parallel_medoid(void);
 
         // Thread function for parallel medoid. Work inside the range defined by [start_index, end_index). Update minima by reference for the merging of the results.
-        void _thread_medoid_fn(int start_index, int end_index, int& local_minimum, float& local_dmin);
+        void _thread_medoid_fn(int start_index, int end_index, Id& local_minimum, float& local_dmin);
     
     public:
 
