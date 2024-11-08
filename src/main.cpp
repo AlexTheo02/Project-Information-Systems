@@ -18,7 +18,61 @@ static float t;
 #define F_QUERIES_PATH "data/contest-queries-release-1m.bin"
 #define F_DATA_DIM 102
 #define F_QUERY_DIM 104
-#define FILTERED_GRAPH_STORE_PATH "filtered_graph_instance.txt"
+#define F_GRAPH_STORE_PATH "filtered_graph_instance.txt"
+#define F_GROUNDTRUTH_PATH "data/contest-groundtruth-custom-1m.txt"
+
+vector<vector<Id>> generateGroundtruth(vector<vector<float>>& data, vector<vector<float>>& queries){
+
+    unordered_map<Id, vector<float>> dataSameCategory;
+    vector<vector<Id>> queryNeighbors;
+
+    for(int i = 0; i < queries.size(); i++){
+
+        dataSameCategory.clear();
+
+        vector<float> queryValue(queries[i].begin() + 4, queries[i].end());
+
+        for(int j = 0; j < data.size(); j++){
+            if(data[j][0] == queries[i][1]){
+                vector<float> onlyValue(data[j].begin() + 2, data[j].end());
+                dataSameCategory[j] = onlyValue;
+            }
+        }
+
+
+        float distance;
+        unordered_map <Id, float> distances; 
+
+        for(pair<Id, vector<float>> pair : dataSameCategory){
+            distance = euclideanDistance(pair.second, queryValue);
+            distances[pair.first] = distance;
+        }
+
+        // Convert distances map to a vector of pairs
+        vector<pair<Id, float>> distancesVec(distances.begin(), distances.end());
+
+        // Sort distancesVec by the second element (distance) in ascending order
+        sort(distancesVec.begin(), distancesVec.end(),
+             [](const pair<Id, float>& a, const pair<Id, float>& b) {
+                 return a.second < b.second;
+             });
+
+        // Extract sorted Ids based on distances and store in sortedIds
+        vector<Id> neighbors;
+        int minimum = (distancesVec.size() > 100) ? 100 : distancesVec.size();
+        for (int i = 0; i < minimum; i++){
+            auto& p = distancesVec[i];
+            neighbors.push_back(p.first);
+        }
+
+        // Add sorted Ids for this query to the result
+        queryNeighbors.push_back(neighbors);
+
+    }
+
+    return queryNeighbors;
+
+}
 
 // Παραδοτέο 1
 void unfilteredVamana(){
@@ -69,7 +123,14 @@ void filteredVamana(){
     ReadBin(F_QUERIES_PATH, F_QUERY_DIM, queries);
 
     // Generate groundtruth
-    vector<vector<Id>> groundtruth;
+    vector<vector<Id>> groundtruth = generateGroundtruth(data, queries);
+
+    fstream file;
+
+    // create a new file if it did not exist, or replace any contents existing before
+    file.open(F_GROUNDTRUTH_PATH, ios::out | ios::trunc);  // mode flags: https://cplusplus.com/reference/fstream/fstream/open/
+
+    file << generateGroundtruth << "/n";
 
     // Create and initialize graph
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>, data, true);
@@ -85,7 +146,7 @@ void filteredVamana(){
 
     profileFilteredVamana(L,R,a,k,t,DG,data,queries,groundtruth);
 
-    DG.store(FILTERED_GRAPH_STORE_PATH); // store the vamana Index
+    DG.store(F_GRAPH_STORE_PATH); // store the vamana Index
 
 }
 void parseArgs(int argc, char*argv[]){

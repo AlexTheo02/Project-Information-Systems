@@ -73,13 +73,11 @@ void profileFilteredVamana(
 
     // Find medoid nodes for each category
     unordered_map<int,Id> medoidMap = DG.findMedoids(t);
-
     // Create set containing all medoid nodes
     unordered_set<Id> medoids;
     for (auto pair : medoidMap){
         medoids.insert(pair.second);
     }
-
 
     // Greedy search for all queries with start node the medoid of all nodes (already calculated)
     for (int i=0; i<queries.size(); i++){
