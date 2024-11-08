@@ -39,12 +39,15 @@ using namespace std;
 #define DEFAULT_N_THREADS 1
 #define DEFAULT_t 0.5f
 #define DEFAULT_SHOULD_OMIT true
+#define DEFAULT_FILTERED false
 
 // Some functions are accelerated by leveraging parallelism using N_THREADS threads (eg. DirectedGraph::medoid).
 static int N_THREADS = DEFAULT_N_THREADS;
 
 // global flag on whether to omit output on tests. Set to non-zero to omit outputs, 0 to allow them.
 static bool SHOULD_OMIT = DEFAULT_SHOULD_OMIT;
+
+static bool FILTERED = DEFAULT_FILTERED;
 
 // Custom Cout-like Object that respects the SHOULD_OMIT flag on whether to print or not.
 // Cannot be used with endl. Please use << '\n'; instead of << endl;

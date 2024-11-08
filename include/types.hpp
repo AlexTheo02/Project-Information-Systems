@@ -86,7 +86,7 @@ class Query{
         function<bool(const T&)> isEmpty;   // pointer to the isEmpty method
 
         // Constructor
-        Query(Id id = -1, int cat = -1, bool fil = false, T value = {}, function<bool(const T&)> isEmpty = alwaysEmpty<T>){
+        Query(Id id = -1, int category = -1, bool fil = false, T value = {}, function<bool(const T&)> isEmpty = alwaysEmpty<T>){
             this->id = id;
             this->filtered = fil;
             this->category = category;
@@ -137,7 +137,7 @@ class DirectedGraph{
     public:
 
         // Constructor: Initialize an empty graph
-        DirectedGraph(function<float(const T&, const T&)> distance_function, function<bool(const T&)> is_Empty, vector<T> values = {}) {
+        DirectedGraph(function<float(const T&, const T&)> distance_function, function<bool(const T&)> is_Empty, vector<T> values = {}, bool isFiltered = false) {
             this->n_edges = 0;
             this->n_nodes = 0;
             this->d = distance_function;
@@ -145,8 +145,18 @@ class DirectedGraph{
             this->_medoid = -1;
             c_log << "Graph created!" << '\n';
 
-            for (const T& value : values){
-                this->createNode(value);
+            if (isFiltered){
+                for (const T& value : values){
+                    int category = value[0];
+                    // Ignore the first 2 dimensions
+                    T newValue(value.begin() + 2, value.end());
+                    this->createNode(newValue, category);
+                }
+            }
+            else{
+                for (const T& value : values){
+                    this->createNode(value);
+                }
             }
         }
 

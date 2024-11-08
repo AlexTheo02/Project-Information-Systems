@@ -4,3 +4,4 @@ bin
 /tests/build
 /tests/bin
 **.txt
+data/
