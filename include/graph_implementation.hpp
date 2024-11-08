@@ -9,6 +9,8 @@ template<typename T>
 Id DirectedGraph<T>::createNode(const T& value, int category){
     // https://cplusplus.com/reference/set/set/insert/ - return values of insert
 
+    c_log << category << '\n';
+
     Node<T> node(this->n_nodes, category, value, this->isEmpty);
 
     // Add the value to graph's set of nodes
@@ -56,6 +58,8 @@ bool DirectedGraph<T>::addEdge(const Id from, const Id to){
 template <typename T>
 bool DirectedGraph<T>::removeEdge(const Id from, const Id to){
 
+    c_log << "From = " << from << "\nTo = " << to << "\n";
+
     // Check if keys exist before accessing them (and removing them)
     if (mapKeyExists(from, this->Nout)) {
         // Key exists, access the value, if successfully removed, return true
@@ -63,6 +67,7 @@ bool DirectedGraph<T>::removeEdge(const Id from, const Id to){
             // Check if outgoing neighbors are empty, if so, remove entry from unordered map
             if(this->Nout[from].empty()){
                 this->Nout.erase(from);
+                c_log << from << "|||" << this->Nout << '\n';
             }
             // Decrement the number of edges in graph
             this->n_edges--;
@@ -85,8 +90,13 @@ bool DirectedGraph<T>::clearNeighbors(const Id id){
     // Node has outgoing neighbors
     if (mapKeyExists(id, this->Nout)){
         // For each outgoing neighbor, remove the edge
-        unordered_set<int> noutCopy(this->Nout[id].begin(), this->Nout[id].end());
-        for (const int n : noutCopy){      
+        c_log << id << '\n';
+        unordered_set<Id> noutCopy(this->Nout[id].begin(), this->Nout[id].end());
+
+        c_log << this->Nout << '\n';
+        c_log << noutCopy << '\n';
+
+        for (const Id n : noutCopy){      
             if (!this->removeEdge(id,n)){
                 c_log << "ERROR: Failed to remove edge, something went wrong" << '\n';
                 return false;
@@ -94,6 +104,7 @@ bool DirectedGraph<T>::clearNeighbors(const Id id){
         }      
         // Check if node has been removed from neighbors map
         if (mapKeyExists(id, this->Nout)){
+            
             c_log << "ERROR: Something went wrong when clearing neighbors" << '\n';
             return false;
         }

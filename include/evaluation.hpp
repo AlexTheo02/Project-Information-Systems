@@ -20,7 +20,10 @@ void profileVamana(
 
     auto startTime = chrono::high_resolution_clock::now();
     // Vamana indexing
+
+    // check for queries, if categorical queries run filtered vamana, or ask user to specify if using filters
     DG.vamanaAlgorithm(L, R, a);
+    // DG.filteredVamanaAlgorithm(L,R,a,0.5f);
     auto endTime = chrono::high_resolution_clock::now();
 
     auto duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime);

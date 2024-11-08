@@ -25,6 +25,10 @@ using namespace std;
 // Their implementations are on a separate .hpp file
 // They are all linked together in the interface.hpp file
 
+
+template <typename T>
+class DirectedGraph;    // forward declaration for nodes and queries
+
 struct Id {
     int value;
     Id() : value(-1) {}
@@ -32,31 +36,18 @@ struct Id {
 
     operator int() const { return value; } // Used to convert id to int in array indexing
 
-    Id& operator=(int newValue);
-
-    bool operator==(const Id& other) const;
-
-    bool operator==(const int other) const;
-
-    bool operator<(const Id& other) const;
-
-    bool operator<(const int other) const;
-
-    bool operator>=(const int other) const;
+    Id& operator=(int newValue);                // assignment
+    bool operator==(const Id& other) const;     // equality with Id
+    bool operator==(const int other) const;     // equality with int
+    bool operator<(const Id& other) const;      // less with Id
+    bool operator<(const int other) const;      // less with in
+    bool operator>=(const int other) const;     // geq with int
 };
 
-// Specialize std::hash for the Id struct
-namespace std {
-    template <>
-    struct hash<Id> {
-        size_t operator()(const Id& id) const noexcept {
-            return hash<int>()(id.value);  // Hash based on the integer value
-        }
-    };
-}
-
-template <typename T>
-class DirectedGraph;    // forward declaration for nodes and queries
+// Specialize std::hash for the Id struct (required because Id is used in unordered_containers(set, map) that are implemented with hash tables)
+namespace std { // Hash based on the integer value
+    template <> struct hash<Id> { size_t operator()(const Id& id) const noexcept { return hash<int>()(id.value);} };
+}                                                                       /* actual hash implementation = hash with id.value (hash<int>)*/
 
 
 // Node class
@@ -70,7 +61,7 @@ class Node{
         function<bool(const T&)> isEmpty;   // pointer to the isEmpty method
 
         // Constructor
-        Node(Id id = -1, int cat = -1, T value = {}, function<bool(const T&)> isEmpty = alwaysEmpty<T>){
+        Node(Id id = -1, int category = -1, T value = {}, function<bool(const T&)> isEmpty = alwaysEmpty<T>){
             this->id = id;
             this->category = category;
             this->value = value;
@@ -190,23 +181,23 @@ class DirectedGraph{
         const Id medoid(void);
 
         // calculates the Filtered Medoids
-        const unordered_map<int, int> findMedoids(float threshold);
+        const unordered_map<int, Id> findMedoids(float threshold);
 
         // implements filtered medoid function using serial programming.
-        const unordered_map<int, int> _filtered_serial_medoid(float threshold);
+        const unordered_map<int, Id> _filtered_serial_medoid(float threshold);
 
         // Implements filtered medoid function using parallel programming with threads. Concurrency is set by the global constant N_THREADS.
-        const unordered_map<int, int> _filtered_parallel_medoid(float threshold);
+        const unordered_map<int, Id> _filtered_parallel_medoid(float threshold);
 
         // Thread function for parallel filtered medoid.
-        void _filtered_thread_medoid_fn(mutex& T_counterMutex, mutex& categoryMutex, vector<int>& T_counter, int& categoryIndex, int maxCategoryIndex, vector<pair<int, unordered_set<int>>>& categoryPairs, int threshold);
+        void _filtered_thread_medoid_fn(mutex& T_counterMutex, mutex& categoryMutex, vector<int>& T_counter, int& categoryIndex, int maxCategoryIndex, vector<pair<int, unordered_set<Id>>>& categoryPairs, float threshold);
 
         Id _myArgMin(const unordered_set<Id>& nodeSet, T t);
 
         unordered_set<Id> _closestN(int N, const unordered_set<Id>& S, T X);
 
         // Returns a filtered set
-        unordered_set<int> filterSet(unordered_set<int> S, int filter);
+        unordered_set<Id> filterSet(unordered_set<Id> S, int filter);
 
         // creates a random R graph with the existing nodes. Return TRUE if successful, FALSE otherwise
         bool Rgraph(int R);
@@ -216,12 +207,12 @@ class DirectedGraph{
         const pair<unordered_set<Id>, unordered_set<Id>> greedySearch(Id s, T xq, int k, int L);
 
         // Returns a set with the k closest neighbors (returned.first) and a set of all visited nodes (returned.second).
-        const pair<unordered_set<int>, unordered_set<int>> filteredGreedySearch(unordered_set<int>& S, Query<T> q, int k, int L);
+        const pair<unordered_set<Id>, unordered_set<Id>> filteredGreedySearch(unordered_set<Id>& S, Query<T> q, int k, int L);
 
         // Prunes out-neighbors of node p up until a minimum threshold R of out-neighbors for node p, based on distance criteria with parameter a.
         void robustPrune(Id p, unordered_set<Id> V, float a, int R);
 
-        void filteredRobustPrune(int p, unordered_set<int> V, float a, int R);
+        void filteredRobustPrune(Id p, unordered_set<Id> V, float a, int R);
 
         // Transforms the graph into a Directed Graph such that it makes the finding of nearest neighbors easier.
         // Parameters:

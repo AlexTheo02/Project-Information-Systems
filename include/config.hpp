@@ -169,17 +169,17 @@ operator>>(istream& stream, Container& container) {  // container is updated by 
     return stream;
 }
 
-// Operator Overloading for Map<T, set<T>>. Works for any printable type T.
+// Operator Overloading for Map<Key, Value>. Works for any printable types Key and Value.
 
-// template overload for printing a unordered_map of T,set<T>
-template <typename T>
-ostream& operator<<(ostream& stream, const unordered_map<T, unordered_set<T>>& m){
+// template overload for printing a unordered_map of Key,Value
+template <typename Key, typename Value>
+ostream& operator<<(ostream& stream, const unordered_map<Key, Value>& m){
 
     stream << "{";
 
     bool first = true;  // flag to omit delimiter in first iteration
 
-    for (const auto& pair : m){
+    for (const auto& pair : m){ // auto = pair<Key, Value>
 
         if (first){
             stream << "(" << pair.first << ", " << pair.second << ")";  // dereference the iterator->first for key and seconds for value and print value in stream
@@ -193,9 +193,9 @@ ostream& operator<<(ostream& stream, const unordered_map<T, unordered_set<T>>& m
     return stream;
 }
 
-// template overload for reading a map of T,set<T>
-template <typename T>
-istream& operator>>(istream& stream, unordered_map<T, unordered_set<T>>& m){
+// template overload for reading a map of Key, Value
+template <typename Key, typename Value>
+istream& operator>>(istream& stream, unordered_map<Key, Value>& m){
 
     m.clear();
 
@@ -207,8 +207,8 @@ istream& operator>>(istream& stream, unordered_map<T, unordered_set<T>>& m){
         return stream;
     }
         
-    T key;
-    unordered_set<T> value;
+    Key key;
+    Value value;
 
     // how the map string representation is formatted (BNF syntax)
     // pair ::= ε
