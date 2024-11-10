@@ -54,11 +54,13 @@ void profileFilteredVamana(
     DirectedGraph<vector<float>>& DG,
     const vector<vector<float>>& vectors,
     const vector<vector<float>>& queries,
-    const vector<vector<Id>>& groundtruth
+    const vector<vector<Id>>& groundtruth,
+    string filepath
     ){
     
     auto startTime = chrono::high_resolution_clock::now();
     DG.filteredVamanaAlgorithm(L, R, a, t);
+    DG.store(filepath); // store the vamana Index
     auto endTime = chrono::high_resolution_clock::now();
 
     auto duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime);

@@ -23,29 +23,45 @@ static float t;
 
 vector<vector<Id>> generateGroundtruth(vector<vector<float>>& data, vector<vector<float>>& queries){
 
-    unordered_map<Id, vector<float>> dataSameCategory;
+    // Create map category -> set of pair<nodeId, value>
+    unordered_map<int, unordered_map<Id,vector<float>>> categories;
+    for (int i=0; i<data.size(); i++){
+        vector<float> vec = data[i];
+        int category = vec[0];
+        vector<float> value(vec.begin() + 2, vec.end());
+        pair<Id, vector<float>> nodePair(i,value);
+        categories[category].insert(nodePair);
+    }
+
+    // Initialize neighbors vector
     vector<vector<Id>> queryNeighbors;
 
+    // For each query
     for(int i = 0; i < queries.size(); i++){
         cout << "Generating groundtruth for query: " << i << endl;
-        dataSameCategory.clear();
 
-        vector<float> queryValue(queries[i].begin() + 4, queries[i].end());
-
-        for(int j = 0; j < data.size(); j++){
-            if(data[j][0] == queries[i][1]){
-                vector<float> onlyValue(data[j].begin() + 2, data[j].end());
-                dataSameCategory[j] = onlyValue;
-            }
-        }
-
+        vector<float> query = queries[i];
+        vector<float> queryValue(query.begin() + 4, query.end());
+        int category = query[1];
 
         float distance;
         unordered_map <Id, float> distances; 
 
-        for(pair<Id, vector<float>> pair : dataSameCategory){
-            distance = euclideanDistance(pair.second, queryValue);
-            distances[pair.first] = distance;
+        // Query is filtered
+        if (category != -1){
+            // Iterate over same-category nodes and calculate the distance for each of them
+            for (pair<Id, vector<float>> vecPair : categories[category]){
+                distances[vecPair.first] = euclideanDistance(queryValue,vecPair.second);
+            }
+        }
+        // Query is unfiltered 
+        else{
+            // Iterate over all nodes and calculate the distance for each of them
+            for (int i=0; i<data.size(); i++){
+                vector<float> vec = data[i];
+                vector<float> value(vec.begin() + 2, vec.end());
+                distances[i] = euclideanDistance(queryValue, value);
+            }
         }
 
         // Convert distances map to a vector of pairs
@@ -124,13 +140,16 @@ void filteredVamana(){
 
     // Generate groundtruth
     fstream file;
-    file.open(F_GROUNDTRUTH_PATH, ios::in);  // mode flags: https://cplusplus.com/reference/fstream/fstream/open/
-    vector<vector<Id>> groundtruth; // = generateGroundtruth(data, queries);
-    file >> groundtruth;
+    file.open(F_GROUNDTRUTH_PATH, ios::out | ios::trunc);  // mode flags: https://cplusplus.com/reference/fstream/fstream/open/
+    vector<vector<Id>> groundtruth = generateGroundtruth(data, queries);
+
+    // Read groundtruth
+    // file >> groundtruth;
 
     // create a new file if it did not exist, or replace any contents existing before
 
-    // file << groundtruth;
+    // Write groundtruth to file
+    file << groundtruth;
 
     file.close();
     // cout << groundtruth;
@@ -147,9 +166,7 @@ void filteredVamana(){
     cout << "Number of threads: " << N_THREADS << endl;
     if (!SHOULD_OMIT) { cout << "Debug mode" << endl; }
 
-    profileFilteredVamana(L,R,a,k,t,DG,data,queries,groundtruth);
-
-    DG.store(F_GRAPH_STORE_PATH); // store the vamana Index
+    profileFilteredVamana(L,R,a,k,t,DG,data,queries,groundtruth,F_GRAPH_STORE_PATH);
 
 }
 void parseArgs(int argc, char*argv[]){
