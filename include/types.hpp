@@ -16,6 +16,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <mutex>
+#include <optional>
 
 #include "util.hpp"
 
@@ -126,13 +127,13 @@ class DirectedGraph{
         function<bool(const T&)> isEmpty;                       // typename T valid check
 
         // implements medoid function using serial programming.
-        const Id _serial_medoid(void);
+        const Id _serial_medoid(vector<Node<T>>& nodes);
 
         // Implements medoid function using parallel programming with threads. Concurrency is set by the global constant N_THREADS.
-        const Id _parallel_medoid(void);
+        const Id _parallel_medoid(vector<Node<T>>& nodes);
 
         // Thread function for parallel medoid. Work inside the range defined by [start_index, end_index). Update minima by reference for the merging of the results.
-        void _thread_medoid_fn(int start_index, int end_index, Id& local_minimum, float& local_dmin);
+        void _thread_medoid_fn(vector<Node<T>>& nodes, int start_index, int end_index, Id& local_minimum, float& local_dmin);
     
     public:
 
@@ -188,7 +189,7 @@ class DirectedGraph{
         bool clearEdges(void);
 
         // Calculates the medoid of the nodes in the graph based on the given distance function
-        const Id medoid(void);
+        const Id medoid(optional<vector<Node<T>>> nodes_arg = nullopt);
 
         // calculates the Filtered Medoids
         const unordered_map<int, Id> findMedoids(float threshold);

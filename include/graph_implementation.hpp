@@ -129,37 +129,42 @@ bool DirectedGraph<T>::clearEdges(void){
 
 // Calculates the medoid of the nodes in the graph based on the given distance function
 template<typename T>
-const Id DirectedGraph<T>::medoid(void){
+const Id DirectedGraph<T>::medoid(optional<vector<Node<T>>> nodes_arg){
+
+    vector<Node<T>>& nodes = (nodes_arg == nullopt) ? this->nodes : nodes_arg.value();    // unrwapping from the "optional" template
 
     // empty set case
-    if (this->nodes.empty()){ throw invalid_argument("Vector is empty.\n"); }
+    if (nodes.empty()){ throw invalid_argument("Vector is empty.\n"); }
 
     // if |s| = 1 or 2, return the first element of the set (metric distance is symmetric)
-    if (this->nodes.size() <= 2){ return Id{0}; }
+    if (nodes.size() <= 2){ return Id{0}; }
 
     // Invalid N_THREADS
     if (N_THREADS <= 0) throw invalid_argument("N_THREADS constant is invalid. Value must be N_THREADS >= 1.\n");
 
-    // avoid recalculation:
-    if (this->_medoid == -1)
-        this->_medoid = (N_THREADS == 1) ? this->_serial_medoid() : this->_parallel_medoid();
-
-    // return saved or new medoid
-    return this->_medoid;
+    // avoid recalculation: (if nodes argument is the this->nodes vector)
+    if (nodes == this->nodes){
+        if (this->_medoid == -1)
+            this->_medoid = (N_THREADS == 1) ? this->_serial_medoid(nodes) : this->_parallel_medoid(nodes);
+        
+        return this->_medoid;
+    }
+    
+    return (N_THREADS == 1) ? this->_serial_medoid(nodes) : this->_parallel_medoid(nodes);
     
 }
 
 // Implements medoid function using serial programming.
 template<typename T>
-const Id DirectedGraph<T>::_serial_medoid(void){
+const Id DirectedGraph<T>::_serial_medoid(vector<Node<T>>& nodes){
 
     Id med;
     float dmin = numeric_limits<float>::max(), dsum, dist;
 
-    for (const Node<T>& node : this->nodes){
+    for (const Node<T>& node : nodes){
         dsum = 0;
 
-        for (const Node<T>& other_node : this->nodes){
+        for (const Node<T>& other_node : nodes){
             // we don't need to check if the other element is the same, because one's distance to itself is zero
             dsum += this->d(node.value, other_node.value);
         }
@@ -175,18 +180,18 @@ const Id DirectedGraph<T>::_serial_medoid(void){
 
 // Thread function for parallel medoid. Work inside the range defined by [start_index, end_index). Update minima by reference for the merging of the results.
 template<typename T>
-void DirectedGraph<T>::_thread_medoid_fn(int start_index, int end_index, Id& local_minimum, float& local_dmin){
+void DirectedGraph<T>::_thread_medoid_fn(vector<Node<T>>& nodes, int start_index, int end_index, Id& local_minimum, float& local_dmin){
 
-    // There is no need for synchronization between threads, as the shared resources (this->nodes) is accessed in a read-only manner.
+    // There is no need for synchronization between threads, as the shared resources (nodes) is accessed in a read-only manner.
 
     // local_dmin is already initialized from the thread_caller function: T DirectedGraph<T>::_parallel_medoid(void)
     float dsum, dist;
 
     for (int i = start_index; i < end_index; i++){
         dsum = 0;
-        const Node<T>& node = this->nodes[i];
+        const Node<T>& node = nodes[i];
         // we don't need to check if the other element is the same, because one's distance to itself is zero
-        for (const Node<T>& other_node : this->nodes)
+        for (const Node<T>& other_node : nodes)
             dsum += this->d(node.value, other_node.value);
 
         // updating best medoid if current total distance is smaller than the minimum total distance yet in the working range
@@ -199,10 +204,10 @@ void DirectedGraph<T>::_thread_medoid_fn(int start_index, int end_index, Id& loc
 
 // Implements medoid function using parallel programming with threads. Concurrency is set by the global constant N_THREADS.
 template<typename T>
-const Id DirectedGraph<T>::_parallel_medoid(void){
+const Id DirectedGraph<T>::_parallel_medoid(vector<Node<T>>& nodes){
 
-    int chunk_size = (int) this->nodes.size() / N_THREADS;          // how many nodes each thread will handle
-    int remainder = this->nodes.size() - N_THREADS*chunk_size;      // amount of remaining nodes to be distributed evenly among threads
+    int chunk_size = nodes.size() / N_THREADS;          // how many nodes each thread will handle
+    int remainder = nodes.size() - N_THREADS*chunk_size;      // amount of remaining nodes to be distributed evenly among threads
 
     // each thread will handle chunk_size nodes. Any remaining nodes will be distributed evenly among threads
     // for example 53 nodes among 5 threads => chunk_size = 10, remainder = 3.
@@ -219,7 +224,7 @@ const Id DirectedGraph<T>::_parallel_medoid(void){
         end_index = start_index + chunk_size + ((remainder-- > 0) ? 1 : 0); // if any remaining left, add + 1 and decrement the remainder
 
         // load and launch thread 
-        threads[i] = thread(&DirectedGraph::_thread_medoid_fn, this, start_index, end_index, ref(local_minima[i]), ref(local_dmin[i]));
+        threads[i] = thread(&DirectedGraph::_thread_medoid_fn, this, ref(nodes), start_index, end_index, ref(local_minima[i]), ref(local_dmin[i]));
         // ref( ) sends the vectors by reference to update their values.
 
         start_index = end_index;    // update index for next thread
@@ -461,7 +466,7 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){
     vector<Node<T>> perm = permutation(this->nodes);
 
     for (Node<T>& si : perm){
-        pair<unordered_set<Id>, unordered_set<Id>> rv = greedySearch(s, si.value, 1, L);
+        pair<unordered_set<Id>, unordered_set<Id>> rv = greedySearch(this->nodes[s].id, si.value, 1, L); 
 
         unordered_set<Id> Lc = rv.first;
         unordered_set<Id> V = rv.second;

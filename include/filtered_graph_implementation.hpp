@@ -16,11 +16,13 @@ const unordered_map<int, Id> DirectedGraph<T>::findMedoids(float threshold){
 
     if (!this->filteredMedoids.empty()) { return this->filteredMedoids; }
 
-    // check Nthreads and pass to _serialFilteredMedoids or _parallelFilteredMedoids
-    if (N_THREADS == 1){
-        return _filtered_serial_medoid(threshold);
-    }
-    return _filtered_parallel_medoid(threshold);
+    // // check Nthreads and pass to _serialFilteredMedoids or _parallelFilteredMedoids
+    // if (N_THREADS == 1){
+    //     return _filtered_serial_medoid(threshold);
+    // }
+    // return _filtered_parallel_medoid(threshold);
+
+    return _filtered_serial_medoid(threshold);
 }
 
 template <typename T>
@@ -30,27 +32,29 @@ const unordered_map<int, Id> DirectedGraph<T>::_filtered_serial_medoid(float thr
 
     for (pair<int, unordered_set<Id>> cpair : this->categories){
         
-        unordered_set<Id> Rf, remaining(cpair.second.begin(), cpair.second.end()); // remaining is a copy that holds all the remaining values to be sampled from
+        vector<Node<T>> Rf;
+        unordered_set<Id> remaining(cpair.second.begin(), cpair.second.end()); // remaining is a copy that holds all the remaining values to be sampled from
 
         while (!remaining.empty() && Rf.size() < (threshold * cpair.second.size())){
             int sample = sampleFromContainer(remaining);
-            Rf.insert(sample);
+            Rf.push_back(this->nodes[sample]);
             remaining.erase(sample);
         }
 
-        // pmin = argmin p \in Rf (T[p])
-        int min_val = numeric_limits<int>::max();
-        Id pmin;
+        this->filteredMedoids[cpair.first] = this->medoid(Rf);
+        // // pmin = argmin p \in Rf (T[p])
+        // int min_val = numeric_limits<int>::max();
+        // Id pmin;
 
-        for (Id p : Rf){
-            if (T_counter[p] < min_val){
-                pmin = p;
-                min_val = T_counter[p];
-            }
-        }
+        // for (Id p : Rf){
+        //     if (T_counter[p] < min_val){
+        //         pmin = p;
+        //         min_val = T_counter[p];
+        //     }
+        // }
 
-        this->filteredMedoids[cpair.first] = pmin;  // medoid candidate for specific category
-        T_counter[pmin]++;      // incremenet pmin's counter (it has been found as the min that much times)
+        // this->filteredMedoids[cpair.first] = pmin;  // medoid candidate for specific category
+        // T_counter[pmin]++;      // incremenet pmin's counter (it has been found as the min that much times)
     }
     cout << "MEDOIDS FOUND" << endl;
     return this->filteredMedoids;
@@ -74,31 +78,35 @@ void DirectedGraph<T>::_filtered_thread_medoid_fn(
         categoryMutex.unlock();
 
         // Sampling
-        unordered_set<Id> Rf, remaining(categoryPairs[myCategory].second.begin(), categoryPairs[myCategory].second.end()); // remaining is a copy that holds all the remaining values to be sampled from
+        vector<Node<T>> Rf;
+        unordered_set<Id> remaining(categoryPairs[myCategory].second.begin(), categoryPairs[myCategory].second.end()); // remaining is a copy that holds all the remaining values to be sampled from
 
         while (!remaining.empty() && Rf.size() < (threshold * categoryPairs[myCategory].second.size())){
             int sample = sampleFromContainer(remaining);
-            Rf.insert(sample);
+            Rf.push_back(this->nodes[sample]);
             remaining.erase(sample);
         }
 
         // pmin = argmin p \in Rf (T[p])
-        int min_val = numeric_limits<int>::max();
-        Id pmin;
+        // int min_val = numeric_limits<int>::max();
+        // Id pmin;
 
-        for (Id p : Rf){
-            T_counterMutex.lock();
-            if (T_counter[p] < min_val){
-                pmin = p;
-                min_val = T_counter[p];
-            }
-            T_counterMutex.unlock();
-        }
+        // for (Id p : Rf){
+        //     T_counterMutex.lock();
+        //     if (T_counter[p] < min_val){
+        //         pmin = p;
+        //         min_val = T_counter[p];
+        //     }
+        //     T_counterMutex.unlock();
+        // }
 
-        this->filteredMedoids[categoryPairs[myCategory].first] = pmin;  // medoid candidate for specific category
-        T_counterMutex.lock();
-        T_counter[pmin]++;      // incremenet pmin's counter (it has been found as the min that much times)
-        T_counterMutex.unlock();
+        // this->filteredMedoids[categoryPairs[myCategory].first] = pmin;  // medoid candidate for specific category
+
+        this->filteredMedoids[categoryPairs[myCategory].first] = this->medoid(Rf);
+
+        // T_counterMutex.lock();
+        // T_counter[pmin]++;      // incremenet pmin's counter (it has been found as the min that much times)
+        // T_counterMutex.unlock();
 
         categoryMutex.lock();
         cout << "Thread exiting category: " << myCategory << endl;
