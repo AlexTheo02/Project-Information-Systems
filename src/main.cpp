@@ -140,19 +140,18 @@ void filteredVamana(){
 
     // Generate groundtruth
     fstream file;
-    file.open(F_GROUNDTRUTH_PATH, ios::out | ios::trunc);  // mode flags: https://cplusplus.com/reference/fstream/fstream/open/
-    vector<vector<Id>> groundtruth = generateGroundtruth(data, queries);
+    
+    // Generate and store groundtruth
+    // file.open(F_GROUNDTRUTH_PATH, ios::out | ios::trunc);  // mode flags: https://cplusplus.com/reference/fstream/fstream/open/
+    // vector<vector<Id>> groundtruth = generateGroundtruth(data, queries);
+    // file << groundtruth;
 
     // Read groundtruth
-    // file >> groundtruth;
-
-    // create a new file if it did not exist, or replace any contents existing before
-
-    // Write groundtruth to file
-    file << groundtruth;
+    file.open(F_GROUNDTRUTH_PATH, ios::in);
+    vector<vector<Id>> groundtruth;
+    file >> groundtruth;
 
     file.close();
-    // cout << groundtruth;
 
     // Create and initialize graph
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>, data, true);

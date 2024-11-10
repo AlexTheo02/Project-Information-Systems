@@ -26,8 +26,10 @@ const unordered_map<int, Id> DirectedGraph<T>::findMedoids(float threshold){
 template <typename T>
 const unordered_map<int, Id> DirectedGraph<T>::_filtered_serial_medoid(float threshold){
 
+    // Initialize T_counter (counts how many times a specific node has been selected as a medoid)
     vector<int> T_counter(this->n_nodes, 0);
 
+    // For each category
     for (pair<int, unordered_set<Id>> cpair : this->categories){
         
         unordered_set<Id> Rf, remaining(cpair.second.begin(), cpair.second.end()); // remaining is a copy that holds all the remaining values to be sampled from
@@ -239,9 +241,9 @@ void DirectedGraph<T>::filteredRobustPrune(Id p, unordered_set<Id> V, float a, i
         
         // safe iteration on V for deletions
         for (auto it = V.begin(); it != V.end(); /*no increment here*/){ // safe set iteration with mutable set during the iteration
-            if (this->nodes[*it].category != this->nodes[pmin].category && this->nodes[p].category != this->nodes[pmin].category) {it++; continue;}
+            if (this->nodes[*it].category == this->nodes[p].category && this->nodes[p].category != this->nodes[pmin].category) {it++; continue;}
             if (a * this->d(this->nodes[pmin].value, this->nodes[*it].value) <= this->d(this->nodes[p].value, this->nodes[*it].value)){
-                it = V.erase(it);
+                it = V.erase(it); // it now points to the next element in the set
             }
             else { it++; }
         }
@@ -256,8 +258,6 @@ bool DirectedGraph<T>::filteredVamanaAlgorithm(int L, int R, float a, float t){
     // initialize G as an empty graph => clear all edges
     if(this->clearEdges() == false)
         return false;
-
-
 
     // what is a good value of T for filteredMedoids?
     unordered_map<int, Id> st = this->findMedoids(t);  // paper says starting points should be the medoids found in [algorithm 2]
