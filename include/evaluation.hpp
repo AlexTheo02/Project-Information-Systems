@@ -58,15 +58,18 @@ void profileFilteredVamana(
     string filepath
     ){
     
-    auto startTime = chrono::high_resolution_clock::now();
-    DG.filteredVamanaAlgorithm(L, R, a, t);
-    DG.store(filepath); // store the vamana Index
-    auto endTime = chrono::high_resolution_clock::now();
+    // auto startTime = chrono::high_resolution_clock::now();
+    // DG.filteredVamanaAlgorithm(L, R, a, t);
+    // auto endTime = chrono::high_resolution_clock::now();
+    // DG.store(filepath); // store the vamana Index
 
-    auto duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime);
+    // auto duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime);
 
-    printf("Time to execute filteredVamanaAlgorithm(L=%d, R=%d, a=%f, t=%f): ", L,R,a,t);
-    printFormatMiliseconds(duration);
+    // printf("Time to execute filteredVamanaAlgorithm(L=%d, R=%d, a=%f, t=%f): ", L,R,a,t);
+    // printFormatMiliseconds(duration);
+
+    cout << "Loading the graph from \"" << filepath <<"\"" << endl;
+    DG.load(filepath);
 
     cout << "Vamana Index Created!" << endl;
 
@@ -81,6 +84,7 @@ void profileFilteredVamana(
         medoids.insert(pair.second);
     }
 
+    cout << "Calculating average recall score" << endl;
     // Greedy search for all queries with start node the medoid of all nodes (already calculated)
     for (int i=0; i<queries.size(); i++){
         vector<float> newValue(queries[i].begin() + 4, queries[i].end());
@@ -89,9 +93,12 @@ void profileFilteredVamana(
         // Get neighbors for i-th query
         pair<unordered_set<Id>, unordered_set<Id>> GS_return =  DG.filteredGreedySearch(medoids, q, k, L);
         unordered_set<Id> neighbors = GS_return.first;
+
+        float recall = k_recall(neighbors, groundtruth[i]);
+        cout << "Recall score for query: " << i << "/" << queries.size() << ": \t\t" << recall << endl;
         
         // Calculate the current recall and add it to the sum of all recall scores
-        total_recall += k_recall(neighbors, groundtruth[i]);
+        total_recall += recall;
     }
     // Print out average recall score
     cout << "FINISHED!\nAverage recall score is: " << total_recall / queries.size() << endl;

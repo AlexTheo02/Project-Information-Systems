@@ -54,7 +54,7 @@ const unordered_map<int, Id> DirectedGraph<T>::_filtered_serial_medoid(float thr
         this->filteredMedoids[cpair.first] = pmin;  // medoid candidate for specific category
         T_counter[pmin]++;      // incremenet pmin's counter (it has been found as the min that much times)
     }
-    cout << "MEDOIDS FOUND" << endl;
+    c_log << "MEDOIDS FOUND" << "\n";
     return this->filteredMedoids;
 }
 
@@ -72,7 +72,7 @@ void DirectedGraph<T>::_filtered_thread_medoid_fn(
     categoryMutex.lock();
     while (categoryIndex <= maxCategoryIndex){
         int myCategory = categoryIndex++; // save and increment
-        cout << "Thread assigned category: " << myCategory << endl;
+        c_log << "Thread assigned category: " << myCategory << "\n";
         categoryMutex.unlock();
 
         // Sampling
@@ -103,7 +103,7 @@ void DirectedGraph<T>::_filtered_thread_medoid_fn(
         T_counterMutex.unlock();
 
         categoryMutex.lock();
-        cout << "Thread exiting category: " << myCategory << endl;
+        c_log << "Thread exiting category: " << myCategory << "\n";
     }
     categoryMutex.unlock();
 }
@@ -114,8 +114,6 @@ const unordered_map<int, Id> DirectedGraph<T>::_filtered_parallel_medoid(float t
     c_log << "Filtered Parallel Medoid\n";
 
     vector<int> T_counter(this->n_nodes, 0); // Shared resource
-    vector<thread> threads(N_THREADS);  // a vector of size N_THREADS holding all the threads
-    int threadIndex = 0;
     
     // Create a vector of category pairs
     vector<pair<int, unordered_set<Id>>> categoryPairs(this->categories.begin(), this->categories.end());
@@ -127,8 +125,9 @@ const unordered_map<int, Id> DirectedGraph<T>::_filtered_parallel_medoid(float t
     mutex categoryMutex;
     mutex T_counterMutex;
 
+    vector<thread> threads(max(min(N_THREADS, maxCategoryIndex),0));  // a vector of size N_THREADS holding all the threads
     // Create the threads
-    for (int i=0; i< min(N_THREADS, maxCategoryIndex); i++){
+    for (int i=0; i< max(min(N_THREADS, maxCategoryIndex),0); i++){
 
         threads[i] = thread(
             &DirectedGraph<T>::_filtered_thread_medoid_fn,
@@ -142,13 +141,15 @@ const unordered_map<int, Id> DirectedGraph<T>::_filtered_parallel_medoid(float t
             threshold
         );
 
-        cout << "Created thread " << i << endl;
+        c_log << "Created thread " << i << "\n";
     }
 
     // Join the threads
-    for (thread& th : threads){ th.join(); }
+    if (!threads.empty()){
+        for (thread& th : threads){ th.join(); }
+    }
 
-    cout << "MEDOIDS FOUND" << endl;
+    c_log << "MEDOIDS FOUND" << "\n";
     return this->filteredMedoids;
 }
 

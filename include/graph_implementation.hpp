@@ -498,7 +498,14 @@ void DirectedGraph<T>::store(const string& filename) const{
     file << '\n';
     file << this->nodes;
     file << '\n';
+    file << this->_medoid;
+    file << '\n';
+    file << this->filteredMedoids;
+    file << "\n";
+    file << this->categories;
+    file << '\n';
     file << this->Nout;
+    
     file.close();
 
     c_log << "Graph Instance stored successfully in \"" << filename << '\"' << '\n';
@@ -515,10 +522,18 @@ void DirectedGraph<T>::load(const string& filename){
     file >> this->n_edges;
     file.ignore(1);         // ignores \n
     file >> this->n_nodes;
-    file.ignore(1);         // ignores \n
+    file.ignore(1);
     file >> this->nodes;
-    file.ignore(1);         // ignores \n
+    file.ignore(1);
+    file >> this->_medoid;
+    file.ignore(1);
+    file >> this->filteredMedoids;
+    file.ignore(1);
+    file >> this->categories;
+    file.ignore(1); 
     file >> this->Nout;
+
     file.close();
+    
     c_log << "Graph Instance loaded successfully from \"" << filename << '\"' << '\n';
 }
