@@ -17,7 +17,7 @@ const unordered_map<int, Id> DirectedGraph<T>::findMedoids(float threshold){
     if (!this->filteredMedoids.empty()) { return this->filteredMedoids; }
 
     // // check Nthreads and pass to _serialFilteredMedoids or _parallelFilteredMedoids
-    // if (N_THREADS == 1){
+    // if (args.n_threads == 1){
     //     return _filtered_serial_medoid(threshold);
     // }
     // return _filtered_parallel_medoid(threshold);
@@ -133,9 +133,9 @@ const unordered_map<int, Id> DirectedGraph<T>::_filtered_parallel_medoid(float t
     mutex categoryMutex;
     mutex T_counterMutex;
 
-    vector<thread> threads(max(min(N_THREADS, maxCategoryIndex),0));  // a vector of size N_THREADS holding all the threads
+    vector<thread> threads(max(min(args.n_threads, maxCategoryIndex),0));  // a vector of size args.n_threads holding all the threads
     // Create the threads
-    for (int i=0; i< max(min(N_THREADS, maxCategoryIndex),0); i++){
+    for (int i=0; i< max(min(args.n_threads, maxCategoryIndex),0); i++){
 
         threads[i] = thread(
             &DirectedGraph<T>::_filtered_thread_medoid_fn,

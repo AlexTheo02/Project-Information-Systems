@@ -31,25 +31,125 @@ using namespace std;
 //
 // For your specified datatype T, you should have the ostream << and istream >> operators overloaded. 
 
-// Default values
-#define DEFAULT_L 100
-#define DEFAULT_R 14
-#define DEFAULT_a 1.0f
-#define DEFAULT_k 100
-#define DEFAULT_N_THREADS 1
-#define DEFAULT_t 0.5f
-#define DEFAULT_SHOULD_OMIT true
-#define DEFAULT_FILTERED false
 
-// Some functions are accelerated by leveraging parallelism using N_THREADS threads (eg. DirectedGraph::medoid).
-static int N_THREADS = DEFAULT_N_THREADS;
+// enum for index type
+enum IndexType {
+    EMPTY,
+    VAMANA,
+    FILTERED_VAMANA,
+    STITCHED_VAMANA
+};
 
-// global flag on whether to omit output on tests. Set to non-zero to omit outputs, 0 to allow them.
-static bool SHOULD_OMIT = DEFAULT_SHOULD_OMIT;
+// Struct containing all possible arguments from the CLI.
+// call Args::parseArgs with argc and argv to initialize the struct
+struct Args{
+    IndexType index_type = EMPTY;
+    int k = -1;
+    int L = -1;
+    int R = -1;
+    float a = -1;
+    int n_threads = -1;             // parallel functions (DirectedGraph::medoid uses threads if available)
+    float threshold = -1;
+    bool debug_mode = false;        // c_log follows this flag (see c_log documentation for more)
+    int Lsmall = -1;
+    int Rsmall = -1;
+    int n_data = -1;
+    int n_queries = -1;
+    int n_groundtruths = -1;
+    int dim_data = -1;
+    int dim_query = -1;
+    string graph_store_path = "";
+    string graph_load_path = "";
+    string data_path = "";
+    string queries_path = "";
+    string groundtruth_path = "";
+    bool reindex = false;           // flag whether to create new vamana index using the vamana algorithm
 
-static bool FILTERED = DEFAULT_FILTERED;
+    Args(){};   // default constructor - empty (values are loaded with Args::parseArgs method)
 
-// Custom Cout-like Object that respects the SHOULD_OMIT flag on whether to print or not.
+    void parseArgs(int argc, char* argv[]){
+
+        if (argc < 2 || argc > 39){ throw invalid_argument("Invalid number of command line arguments\n"); }
+
+        // Iterate through given arguments
+        for (int i = 1; i < argc; i++){
+            string currentArg = argv[i];
+
+            if (currentArg == "-k")                     { this->k = atoi(argv[++i]); }
+            else if (currentArg == "-L")                { this->L = atoi(argv[++i]); }
+            else if (currentArg == "-R")                { this->R = atoi(argv[++i]); }
+            else if (currentArg == "-a")                { this->a = atof(argv[++i]); }
+            else if (currentArg == "-n_threads")        { this->n_threads = atoi(argv[++i]); }
+            else if (currentArg == "-t")                { this->threshold = atof(argv[++i]); }
+            else if (currentArg == "--debug")           { this->debug_mode = false; }
+            else if (currentArg == "-Ls")               { this->Lsmall = atoi(argv[++i]); }
+            else if (currentArg == "-Rs")               { this->Rsmall = atoi(argv[++i]); }
+            else if (currentArg == "-n_data")           { this->n_data = atoi(argv[++i]); }
+            else if (currentArg == "-n_queries")        { this->n_queries = atoi(argv[++i]); }
+            else if (currentArg == "-n_groundtruths")   { this->n_groundtruths = atoi(argv[++i]); }
+            else if (currentArg == "-dim_data")         { this->dim_data = atoi(argv[++i]); }
+            else if (currentArg == "-dim_query")        { this->dim_query = atoi(argv[++i]); }
+
+            else if (currentArg == "-store")            { this->graph_store_path = argv[++i]; }
+            else if (currentArg == "-load")             { this->graph_load_path = argv[++i]; }
+
+            else if (currentArg == "-data")             { this->data_path = argv[++i]; } 
+            else if (currentArg == "-queries")          { this->queries_path = argv[++i]; }
+            else if (currentArg == "-groundtruth")      { this->groundtruth_path = argv[++i]; }
+
+            else if (currentArg == "--vamana")          { this->index_type = VAMANA; }
+            else if (currentArg == "--filtered")        { this->index_type = FILTERED_VAMANA; }
+            else if (currentArg == "--stitched")        { this->index_type = STITCHED_VAMANA; }
+
+            else if (currentArg == "--reindex")         { this->reindex = true; }
+
+            else { throw invalid_argument("Invalid command line arguments"); }
+        }
+
+        // set default values on any missing arguments based on IndexType
+        if (this->k == -1)          this->k = 100;
+        if (this->L == -1)          this->L = 100;
+        if (this->R == -1)          this->R = 14;
+        if (this->a == -1)          this->a = 1.0f;
+        if (this->n_threads == -1)  this->n_threads = 8;
+        if (this->threshold == -1)  this->threshold = 0.5f;
+        if (this->Lsmall == -1)     this->Lsmall = 100;
+        if (this->Rsmall == -1)     this->Rsmall = 9;
+
+        if (this->graph_load_path == "")    this->reindex = true;
+
+
+        if (this->index_type == VAMANA){
+
+            if (this->n_data == -1)  this->n_data = 10000;                  // 10 000
+            if (this->n_queries == -1)  this->n_queries = 100;              // 100
+            if (this->n_groundtruths == -1)  this->n_groundtruths = 100;    // 100
+
+            this->data_path = "data/siftsmall/siftsmall_base.fvecs";
+            this->queries_path = "data/siftsmall/siftsmall_query.fvecs";
+            this->groundtruth_path = "data/siftsmall/siftsmall_groundtruth.ivecs";
+        }
+        else if (this->index_type == FILTERED_VAMANA || this->index_type == STITCHED_VAMANA){
+
+            if (this->n_data == -1)  this->n_data = 1000000;                // 1 000 000
+            if (this->n_queries == -1)  this->n_queries = 10000;            // 10 000
+            if (this->n_groundtruths == -1)  this->n_groundtruths = 10000;  // 10 000
+            if (this->n_data == -1) this->n_data = 102;
+            if (this->n_queries == -1) this->n_queries = 104;
+
+            this->data_path = "data/contest-data-release-1m.bin";
+            this->queries_path = "data/contest-queries-release-1m.bin";
+            this->groundtruth_path = "data/contest-groundtruth-custom-1m.txt";
+        }
+        else throw invalid_argument("You must specify the Index Type. Valid options: [--vamana, --filtered, --stitched]\n");
+    }
+    
+};
+
+static Args args;
+
+
+// Custom Cout-like Object that respects the args.debug_mode flag on whether to print or not.
 // Cannot be used with endl. Please use << '\n'; instead of << endl;
 // Can be chained with simple printable types: c_log << a << b << ... ;
 class ConsoleLog{
@@ -61,7 +161,7 @@ class ConsoleLog{
     // overloading the << operator
     template <typename T>
     ConsoleLog& operator<<(const T& t){
-        if (!SHOULD_OMIT)
+        if (args.debug_mode)
             cout << t;
         return *this;
     }

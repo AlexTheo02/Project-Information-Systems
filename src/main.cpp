@@ -16,10 +16,10 @@ static float t;
 
 #define F_DATA_PATH "data/contest-data-release-1m.bin"
 #define F_QUERIES_PATH "data/contest-queries-release-1m.bin"
+#define F_GROUNDTRUTH_PATH "data/contest-groundtruth-custom-1m.txt"
 #define F_DATA_DIM 102
 #define F_QUERY_DIM 104
 #define F_GRAPH_STORE_PATH "filtered_graph_instance.txt"
-#define F_GROUNDTRUTH_PATH "data/contest-groundtruth-custom-1m.txt"
 
 vector<vector<Id>> generateGroundtruth(vector<vector<float>>& data, vector<vector<float>>& queries){
 
@@ -120,8 +120,8 @@ void unfilteredVamana(){
     cout << "R: " << R << endl;
     cout << "a: " << a << endl;
     cout << "k: " << k << endl;
-    cout << "Number of threads: " << N_THREADS << endl;
-    if (!SHOULD_OMIT) { cout << "Debug mode" << endl; }
+    cout << "Number of threads: " << args.n_threads << endl;
+    if (args.debug_mode) { cout << "Debug mode" << endl; }
 
     profileUnfilteredVamana(L,R,a,k,DG,vectors,queries,groundtruth); // creating the vamana index and querying the groundtruths
 
@@ -162,55 +162,32 @@ void filteredVamana(){
     cout << "a: " << a << endl;
     cout << "k: " << k << endl;
     cout << "t: " << t << endl;
-    cout << "Number of threads: " << N_THREADS << endl;
-    if (!SHOULD_OMIT) { cout << "Debug mode" << endl; }
+    cout << "Number of threads: " << args.n_threads << endl;
+    if (args.debug_mode) { cout << "Debug mode" << endl; }
 
     profileFilteredVamana(L,R,a,k,t,DG,data,queries,groundtruth,F_GRAPH_STORE_PATH);
 
 }
-void parseArgs(int argc, char*argv[]){
-
-    // Check number of arguments
-    if (argc > 15){ throw invalid_argument("Invalid number of command line arguments\n"); }
-
-    // Load default values
-    L = DEFAULT_L;
-    R = DEFAULT_R;
-    a = DEFAULT_a;
-    k = DEFAULT_k;
-    N_THREADS = DEFAULT_N_THREADS;
-    t = DEFAULT_t;
-    SHOULD_OMIT = DEFAULT_SHOULD_OMIT;
-    FILTERED = DEFAULT_FILTERED;
-
-    // Iterate through given arguments
-    string currentArg,nextArg;
-
-    for (int i=1; i<argc; i++){
-        currentArg = argv[i];
-
-        if (currentArg == "-L"){ L = atoi(argv[++i]); }
-        else if (currentArg == "-R"){ R = atoi(argv[++i]); }
-        else if (currentArg == "-a"){ a = atof(argv[++i]); }
-        else if (currentArg == "-k"){ k = atoi(argv[++i]); }
-        else if (currentArg == "-P"){ N_THREADS = atoi(argv[++i]); }
-        else if (currentArg == "-t"){ t = atof(argv[++i]); }
-        else if (currentArg == "--debug"){ SHOULD_OMIT = false; }
-        else if (currentArg == "--filtered"){ FILTERED = true; }
-        else { throw invalid_argument("Invalid command line arguments"); }
-    }
-}
-
 
 int main (int argc, char* argv[]) {
-    parseArgs(argc, argv);
 
-    if (FILTERED){
-        filteredVamana();
-    }
-    else{
-        unfilteredVamana();
-    }
+    args.parseArgs(argc,argv);
+
+    // all data points in our datasets are vector<float> so the graph is initialized the same for all cases (euclidean distance and vector empty)
+    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
+
+    // pass DG byref to other functions
+
+    // create index(ref(DG))
+        // void load graph(ref(DG))
+            // check if graph is to be loaded from file. Directories: graph_instances/<index_type>/filename
+            // else if data is to be loaded from file (read data) depending on index type and file, chooses different read_data function
+
+    // valid index from here forward
+
+    // querying phase
+        // 
+    
 
     return 0;
 }

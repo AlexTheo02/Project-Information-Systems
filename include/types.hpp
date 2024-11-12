@@ -129,7 +129,7 @@ class DirectedGraph{
         // implements medoid function using serial programming.
         const Id _serial_medoid(vector<Node<T>>& nodes);
 
-        // Implements medoid function using parallel programming with threads. Concurrency is set by the global constant N_THREADS.
+        // Implements medoid function using parallel programming with threads. Concurrency is set by the argument args.n_threads.
         const Id _parallel_medoid(vector<Node<T>>& nodes);
 
         // Thread function for parallel medoid. Work inside the range defined by [start_index, end_index). Update minima by reference for the merging of the results.
@@ -196,7 +196,7 @@ class DirectedGraph{
         // implements filtered medoid function using serial programming.
         const unordered_map<int, Id> _filtered_serial_medoid(float threshold);
 
-        // Implements filtered medoid function using parallel programming with threads. Concurrency is set by the global constant N_THREADS.
+        // Implements filtered medoid function using parallel programming with threads. Concurrency is set by the argument args.n_threads.
         const unordered_map<int, Id> _filtered_parallel_medoid(float threshold);
 
         // Thread function for parallel filtered medoid.

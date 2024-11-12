@@ -148,8 +148,8 @@ const Id DirectedGraph<T>::medoid(optional<vector<Node<T>>> nodes_arg, optional<
     // if |s| = 1 or 2, return the first element of the set (metric distance is symmetric)
     if (nodes.size() <= 2){ return Id{0}; }
 
-    // Invalid N_THREADS
-    if (N_THREADS <= 0) throw invalid_argument("N_THREADS constant is invalid. Value must be N_THREADS >= 1.\n");
+    // Invalid args.n_threads
+    if (args.n_threads <= 0) throw invalid_argument("args.n_threads constant is invalid. Value must be args.n_threads >= 1.\n");
 
     // avoid recalculation: (if nodes argument is the this->nodes vector)
     if (nodes == this->nodes && this->_medoid != -1)
@@ -157,12 +157,12 @@ const Id DirectedGraph<T>::medoid(optional<vector<Node<T>>> nodes_arg, optional<
 
     // store if asked to (or if default state)
     if (to_store){
-        this->_medoid = (N_THREADS == 1) ? this->_serial_medoid(nodes) : this->_parallel_medoid(nodes);
+        this->_medoid = (args.n_threads == 1) ? this->_serial_medoid(nodes) : this->_parallel_medoid(nodes);
         return this->_medoid;
     }
     
     // else calculate and return it
-    return (N_THREADS == 1) ? this->_serial_medoid(nodes) : this->_parallel_medoid(nodes);
+    return (args.n_threads == 1) ? this->_serial_medoid(nodes) : this->_parallel_medoid(nodes);
     
 }
 
@@ -214,12 +214,12 @@ void DirectedGraph<T>::_thread_medoid_fn(vector<Node<T>>& nodes, int start_index
     }
 }
 
-// Implements medoid function using parallel programming with threads. Concurrency is set by the global constant N_THREADS.
+// Implements medoid function using parallel programming with threads. Concurrency is set by the global constant args.n_threads.
 template<typename T>
 const Id DirectedGraph<T>::_parallel_medoid(vector<Node<T>>& nodes){
 
-    int chunk_size = nodes.size() / N_THREADS;          // how many nodes each thread will handle
-    int remainder = nodes.size() - N_THREADS*chunk_size;      // amount of remaining nodes to be distributed evenly among threads
+    int chunk_size = nodes.size() / args.n_threads;          // how many nodes each thread will handle
+    int remainder = nodes.size() - args.n_threads*chunk_size;      // amount of remaining nodes to be distributed evenly among threads
 
     // each thread will handle chunk_size nodes. Any remaining nodes will be distributed evenly among threads
     // for example 53 nodes among 5 threads => chunk_size = 10, remainder = 3.
@@ -228,11 +228,11 @@ const Id DirectedGraph<T>::_parallel_medoid(vector<Node<T>>& nodes){
     int start_index = 0, end_index;
 
     // initializing the threads
-    vector<thread> threads(N_THREADS);                                  // a vector of size N_THREADS holding all the threads
-    vector<Id> local_minima(N_THREADS);                                 // a vector of size N_THREADS to hold ids of local medoids
-    vector<float> local_dmin(N_THREADS, numeric_limits<float>::max());  // a vector of size N_THREADS all initialized with float_max
+    vector<thread> threads(args.n_threads);                                  // a vector of size args.n_threads holding all the threads
+    vector<Id> local_minima(args.n_threads);                                 // a vector of size args.n_threads to hold ids of local medoids
+    vector<float> local_dmin(args.n_threads, numeric_limits<float>::max());  // a vector of size args.n_threads all initialized with float_max
 
-    for (int i = 0; i < N_THREADS; i++){
+    for (int i = 0; i < args.n_threads; i++){
         end_index = start_index + chunk_size + ((remainder-- > 0) ? 1 : 0); // if any remaining left, add + 1 and decrement the remainder
 
         // load and launch thread 
