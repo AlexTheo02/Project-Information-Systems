@@ -81,7 +81,7 @@ struct Args{
             else if (currentArg == "-a")                { this->a = atof(argv[++i]); }
             else if (currentArg == "-n_threads")        { this->n_threads = atoi(argv[++i]); }
             else if (currentArg == "-t")                { this->threshold = atof(argv[++i]); }
-            else if (currentArg == "--debug")           { this->debug_mode = false; }
+            else if (currentArg == "--debug")           { this->debug_mode = true; }
             else if (currentArg == "-Ls")               { this->Lsmall = atoi(argv[++i]); }
             else if (currentArg == "-Rs")               { this->Rsmall = atoi(argv[++i]); }
             else if (currentArg == "-n_data")           { this->n_data = atoi(argv[++i]); }
@@ -146,21 +146,21 @@ struct Args{
 
     // Print argument values for each indexing type
     void printArgs(){
-        this->debug_mode && cout << "------ Debug mode ------" << endl;
+        if(this->debug_mode) cout << "------ Debug mode ------" << endl;
         cout << "Number of threads: " << this->n_threads << endl;
         cout << "Indexing Type: ";
-        this->index_type == VAMANA && cout << "VAMANA" << endl;
-        this->index_type == FILTERED_VAMANA && cout << "FILTERED_VAMANA" << endl;
-        this->index_type == STITCHED_VAMANA && cout << "STITCHED_VAMANA" << endl;
+        if(this->index_type == VAMANA) cout << "VAMANA" << endl;
+        if(this->index_type == FILTERED_VAMANA) cout << "FILTERED_VAMANA" << endl;
+        if(this->index_type == STITCHED_VAMANA) cout << "STITCHED_VAMANA" << endl;
         cout << "k: " << this->k << endl;
         cout << "L: " << this->L << endl;
         cout << "R: " << this->R << endl;
         cout << "a: " << this->a << endl;
 
-        this->index_type == FILTERED_VAMANA && cout << "threshold: " << this->threshold << endl;
+        if(this->index_type == FILTERED_VAMANA) cout << "threshold: " << this->threshold << endl;
 
-        this->index_type == STITCHED_VAMANA && cout << "Lsmall: " << this->Lsmall << endl;
-        this->index_type == STITCHED_VAMANA && cout << "Rsmall: " << this->Rsmall << endl;
+        if(this->index_type == STITCHED_VAMANA) cout << "Lsmall: " << this->Lsmall << endl;
+        if(this->index_type == STITCHED_VAMANA) cout << "Rsmall: " << this->Rsmall << endl;
     }
 };
 

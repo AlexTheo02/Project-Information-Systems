@@ -19,6 +19,7 @@ int main (int argc, char* argv[]) {
     else
         DG.load(args.graph_load_path);
 
+    cout << "Index is ready\n";
     // Store graph if instructed from command line arguments
     DG.store(args.graph_store_path);
 

@@ -225,12 +225,14 @@ void test_medoid(void){
     DG2.addEdge(id_22, id_23);
 
     // Test Serial Medoid
-    N_THREADS = 1;  // Set N_THREADS to 1 for serial execution
+    // N_THREADS = 1;  // Set N_THREADS to 1 for serial execution
+    args.n_threads = 1;
     int computedMedoidSerialId = DG.medoid(); // Call medoid in serial mode
     TEST_CHECK(computedMedoidSerialId == id_13); // Check against expected medoid
 
     // Test Parallel Medoid
-    N_THREADS = 8;  // Set N_THREADS to 8 for parallel execution
+    // N_THREADS = 8;  // Set N_THREADS to 8 for parallel execution
+    args.n_threads = 8;
     int computedMedoidParallelId = DG2.medoid(); // Call medoid in parallel mode
     TEST_CHECK(computedMedoidParallelId == id_23); // Check against expected medoid
 

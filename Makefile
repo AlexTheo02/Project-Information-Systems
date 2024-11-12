@@ -24,7 +24,6 @@ CONFIG = config
 GRAPH = graph_implementation
 FGRAPH = filtered_graph_implementation
 NQ = node_and_query
-EVAL = evaluation
 INTERFACE = interface
 
 MAIN = main
@@ -43,7 +42,6 @@ HEADER_CONFIG = $(INCLUDE_DIR)/$(CONFIG).hpp
 HEADER_GRAPH = $(INCLUDE_DIR)/$(GRAPH).hpp
 HEADER_FGRAPH = $(INCLUDE_DIR)/$(FGRAPH).hpp
 HEADER_NQ = $(INCLUDE_DIR)/$(NQ).hpp
-HEADER_EVAL = $(INCLUDE_DIR)/$(EVAL).hpp
 HEADER_INTERFACE = $(INCLUDE_DIR)/$(INTERFACE).hpp
 
 # Include
@@ -64,9 +62,17 @@ dirs:
 	@mkdir -p bin
 	@mkdir -p build
 
-run:
+run_v:
 	make
-	$(EX_MAIN) -L 100 -R 14 -a 1 -k 100 -P 8
+	$(EX_MAIN) --vamana 
+
+run_f:
+	make
+	$(EX_MAIN) --filtered
+
+run_s:
+	make
+	$(EX_MAIN) --stitched
 
 all: clean dirs $(EX_MAIN)
 	@echo "Executing $(EX_MAIN):"
