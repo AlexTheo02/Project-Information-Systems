@@ -63,7 +63,7 @@ struct Args{
     string data_path = "";
     string queries_path = "";
     string groundtruth_path = "";
-    bool reindex = false;           // flag whether to create new vamana index using the vamana algorithm
+    bool createIndex = false;           // flag whether to create new vamana index using the vamana algorithm
 
     Args(){};   // default constructor - empty (values are loaded with Args::parseArgs method)
 
@@ -101,7 +101,7 @@ struct Args{
             else if (currentArg == "--filtered")        { this->index_type = FILTERED_VAMANA; }
             else if (currentArg == "--stitched")        { this->index_type = STITCHED_VAMANA; }
 
-            else if (currentArg == "--reindex")         { this->reindex = true; }
+            else if (currentArg == "--create")         { this->createIndex = true; }
 
             else { throw invalid_argument("Invalid command line arguments"); }
         }
@@ -116,7 +116,7 @@ struct Args{
         if (this->Lsmall == -1)     this->Lsmall = 100;
         if (this->Rsmall == -1)     this->Rsmall = 9;
 
-        if (this->graph_load_path == "")    this->reindex = true;
+        if (this->graph_load_path == "")    this->createIndex = true;
 
 
         if (this->index_type == VAMANA){

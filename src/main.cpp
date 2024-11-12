@@ -1,75 +1,6 @@
 #include "interface.hpp"
 using namespace std;
 
-vector<vector<Id>> generateGroundtruth(vector<vector<float>>& data, vector<vector<float>>& queries){
-
-    // Create map category -> set of pair<nodeId, value>
-    unordered_map<int, unordered_map<Id,vector<float>>> categories;
-    for (int i=0; i<data.size(); i++){
-        vector<float> vec = data[i];
-        int category = vec[0];
-        vector<float> value(vec.begin() + 2, vec.end());
-        pair<Id, vector<float>> nodePair(i,value);
-        categories[category].insert(nodePair);
-    }
-
-    // Initialize neighbors vector
-    vector<vector<Id>> queryNeighbors;
-
-    // For each query
-    for(int i = 0; i < queries.size(); i++){
-        cout << "Generating groundtruth for query: " << i << endl;
-
-        vector<float> query = queries[i];
-        vector<float> queryValue(query.begin() + 4, query.end());
-        int category = query[1];
-
-        float distance;
-        unordered_map <Id, float> distances; 
-
-        // Query is filtered
-        if (category != -1){
-            // Iterate over same-category nodes and calculate the distance for each of them
-            for (pair<Id, vector<float>> vecPair : categories[category]){
-                distances[vecPair.first] = euclideanDistance(queryValue,vecPair.second);
-            }
-        }
-        // Query is unfiltered 
-        else{
-            // Iterate over all nodes and calculate the distance for each of them
-            for (int i=0; i<data.size(); i++){
-                vector<float> vec = data[i];
-                vector<float> value(vec.begin() + 2, vec.end());
-                distances[i] = euclideanDistance(queryValue, value);
-            }
-        }
-
-        // Convert distances map to a vector of pairs
-        vector<pair<Id, float>> distancesVec(distances.begin(), distances.end());
-
-        // Sort distancesVec by the second element (distance) in ascending order
-        sort(distancesVec.begin(), distancesVec.end(),
-             [](const pair<Id, float>& a, const pair<Id, float>& b) {
-                 return a.second < b.second;
-             });
-
-        // Extract sorted Ids based on distances and store in sortedIds
-        vector<Id> neighbors;
-        int minimum = (distancesVec.size() > 100) ? 100 : distancesVec.size();
-        for (int k = 0; k < minimum; k++){
-            auto& p = distancesVec[k];
-            neighbors.push_back(p.first);
-        }
-
-        // Add sorted Ids for this query to the result
-        queryNeighbors.push_back(neighbors);
-
-    }
-
-    return queryNeighbors;
-
-}
-
 // Παραδοτέο 1
 void unfilteredVamana(){
     // Instantiate a DirectedGraph object DG
@@ -161,14 +92,14 @@ int main (int argc, char* argv[]) {
 
     // all data points in our datasets are vector<float> so the graph is initialized the same for all cases (euclidean distance and vector empty)
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
-
-    // Load graph if instructed from command line arguments
-    DG.load(args.graph_load_path);
     
-    // Reindex the graph if instructed from command line arguments, based on indexing type
-    if (args.reindex){
-        reindex(DG,args);
-    }
+    // Create the indexed graph if instructed from command line arguments, based on indexing type
+    if (args.createIndex)
+        createIndex(DG,args);
+        
+    // Load graph if instructed from command line arguments
+    else
+        DG.load(args.graph_load_path);
 
     // Store graph if instructed from command line arguments
     DG.store(args.graph_store_path);

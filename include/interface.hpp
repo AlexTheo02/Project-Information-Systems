@@ -14,21 +14,69 @@ using namespace std;
 
 // This file is an interface file that contains all the dependencies of the project. Simply include "interface.hpp" in your project and you're good to go!
 
-// Reindex the graph based on the indexing type and return the duration in miliseconds
+// Creates the index on the graph based on the indexing type and return the duration in miliseconds
 template <typename T>
-chrono::milliseconds reindex(DirectedGraph<T>& DG, Args arguments){
+chrono::milliseconds createIndex(DirectedGraph<T>& DG, Args arguments){
     chrono::milliseconds duration = 0;
+
     switch (arguments.index_type){
         case VAMANA:
-            /* code */
+            // Read base vectors file
+            vector<vector<float>> vectors = read_vecs<float>(args.data_path, args.n_data);
+
+            // Populate the Graph
+            for (auto& v : vectors){
+                DG.createNode(v);
+            }
+
+            // Start the timer and create the index using vamanaAlgorithm
+            chrono::milliseconds startTime = chrono::high_resolution_clock::now();
+            DG.vamanaAlgorithm(arguments.L, arguments.R, arguments.a);
+            chrono::milliseconds endTime = chrono::high_resolution_clock::now();
+
+            // Calculate duration
+            duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime);
+            
             break;
 
         case FILTERED_VAMANA:
-            /* code */
+            // Read data
+            vector<vector<float>> data;
+            ReadBin(args.data_path, args.dim_data, data);
+
+            // Populate the Graph
+            for (auto& v : vectors){
+                DG.createNode(v);
+            }
+
+            // Start the timer and create the index using vamanaAlgorithm
+            chrono::milliseconds startTime = chrono::high_resolution_clock::now();
+            DG.filteredVamanaAlgorithm(arguments.L, arguments.R, arguments.a, arguments.threshold);
+            chrono::milliseconds endTime = chrono::high_resolution_clock::now();
+
+            // Calculate duration
+            duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime);
+
             break;
 
         case STITCHED_VAMANA:
-            /* code */
+            // Read data
+            vector<vector<float>> data;
+            ReadBin(args.data_path, args.dim_data, data);
+
+            // Populate the Graph
+            for (auto& v : vectors){
+                DG.createNode(v);
+            }
+            
+            // Start the timer and create the index using vamanaAlgorithm
+            chrono::milliseconds startTime = chrono::high_resolution_clock::now();
+            DG.stitchedVamanaAlgorithm(arguments.a, arguments.Lsmall, arguments.Rsmall, arguments.R); // TODO
+            chrono::milliseconds endTime = chrono::high_resolution_clock::now();
+
+            // Calculate duration
+            duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime);
+
             break;
         
         default:
