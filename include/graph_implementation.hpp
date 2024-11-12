@@ -506,6 +506,7 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){
 // Make sure SHOULD_OMIT flag in config.hpp file is set to 0
 template<typename T>
 void DirectedGraph<T>::store(const string& filename) const{
+    if (filename == ""){ return; }
     fstream file;
 
     // create a new file if it did not exist, or replace any contents existing before
@@ -534,6 +535,7 @@ void DirectedGraph<T>::store(const string& filename) const{
 // IMPORTANT: makes use of overloaded >> operator to load the graph from a file
 template<typename T>
 void DirectedGraph<T>::load(const string& filename){
+    if (filename == ""){ return; }
     fstream file;
 
     file.open(filename, ios::in);

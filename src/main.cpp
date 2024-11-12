@@ -1,26 +1,6 @@
 #include "interface.hpp"
 using namespace std;
 
-static int L;
-static int R;
-static float a;
-static int k;
-static float t;
-
-#define DATA_PATH "data/siftsmall/siftsmall_base.fvecs"
-#define QUERIES_PATH "data/siftsmall/siftsmall_query.fvecs"
-#define GROUNDTRUTH_PATH "data/siftsmall/siftsmall_groundtruth.ivecs"
-#define N_DATA 10000
-#define N_QUERIES 100
-#define GRAPH_STORE_PATH "graph_instance.txt"
-
-#define F_DATA_PATH "data/contest-data-release-1m.bin"
-#define F_QUERIES_PATH "data/contest-queries-release-1m.bin"
-#define F_GROUNDTRUTH_PATH "data/contest-groundtruth-custom-1m.txt"
-#define F_DATA_DIM 102
-#define F_QUERY_DIM 104
-#define F_GRAPH_STORE_PATH "filtered_graph_instance.txt"
-
 vector<vector<Id>> generateGroundtruth(vector<vector<float>>& data, vector<vector<float>>& queries){
 
     // Create map category -> set of pair<nodeId, value>
@@ -96,7 +76,7 @@ void unfilteredVamana(){
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
 
     // Read base vectors file
-    vector<vector<float>> vectors = read_vecs<float>(DATA_PATH, N_DATA);
+    vector<vector<float>> vectors = read_vecs<float>(args.data_path, args.n_data);
 
     // Create map key: vector, value: id (for groundtruth)
     map<vector<float>, int> v2id;
@@ -105,38 +85,42 @@ void unfilteredVamana(){
     }
 
     // Read query vectors file
-    vector<vector<float>> queries = read_vecs<float>(QUERIES_PATH, N_QUERIES);
+    vector<vector<float>> queries = read_vecs<float>(args.queries_path, args.n_queries);
 
     // Read groundtruth file
-    vector<vector<int>> groundtruth = read_vecs<int>(GROUNDTRUTH_PATH, N_QUERIES);
+    vector<vector<int>> groundtruth = read_vecs<int>(args.groundtruth_path, args.n_groundtruths);
 
     // Populate the Graph
     for (auto& v : vectors){
         DG.createNode(v);
     }
 
-    cout << "Running unfiltered main program with:" << endl;
-    cout << "L: " << L << endl;
-    cout << "R: " << R << endl;
-    cout << "a: " << a << endl;
-    cout << "k: " << k << endl;
-    cout << "Number of threads: " << args.n_threads << endl;
-    if (args.debug_mode) { cout << "Debug mode" << endl; }
+    // MOVE TO PRINT FUNCTION
 
-    profileUnfilteredVamana(L,R,a,k,DG,vectors,queries,groundtruth); // creating the vamana index and querying the groundtruths
+    // cout << "Running unfiltered main program with:" << endl;
+    // cout << "L: " << L << endl;
+    // cout << "R: " << R << endl;
+    // cout << "a: " << a << endl;
+    // cout << "k: " << k << endl;
+    // cout << "Number of threads: " << args.n_threads << endl;
+    // if (args.debug_mode) { cout << "Debug mode" << endl; }
 
-    DG.store(GRAPH_STORE_PATH); // store the vamana Index
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    // profileUnfilteredVamana(L,R,a,k,DG,vectors,queries,groundtruth); // creating the vamana index and querying the groundtruths
+
+    DG.store(args.graph_store_path); // store the vamana Index
 }
 
 // Παραδοτέο 2
 void filteredVamana(){
     // Read data
     vector<vector<float>> data;
-    ReadBin(F_DATA_PATH, F_DATA_DIM, data);
+    ReadBin(args.data_path, args.dim_data, data);
 
     // Read queries
     vector<vector<float>> queries;
-    ReadBin(F_QUERIES_PATH, F_QUERY_DIM, queries);
+    ReadBin(args.queries_path, args.dim_query, queries);
 
     // Generate groundtruth
     fstream file;
@@ -147,7 +131,7 @@ void filteredVamana(){
     // file << groundtruth;
 
     // Read groundtruth
-    file.open(F_GROUNDTRUTH_PATH, ios::in);
+    file.open(args.groundtruth_path, ios::in);
     vector<vector<Id>> groundtruth;
     file >> groundtruth;
 
@@ -156,16 +140,16 @@ void filteredVamana(){
     // Create and initialize graph
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>, data, true);
 
-    cout << "Running filtered main program with:" << endl;
-    cout << "L: " << L << endl;
-    cout << "R: " << R << endl;
-    cout << "a: " << a << endl;
-    cout << "k: " << k << endl;
-    cout << "t: " << t << endl;
-    cout << "Number of threads: " << args.n_threads << endl;
-    if (args.debug_mode) { cout << "Debug mode" << endl; }
+    // cout << "Running filtered main program with:" << endl;
+    // cout << "L: " << L << endl;
+    // cout << "R: " << R << endl;
+    // cout << "a: " << a << endl;
+    // cout << "k: " << k << endl;
+    // cout << "t: " << t << endl;
+    // cout << "Number of threads: " << args.n_threads << endl;
+    // if (args.debug_mode) { cout << "Debug mode" << endl; }
 
-    profileFilteredVamana(L,R,a,k,t,DG,data,queries,groundtruth,F_GRAPH_STORE_PATH);
+    // profileFilteredVamana(L,R,a,k,t,DG,data,queries,groundtruth,F_GRAPH_STORE_PATH);
 
 }
 
@@ -173,20 +157,24 @@ int main (int argc, char* argv[]) {
 
     args.parseArgs(argc,argv);
 
+    args.printArgs();
+
     // all data points in our datasets are vector<float> so the graph is initialized the same for all cases (euclidean distance and vector empty)
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
 
-    // pass DG byref to other functions
+    // Load graph if instructed from command line arguments
+    DG.load(args.graph_load_path);
+    
+    // Reindex the graph if instructed from command line arguments, based on indexing type
+    if (args.reindex){
+        reindex(DG,args);
+    }
 
-    // create index(ref(DG))
-        // void load graph(ref(DG))
-            // check if graph is to be loaded from file. Directories: graph_instances/<index_type>/filename
-            // else if data is to be loaded from file (read data) depending on index type and file, chooses different read_data function
+    // Store graph if instructed from command line arguments
+    DG.store(args.graph_store_path);
 
-    // valid index from here forward
-
-    // querying phase
-        // 
+    // Perform queries on the graph and calculate average recall score
+    float averageRecall = evaluateIndex(DG,args);
     
 
     return 0;

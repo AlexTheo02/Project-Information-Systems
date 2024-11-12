@@ -69,7 +69,7 @@ struct Args{
 
     void parseArgs(int argc, char* argv[]){
 
-        if (argc < 2 || argc > 39){ throw invalid_argument("Invalid number of command line arguments\n"); }
+        if (argc < 2){ throw invalid_argument("Invalid number of command line arguments\n"); }
 
         // Iterate through given arguments
         for (int i = 1; i < argc; i++){
@@ -143,7 +143,25 @@ struct Args{
         }
         else throw invalid_argument("You must specify the Index Type. Valid options: [--vamana, --filtered, --stitched]\n");
     }
-    
+
+    // Print argument values for each indexing type
+    void printArgs(){
+        this->debug_mode && cout << "------ Debug mode ------" << endl;
+        cout << "Number of threads: " << this->n_threads << endl;
+        cout << "Indexing Type: ";
+        this->index_type == VAMANA && cout << "VAMANA" << endl;
+        this->index_type == FILTERED_VAMANA && cout << "FILTERED_VAMANA" << endl;
+        this->index_type == STITCHED_VAMANA && cout << "STITCHED_VAMANA" << endl;
+        cout << "k: " << this->k << endl;
+        cout << "L: " << this->L << endl;
+        cout << "R: " << this->R << endl;
+        cout << "a: " << this->a << endl;
+
+        this->index_type == FILTERED_VAMANA && cout << "threshold: " << this->threshold << endl;
+
+        this->index_type == STITCHED_VAMANA && cout << "Lsmall: " << this->Lsmall << endl;
+        this->index_type == STITCHED_VAMANA && cout << "Rsmall: " << this->Rsmall << endl;
+    }
 };
 
 static Args args;
