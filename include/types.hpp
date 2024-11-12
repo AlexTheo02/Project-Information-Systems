@@ -242,4 +242,11 @@ class DirectedGraph{
         // Loads a graph state from the specified file. A Graph instance must already be instantiated with the appropriate distance and isEmpty functions.
         // IMPORTANT: makes use of overloaded >> operator to load the graph from a file
         void load(const string& filename);
+
+        // Based on the qiven vector, the function returns the query's neighbors
+        unordered_set<Id> findNeighbors(Query<T> q);
+
+        // Returns the neighbors of all queries found in the given queries_path file.
+        // If the file is .vecs format read_arg corresponds to the number of queries and, if the file is in .bin format, it corresponds to the dimension of the query vector
+        vector<unordered_set<Id>> findQueriesNeighbors(string queries_path, int read_arg = -1);
 };
