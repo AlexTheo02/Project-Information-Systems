@@ -94,6 +94,13 @@ run:
 	$(EX_t_TYPES)
 	$(EX_t_CONFIG)
 
+val:
+	make rebuild
+	valgrind $(EX_t_UTIL)
+	valgrind $(EX_t_TYPES)
+	valgrind $(EX_t_CONFIG)
+	
+
 # Build Executable test_Types
 $(EX_t_TYPES): $(OBJ_t_TYPES)
 	@echo "Linking Object Files to Create Executable $(EX_t_TYPES) . . ."
