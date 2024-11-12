@@ -94,8 +94,9 @@ int main (int argc, char* argv[]) {
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
     
     // Create the indexed graph if instructed from command line arguments, based on indexing type
+    chrono::milliseconds duration; 
     if (args.createIndex)
-        createIndex(DG,args);
+        duration = createIndex(DG,args);
         
     // Load graph if instructed from command line arguments
     else
