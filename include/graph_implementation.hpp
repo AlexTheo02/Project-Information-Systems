@@ -129,9 +129,18 @@ bool DirectedGraph<T>::clearEdges(void){
 
 // Calculates the medoid of the nodes in the graph based on the given distance function
 template<typename T>
-const Id DirectedGraph<T>::medoid(optional<vector<Node<T>>> nodes_arg){
+const Id DirectedGraph<T>::medoid(optional<vector<Node<T>>> nodes_arg, optional<bool> update_stored){
 
-    vector<Node<T>>& nodes = (nodes_arg == nullopt) ? this->nodes : nodes_arg.value();    // unrwapping from the "optional" template
+
+    // unrwapping from the "optional" template with appropriate values
+    vector<Node<T>>& nodes = (nodes_arg == nullopt) ? this->nodes : nodes_arg.value();
+    bool to_store;
+
+    if (update_stored != nullopt)
+        to_store = update_stored.value();
+    else
+        to_store = (nodes_arg == nullopt) ? true : false;
+    
 
     // empty set case
     if (nodes.empty()){ throw invalid_argument("Vector is empty.\n"); }
@@ -143,13 +152,16 @@ const Id DirectedGraph<T>::medoid(optional<vector<Node<T>>> nodes_arg){
     if (N_THREADS <= 0) throw invalid_argument("N_THREADS constant is invalid. Value must be N_THREADS >= 1.\n");
 
     // avoid recalculation: (if nodes argument is the this->nodes vector)
-    if (nodes == this->nodes){
-        if (this->_medoid == -1)
-            this->_medoid = (N_THREADS == 1) ? this->_serial_medoid(nodes) : this->_parallel_medoid(nodes);
-        
+    if (nodes == this->nodes && this->_medoid != -1)
+        return this->_medoid;
+
+    // store if asked to (or if default state)
+    if (to_store){
+        this->_medoid = (N_THREADS == 1) ? this->_serial_medoid(nodes) : this->_parallel_medoid(nodes);
         return this->_medoid;
     }
     
+    // else calculate and return it
     return (N_THREADS == 1) ? this->_serial_medoid(nodes) : this->_parallel_medoid(nodes);
     
 }
@@ -356,6 +368,8 @@ bool DirectedGraph<T>::Rgraph(int R){
 template <typename T>
 const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(Id s, T xq, int k, int L) {
 
+    c_log << "Greedy Search\n";
+
     // argument checks
     if (s < 0 || s >= this->n_nodes){ throw invalid_argument("Invalid Index was provided.\n"); }
 
@@ -539,6 +553,9 @@ void DirectedGraph<T>::load(const string& filename){
     file >> this->Nout;
 
     file.close();
+
+    for (Node<T>& node : this->nodes)    // update isEmpty function (not serialized, argument in graph)
+        node.isEmpty = this->isEmpty;
     
     c_log << "Graph Instance loaded successfully from \"" << filename << '\"' << '\n';
 }

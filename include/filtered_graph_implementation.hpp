@@ -37,7 +37,7 @@ const unordered_map<int, Id> DirectedGraph<T>::_filtered_serial_medoid(float thr
         vector<Node<T>> Rf;
         unordered_set<Id> remaining(cpair.second.begin(), cpair.second.end()); // remaining is a copy that holds all the remaining values to be sampled from
 
-        while (!remaining.empty() && Rf.size() < (threshold * cpair.second.size())){
+        while (!remaining.empty() && Rf.size() < (ceil(threshold * cpair.second.size()))){
             int sample = sampleFromContainer(remaining);
             Rf.push_back(this->nodes[sample]);
             remaining.erase(sample);
@@ -182,14 +182,15 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::filteredGreed
 
     // Argument checks
 
+    // No filters are present, perform unfiltered greedy search
+    if (q.empty()) { return this->greedySearch(this->medoid(), q.value, k, L); }
+
     if (S.empty()){ throw invalid_argument("No start node was provided.\n"); }
 
     if (k < 0){ throw invalid_argument("K must be greater than or equal to 0.\n"); }
 
     if (L < k){ throw invalid_argument("L must be greater or equal to K.\n"); }
 
-    // No filters are present, perform unfiltered greedy search
-    if (q.empty()) { return this->greedySearch(this->medoid(), q.value, k, L); }
 
     // Create empty sets
     unordered_set<Id> Lc, V, diff;

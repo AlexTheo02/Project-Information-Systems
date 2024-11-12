@@ -143,7 +143,6 @@ class DirectedGraph{
             this->n_nodes = 0;
             this->d = distance_function;
             this->isEmpty = is_Empty;
-            this->_medoid = -1;
             c_log << "Graph created!" << '\n';
 
             if (isFiltered){
@@ -189,7 +188,7 @@ class DirectedGraph{
         bool clearEdges(void);
 
         // Calculates the medoid of the nodes in the graph based on the given distance function
-        const Id medoid(optional<vector<Node<T>>> nodes_arg = nullopt);
+        const Id medoid(optional<vector<Node<T>>> nodes_arg = nullopt, optional<bool> update_stored = nullopt);
 
         // calculates the Filtered Medoids
         const unordered_map<int, Id> findMedoids(float threshold);

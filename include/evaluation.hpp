@@ -79,13 +79,32 @@ void profileFilteredVamana(
     // Find medoid nodes for each category
     unordered_map<int,Id> medoidMap = DG.findMedoids(t);
 
+
+    // (uncomment to estimate medoid for all points by finding the medoid of the medoids of each category. Used for storing DG._medoid for graph instance)
+    // // create set with all medoid Nodes (not ids)
+    // vector<Node<vector<float>>> medoid_set;
+    // for (pair<int, Id> cpair : medoidMap){
+    //     medoid_set.push_back(DG.getNodes()[cpair.second]);
+    // }
+    // // call DG.medoid(set_medoids, store = true)
+    // DG.medoid(medoid_set, true);
+    // // call DG.store()
+    // DG.store(filepath);
+    // return;
+    
+
+
+
+
+
+
+
     cout << "Calculating average recall score" << endl;
     // Greedy search for all queries with start node the medoid of all nodes (already calculated)
     for (int i=0; i<queries.size(); i++){
         vector<float> newValue(queries[i].begin() + 4, queries[i].end());
-        Query<vector<float>> q(i, queries[i][1], queries[i][0], newValue);
+        Query<vector<float>> q(i, queries[i][1], queries[i][0], newValue, vectorEmpty<float>);
 
-        if (q.empty()) continue;
         // finding start nodes for greedy search
         unordered_set<Id> start_nodes = (unordered_set<Id>) {medoidMap[q.category]};
         // Get neighbors for i-th query
@@ -93,7 +112,7 @@ void profileFilteredVamana(
         unordered_set<Id> neighbors = GS_return.first;
 
         float recall = k_recall(neighbors, groundtruth[i]);
-        cout << "Recall score for query: " << i << "/" << queries.size() << ": \t\t" << recall << endl;
+        cout << "Recall score for query: " << i+1 << "/" << queries.size() << " | category = " << q.category <<": \t\t" << recall << endl;
         
         // Calculate the current recall and add it to the sum of all recall scores
         total_recall += recall;
