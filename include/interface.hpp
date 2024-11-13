@@ -66,7 +66,6 @@ chrono::milliseconds createIndex(DirectedGraph<T>& DG, Args arguments){
 
         case STITCHED_VAMANA:
             // Read data
-            cout << arguments.data_path << arguments.dim_data << endl;
             ReadBin(arguments.data_path, arguments.dim_data, data);
 
             // Populate the Graph
@@ -116,7 +115,7 @@ unordered_set<Id> DirectedGraph<T>::findNeighbors(Query<T> q){
 template <typename T>
 vector<unordered_set<Id>> DirectedGraph<T>::findQueriesNeighbors(string queries_path, int read_arg){
 
-    cout << "In Queries Neighbors" << endl;
+    c_log << "In Queries Neighbors" << endl;
     // Read queries
     vector<T> queries;
     
@@ -138,8 +137,6 @@ vector<unordered_set<Id>> DirectedGraph<T>::findQueriesNeighbors(string queries_
 
     vector<unordered_set<Id>> returnVec;
 
-    cout << queries.size() << endl;
-    cout << "Before for loop" << endl;
     // Iterate through the queries
     for(int i = 0; i < queries.size(); i++){
         
@@ -187,8 +184,6 @@ float evaluateIndex(DirectedGraph<T>& DG, Args arguments){
     vector<unordered_set<Id>> queriesNeighbors = DG.findQueriesNeighbors(args.queries_path);
     float total_recall = 0.f, query_recall;
     
-    cout << "Found Neighbors\n";
-    // cout << queriesNeighbors.size() << groundtruth.size() << endl;
     for(int i = 0; i < args.n_queries; i++){
         // Calculate the current recall and add it to the sum of all recall scores
         query_recall = k_recall(queriesNeighbors[i], groundtruth[i]);
@@ -218,7 +213,7 @@ vector<vector<Id>> generateGroundtruth(vector<vector<T>>& data, vector<vector<T>
 
     // For each query
     for(int i = 0; i < queries.size(); i++){
-        cout << "Generating groundtruth for query: " << i << endl;
+        c_log << "Generating groundtruth for query: " << i << endl;
 
         vector<T> query = queries[i];
         vector<T> queryValue(query.begin() + 4, query.end());

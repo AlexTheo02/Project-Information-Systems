@@ -199,7 +199,6 @@ bool DirectedGraph<T>::stitchedVamanaAlgorithm(int Lstitched, int Rstitched, int
         c_log << "Creating Index for Category: " << cpair.first << '\n';
 
         // Creating Index for nodes of specific category as unfiltered data
-        cout << cpair.second.size() << endl;
         int Rsmall_f = min(Rsmall, (int)cpair.second.size() - 1);    // handle case when Rsmall > |Pf| - 1 for certain filters f
         if (!DGf.vamanaAlgorithm(Lsmall, Rsmall_f, a)){
             cout << "Something went wrong in vamana algorithm.\n";
