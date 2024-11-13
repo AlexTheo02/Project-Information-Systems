@@ -16,7 +16,7 @@ const unordered_map<int, Id> DirectedGraph<T>::findMedoids(float threshold){
 
     if (!this->filteredMedoids.empty()) { return this->filteredMedoids; }
 
-    return _filtered__medoid(threshold);
+    return _filtered_medoid(threshold);
 }
 
 template <typename T>
@@ -174,5 +174,59 @@ bool DirectedGraph<T>::filteredVamanaAlgorithm(int L, int R, float a, float t){
             }
         }
     }
+    return true;
+}
+
+template <typename T>
+bool DirectedGraph<T>::stitchedVamanaAlgorithm(int Lstitched, int Rstitched, int Lsmall, int Rsmall, float a){
+
+    c_log << "Stitched Vamana\n";
+
+    // initialize G as an empty graph => clear all edges
+    if(this->clearEdges() == false)
+        return false;
+
+    DirectedGraph<T> DGf(this->d, this->isEmpty);
+    for (pair<int, unordered_set<Id>> cpair : this->categories){
+        
+        vector<Id> original_id;                         // a vector that maps DGf node ids to the original this ids
+
+        for (Id node : cpair.second){
+            DGf.createNode(this->nodes[node].value);    // create nodes as unfiltered data (specific category)
+            original_id.push_back(node);
+        }
+
+        c_log << "Creating Index for Category: " << cpair.first << '\n';
+
+        // Creating Index for nodes of specific category as unfiltered data
+        cout << cpair.second.size() << endl;
+        int Rsmall_f = min(Rsmall, (int)cpair.second.size() - 1);    // handle case when Rsmall > |Pf| - 1 for certain filters f
+        if (!DGf.vamanaAlgorithm(Lsmall, Rsmall_f, a)){
+            cout << "Something went wrong in vamana algorithm.\n";
+            return false;
+        }
+        c_log << "Creating Index for Category: " << cpair.first << " created.\nStitching with main graph.\n";
+
+        // union of edges: this->Nout ∪= DGf.Nout
+        for (pair<Id, unordered_set<Id>> edge : DGf.get_Nout()){
+            Id from = edge.first;
+            for (Id to : edge.second)
+                this->addEdge(original_id[from], original_id[to]);
+        }
+        c_log << "Stitching successful.\n";
+
+        // cleanup for next category
+        original_id.clear();
+        DGf.init();
+    }
+    c_log << "Initial Stitched Vamana Index Created. Pruning.\n";
+    return false;
+
+    // robust prune
+    for (Node<T>& node : this->nodes){
+        this->filteredRobustPrune(node.id, this->Nout[node.id], a, Rstitched);
+    }
+    c_log << "Pruning successfully completed. Index is ready.\n";
+
     return true;
 }

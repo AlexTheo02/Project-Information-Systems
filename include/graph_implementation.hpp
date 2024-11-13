@@ -457,13 +457,15 @@ void DirectedGraph<T>::robustPrune(Id p, unordered_set<Id> V, float a, int R){
 // + a the parameter for robust pruning (a >=1)
 template <typename T>
 bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){
-    // check parameters if they are in legal range, for example R > 0 
+    // check parameters if they are in legal range
+    if (this->nodes.size() == 1) return true;   // no edges possible
 
     if (R <= 0){ throw invalid_argument("R must be a positive, non-zero integer.\n"); }
 
     if (L < 1) { throw invalid_argument("Parameter L must be >= 1.\n"); }
 
     if (a < 1) { throw invalid_argument("Parameter a must be >= 1.\n"); }
+
     
 
     c_log << "Initializing a random R-Regular Directed Graph with out-degree R = " << R << ". . ." << '\n';
@@ -560,4 +562,19 @@ void DirectedGraph<T>::load(const string& filename){
         node.isEmpty = this->isEmpty;
     
     c_log << "Graph Instance loaded successfully from \"" << filename << '\"' << '\n';
+}
+
+
+template<typename T>
+void DirectedGraph<T>::init(){
+
+    this->n_edges = 0;
+    this->n_nodes = 0;
+    this->nodes.clear();
+    this->_medoid = -1;
+    this->filteredMedoids.clear();
+    this->categories.clear();
+    this->Nout.clear();
+
+    c_log << "Graph Successfully initialized to default values apart from function arguments.\n";
 }

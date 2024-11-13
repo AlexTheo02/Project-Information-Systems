@@ -24,7 +24,7 @@ chrono::milliseconds createIndex(DirectedGraph<T>& DG, Args arguments){
     switch (arguments.index_type){
         case VAMANA:
             // Read base vectors file
-            data = read_vecs<float>(args.data_path, args.n_data);
+            data = read_vecs<float>(arguments.data_path, arguments.n_data);
 
             // Populate the Graph
             for (auto& v : data){
@@ -44,11 +44,14 @@ chrono::milliseconds createIndex(DirectedGraph<T>& DG, Args arguments){
         case FILTERED_VAMANA:
             // Read data
             
-            ReadBin(args.data_path, args.dim_data, data);
+            ReadBin(arguments.data_path, arguments.dim_data, data);
 
             // Populate the Graph
-            for (auto& v : data){
-                DG.createNode(v);
+            for (const T& value : data){
+                int category = value[0];
+                // Ignore the first 2 dimensions when finding the value
+                T newValue(value.begin() + 2, value.end());
+                DG.createNode(newValue, category);
             }
 
             // Start the timer and create the index using vamanaAlgorithm
@@ -63,16 +66,20 @@ chrono::milliseconds createIndex(DirectedGraph<T>& DG, Args arguments){
 
         case STITCHED_VAMANA:
             // Read data
-            ReadBin(args.data_path, args.dim_data, data);
+            cout << arguments.data_path << arguments.dim_data << endl;
+            ReadBin(arguments.data_path, arguments.dim_data, data);
 
             // Populate the Graph
-            for (auto& v : data){
-                DG.createNode(v);
+            for (const T& value : data){
+                int category = value[0];
+                // Ignore the first 2 dimensions when finding the value
+                T newValue(value.begin() + 2, value.end());
+                DG.createNode(newValue, category);
             }
             
             // Start the timer and create the index using vamanaAlgorithm
             startTime = chrono::high_resolution_clock::now();
-            // DG.stitchedVamanaAlgorithm(arguments.a, arguments.Lsmall, arguments.Rsmall, arguments.R); // TODO
+            DG.stitchedVamanaAlgorithm(arguments.L, arguments.R, arguments.Lsmall, arguments.Rsmall, arguments.a);
             endTime = chrono::high_resolution_clock::now();
 
             // Calculate duration

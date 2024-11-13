@@ -25,7 +25,11 @@ int main (int argc, char* argv[]) {
 
     // Perform queries on the graph and calculate average recall score
     float averageRecall = evaluateIndex(DG,args);
-    
+
+    // print recall and duration
+    cout << "Evaluation Finished." << endl;
+    cout << "Time to create the index: "; printFormatMiliseconds(duration);
+    cout << "Average recall score: " << averageRecall << endl;
 
     return 0;
 }

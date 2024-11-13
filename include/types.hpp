@@ -175,7 +175,7 @@ class DirectedGraph{
         // Creates a node, adds it in the graph and returns it
         Id createNode(const T& value, int category = -1);
 
-        // Adds an directed edge (from->to). Updates outNeighbors(from) and inNeighbors(to)
+        // Adds a directed edge (from->to). Updates outNeighbors(from) and inNeighbors(to)
         bool addEdge(const Id from, const Id to);
 
         // Remove edge
@@ -230,6 +230,9 @@ class DirectedGraph{
         // float t threshold is a value in (0,1] that represents a fraction of the data in a specific category to be accounted for when searching for the medoid of that specific category
         bool filteredVamanaAlgorithm(int L, int R, float a, float t); // + t = threshold.
 
+        // 
+        bool stitchedVamanaAlgorithm(int Lstitched, int Rstitched, int Lsmall, int Rsmall, float a);
+
 
         // Stores the current state of a graph into the specified file.
         // IMPORTANT: makes use of overloaded << operator to store the graph into a file.
@@ -245,4 +248,9 @@ class DirectedGraph{
         // Returns the neighbors of all queries found in the given queries_path file.
         // If the file is .vecs format read_arg corresponds to the number of queries and, if the file is in .bin format, it corresponds to the dimension of the query vector
         vector<unordered_set<Id>> findQueriesNeighbors(string queries_path, int read_arg = -1);
+
+
+        // Initializes the Graph as if it has been instantiated just now (resets everything to default except constructor arguments)
+        void init();
+
 };

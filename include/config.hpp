@@ -114,7 +114,7 @@ struct Args{
         if (this->n_threads == -1)  this->n_threads = 8;
         if (this->threshold == -1)  this->threshold = 0.5f;
         if (this->Lsmall == -1)     this->Lsmall = 100;
-        if (this->Rsmall == -1)     this->Rsmall = 9;
+        if (this->Rsmall == -1)     this->Rsmall = 32;
 
         if (this->graph_load_path == "")    this->createIndex = true;
 
@@ -134,12 +134,14 @@ struct Args{
             if (this->n_data == -1)  this->n_data = 1000000;                // 1 000 000
             if (this->n_queries == -1)  this->n_queries = 10000;            // 10 000
             if (this->n_groundtruths == -1)  this->n_groundtruths = 10000;  // 10 000
-            if (this->n_data == -1) this->n_data = 102;
-            if (this->n_queries == -1) this->n_queries = 104;
+            if (this->dim_data == -1) this->dim_data = 102;
+            if (this->dim_query == -1) this->dim_query = 104;
 
             this->data_path = "data/contest-data-release-1m.bin";
             this->queries_path = "data/contest-queries-release-1m.bin";
             this->groundtruth_path = "data/contest-groundtruth-custom-1m.txt";
+
+            if (this->index_type == STITCHED_VAMANA) this->R = 64;  // R = Rstitched
         }
         else throw invalid_argument("You must specify the Index Type. Valid options: [--vamana, --filtered, --stitched]\n");
     }
