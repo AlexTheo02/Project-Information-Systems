@@ -194,16 +194,12 @@ class DirectedGraph{
         const unordered_map<int, Id> findMedoids(float threshold);
 
         // implements filtered medoid function using serial programming.
-        const unordered_map<int, Id> _filtered_serial_medoid(float threshold);
+        const unordered_map<int, Id> _filtered_medoid(float threshold);
 
-        // Implements filtered medoid function using parallel programming with threads. Concurrency is set by the argument args.n_threads.
-        const unordered_map<int, Id> _filtered_parallel_medoid(float threshold);
-
-        // Thread function for parallel filtered medoid.
-        void _filtered_thread_medoid_fn(mutex& T_counterMutex, mutex& categoryMutex, vector<int>& T_counter, int& categoryIndex, int maxCategoryIndex, vector<pair<int, unordered_set<Id>>>& categoryPairs, float threshold);
-
+        // returns the Id of the node in nodeSet which is closest to the point t, using the distance function provided
         Id _myArgMin(const unordered_set<Id>& nodeSet, T t);
 
+        // returns a set with the Ids of the N nodes in set S which are closest to point X
         unordered_set<Id> _closestN(int N, const unordered_set<Id>& S, T X);
 
         // Returns a filtered set

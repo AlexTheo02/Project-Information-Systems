@@ -16,17 +16,11 @@ const unordered_map<int, Id> DirectedGraph<T>::findMedoids(float threshold){
 
     if (!this->filteredMedoids.empty()) { return this->filteredMedoids; }
 
-    // // check Nthreads and pass to _serialFilteredMedoids or _parallelFilteredMedoids
-    // if (args.n_threads == 1){
-    //     return _filtered_serial_medoid(threshold);
-    // }
-    // return _filtered_parallel_medoid(threshold);
-
-    return _filtered_serial_medoid(threshold);
+    return _filtered__medoid(threshold);
 }
 
 template <typename T>
-const unordered_map<int, Id> DirectedGraph<T>::_filtered_serial_medoid(float threshold){
+const unordered_map<int, Id> DirectedGraph<T>::_filtered_medoid(float threshold){
 
     // Initialize T_counter (counts how many times a specific node has been selected as a medoid)
     vector<int> T_counter(this->n_nodes, 0);
@@ -44,124 +38,10 @@ const unordered_map<int, Id> DirectedGraph<T>::_filtered_serial_medoid(float thr
         }
 
         this->filteredMedoids[cpair.first] = this->medoid(Rf);
-        // // pmin = argmin p \in Rf (T[p])
-        // int min_val = numeric_limits<int>::max();
-        // Id pmin;
-
-        // for (Id p : Rf){
-        //     if (T_counter[p] < min_val){
-        //         pmin = p;
-        //         min_val = T_counter[p];
-        //     }
-        // }
-
-        // this->filteredMedoids[cpair.first] = pmin;  // medoid candidate for specific category
-        // T_counter[pmin]++;      // incremenet pmin's counter (it has been found as the min that much times)
     }
     c_log << "MEDOIDS FOUND" << "\n";
     return this->filteredMedoids;
 }
-
-template <typename T>
-void DirectedGraph<T>::_filtered_thread_medoid_fn(
-    mutex& T_counterMutex,
-    mutex& categoryMutex,
-    vector<int>& T_counter,
-    int& categoryIndex,
-    int maxCategoryIndex,
-    vector<pair<int, unordered_set<Id>>>& categoryPairs,
-    float threshold
-    ){
-    
-    categoryMutex.lock();
-    while (categoryIndex <= maxCategoryIndex){
-        int myCategory = categoryIndex++; // save and increment
-        c_log << "Thread assigned category: " << myCategory << "\n";
-        categoryMutex.unlock();
-
-        // Sampling
-        vector<Node<T>> Rf;
-        unordered_set<Id> remaining(categoryPairs[myCategory].second.begin(), categoryPairs[myCategory].second.end()); // remaining is a copy that holds all the remaining values to be sampled from
-
-        while (!remaining.empty() && Rf.size() < (threshold * categoryPairs[myCategory].second.size())){
-            int sample = sampleFromContainer(remaining);
-            Rf.push_back(this->nodes[sample]);
-            remaining.erase(sample);
-        }
-
-        // pmin = argmin p \in Rf (T[p])
-        // int min_val = numeric_limits<int>::max();
-        // Id pmin;
-
-        // for (Id p : Rf){
-        //     T_counterMutex.lock();
-        //     if (T_counter[p] < min_val){
-        //         pmin = p;
-        //         min_val = T_counter[p];
-        //     }
-        //     T_counterMutex.unlock();
-        // }
-
-        // this->filteredMedoids[categoryPairs[myCategory].first] = pmin;  // medoid candidate for specific category
-
-        this->filteredMedoids[categoryPairs[myCategory].first] = this->medoid(Rf);
-
-        // T_counterMutex.lock();
-        // T_counter[pmin]++;      // incremenet pmin's counter (it has been found as the min that much times)
-        // T_counterMutex.unlock();
-
-        categoryMutex.lock();
-        c_log << "Thread exiting category: " << myCategory << "\n";
-    }
-    categoryMutex.unlock();
-}
-
-template <typename T>
-const unordered_map<int, Id> DirectedGraph<T>::_filtered_parallel_medoid(float threshold){
-
-    c_log << "Filtered Parallel Medoid\n";
-
-    vector<int> T_counter(this->n_nodes, 0); // Shared resource
-    
-    // Create a vector of category pairs
-    vector<pair<int, unordered_set<Id>>> categoryPairs(this->categories.begin(), this->categories.end());
-
-    int categoryIndex = 0; // Shared resource
-    int maxCategoryIndex = categoryPairs.size() -1;
-
-    // Create mutexes for shared resources
-    mutex categoryMutex;
-    mutex T_counterMutex;
-
-    vector<thread> threads(max(min(args.n_threads, maxCategoryIndex),0));  // a vector of size args.n_threads holding all the threads
-    // Create the threads
-    for (int i=0; i< max(min(args.n_threads, maxCategoryIndex),0); i++){
-
-        threads[i] = thread(
-            &DirectedGraph<T>::_filtered_thread_medoid_fn,
-            this,
-            ref(T_counterMutex),
-            ref(categoryMutex),
-            ref(T_counter),
-            ref(categoryIndex),
-            maxCategoryIndex,
-            ref(categoryPairs),
-            threshold
-        );
-
-        c_log << "Created thread " << i << "\n";
-    }
-
-    // Join the threads
-    if (!threads.empty()){
-        for (thread& th : threads){ th.join(); }
-    }
-
-    c_log << "MEDOIDS FOUND" << "\n";
-    return this->filteredMedoids;
-}
-
-
 
 // Returns a filtered set
 template <typename T>
