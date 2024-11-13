@@ -130,7 +130,7 @@ bool DirectedGraph<T>::clearEdges(void){
 // Calculates the medoid of the nodes in the graph based on the given distance function
 template<typename T>
 const Id DirectedGraph<T>::medoid(optional<vector<Node<T>>> nodes_arg, optional<bool> update_stored){
-
+    c_log << "Medoid\n";
 
     // unrwapping from the "optional" template with appropriate values
     vector<Node<T>>& nodes = (nodes_arg == nullopt) ? this->nodes : nodes_arg.value();
@@ -152,8 +152,10 @@ const Id DirectedGraph<T>::medoid(optional<vector<Node<T>>> nodes_arg, optional<
     if (args.n_threads <= 0) throw invalid_argument("args.n_threads constant is invalid. Value must be args.n_threads >= 1.\n");
 
     // avoid recalculation: (if nodes argument is the this->nodes vector)
-    if (nodes == this->nodes && this->_medoid != -1)
+    if (nodes == this->nodes && this->_medoid != -1){
+        c_log << "Medoid already exists, returning.\n";
         return this->_medoid;
+    }
 
     // store if asked to (or if default state)
     if (to_store){

@@ -243,11 +243,11 @@ class DirectedGraph{
         void load(const string& filename);
 
         // Based on the qiven vector, the function returns the query's neighbors
-        unordered_set<Id> findNeighbors(Query<T> q);
+        unordered_set<Id> findNeighbors(Query<T> q, Args arguments);
 
         // Returns the neighbors of all queries found in the given queries_path file.
         // If the file is .vecs format read_arg corresponds to the number of queries and, if the file is in .bin format, it corresponds to the dimension of the query vector
-        vector<unordered_set<Id>> findQueriesNeighbors(string queries_path, int read_arg = -1);
+        vector<unordered_set<Id>> findQueriesNeighbors(Args arguments, int read_arg = -1);
 
 
         // Initializes the Graph as if it has been instantiated just now (resets everything to default except constructor arguments)

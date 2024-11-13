@@ -94,45 +94,47 @@ chrono::milliseconds createIndex(DirectedGraph<T>& DG, Args arguments){
 
 
 template <typename T>
-unordered_set<Id> DirectedGraph<T>::findNeighbors(Query<T> q){
+unordered_set<Id> DirectedGraph<T>::findNeighbors(Query<T> q, Args arguments){
 
     // Set for storing the query's neighbors
     unordered_set<Id> queryNeighbors;
     
     // Check index_type
-    if(args.index_type == VAMANA)
-        queryNeighbors = this->greedySearch(this->medoid(), q.value, args.k, args.L).first;
-    else if(args.index_type == FILTERED_VAMANA || args.index_type == STITCHED_VAMANA){                      // in both cases we call filteredGreedySearch
-
-        unordered_set<Id> starting_nodes = (unordered_set<Id>) {findMedoids(args.threshold).at(q.category)};   // because each node belongs to at most one category.
-        queryNeighbors = this->filteredGreedySearch(starting_nodes, q, args.k, args.L).first;
+    cout << "Searching for neighbors for query: " << q.id + 1 << "/10000. . ." << q.category << endl;
+    if(arguments.index_type == VAMANA || q.category == -1){
+        queryNeighbors = this->greedySearch(this->medoid(), q.value, arguments.k, arguments.L).first;
     }
+    else if(arguments.index_type == FILTERED_VAMANA || arguments.index_type == STITCHED_VAMANA){                      // in both cases we call filteredGreedySearch
+        unordered_set<Id> starting_nodes = (unordered_set<Id>) {findMedoids(arguments.threshold).at(q.category)};   // because each node belongs to at most one category.
+        queryNeighbors = this->filteredGreedySearch(starting_nodes, q, arguments.k, arguments.L).first;
+    }
+    cout << "Query neighbors found for query: " << q.id + 1<< "/10000. . ." << q.category << endl;
 
     // Return the set containing the query's neighbors
     return queryNeighbors;
 }
 
 template <typename T>
-vector<unordered_set<Id>> DirectedGraph<T>::findQueriesNeighbors(string queries_path, int read_arg){
+vector<unordered_set<Id>> DirectedGraph<T>::findQueriesNeighbors(Args arguments, int read_arg){
 
     c_log << "In Queries Neighbors" << '\n';
     // Read queries
     vector<T> queries;
     
     // Check index type
-    if(args.index_type == VAMANA){
+    if(arguments.index_type == VAMANA){
         // If default value
         if(read_arg == -1)
-            read_arg = args.n_queries;
+            read_arg = arguments.n_queries;
         
         // Read query vectors file
-        queries = read_vecs<float>(queries_path, read_arg);
+        queries = read_vecs<float>(arguments.queries_path, read_arg);
     }else{
         // If default value
         if(read_arg == -1)
-            read_arg = args.dim_query;
+            read_arg = arguments.dim_query;
         // Read query vectors file
-        ReadBin(queries_path, read_arg, queries);
+        ReadBin(arguments.queries_path, read_arg, queries);
     }
 
     vector<unordered_set<Id>> returnVec;
@@ -140,15 +142,15 @@ vector<unordered_set<Id>> DirectedGraph<T>::findQueriesNeighbors(string queries_
     // Iterate through the queries
     for(int i = 0; i < queries.size(); i++){
         
-        if(args.index_type == VAMANA){
+        if(arguments.index_type == VAMANA){
             Query<T> q(i, -1, false, queries[i], this->isEmpty);
-            returnVec.push_back(findNeighbors(q));
+            returnVec.push_back(findNeighbors(q,arguments));
 
         }else{
             T newValue(queries[i].begin() + 4, queries[i].end());
             Query<T> q(i, queries[i][1], queries[i][0], newValue, this->isEmpty);
             // Append each query's neighbors to the vector
-            returnVec.push_back(findNeighbors(q));
+            returnVec.push_back(findNeighbors(q,arguments));
         }
         
     }
@@ -164,14 +166,14 @@ float evaluateIndex(DirectedGraph<T>& DG, Args arguments){
 
     vector<vector<Id>> groundtruth;
     // If the groundtruth path is given, then read the specified file
-    if(args.groundtruth_path != ""){
+    if(arguments.groundtruth_path != ""){
 
-        if(args.index_type == VAMANA)
-            groundtruth = read_vecs<Id>(args.groundtruth_path, args.n_groundtruths);
+        if(arguments.index_type == VAMANA)
+            groundtruth = read_vecs<Id>(arguments.groundtruth_path, arguments.n_groundtruths);
         else{
             // Open the file and read its contents
             fstream file;
-            file.open(args.groundtruth_path, ios::in);
+            file.open(arguments.groundtruth_path, ios::in);
             
             // Read the file's contents
             file >> groundtruth;
@@ -181,17 +183,17 @@ float evaluateIndex(DirectedGraph<T>& DG, Args arguments){
         }
     }
 
-    vector<unordered_set<Id>> queriesNeighbors = DG.findQueriesNeighbors(args.queries_path);
+    vector<unordered_set<Id>> queriesNeighbors = DG.findQueriesNeighbors(arguments);
     float total_recall = 0.f, query_recall;
     
-    for(int i = 0; i < args.n_queries; i++){
+    for(int i = 0; i < arguments.n_queries; i++){
         // Calculate the current recall and add it to the sum of all recall scores
         query_recall = k_recall(queriesNeighbors[i], groundtruth[i]);
-        c_log << "Recall score for query: " << i+1 << "/" << args.n_queries << ":\t\t" << query_recall << "\n";
+        c_log << "Recall score for query: " << i+1 << "/" << arguments.n_queries << ":\t\t" << query_recall << "\n";
         total_recall += query_recall;
     }
 
-    return total_recall / args.n_queries;
+    return total_recall / arguments.n_queries;
 
 }
 
