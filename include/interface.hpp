@@ -115,7 +115,7 @@ unordered_set<Id> DirectedGraph<T>::findNeighbors(Query<T> q){
 template <typename T>
 vector<unordered_set<Id>> DirectedGraph<T>::findQueriesNeighbors(string queries_path, int read_arg){
 
-    c_log << "In Queries Neighbors" << endl;
+    c_log << "In Queries Neighbors" << '\n';
     // Read queries
     vector<T> queries;
     
@@ -213,7 +213,7 @@ vector<vector<Id>> generateGroundtruth(vector<vector<T>>& data, vector<vector<T>
 
     // For each query
     for(int i = 0; i < queries.size(); i++){
-        c_log << "Generating groundtruth for query: " << i << endl;
+        c_log << "Generating groundtruth for query: " << i << '\n';
 
         vector<T> query = queries[i];
         vector<T> queryValue(query.begin() + 4, query.end());
