@@ -212,6 +212,7 @@ bool DirectedGraph<T>::stitchedVamanaAlgorithm(int Lstitched, int Rstitched, int
             for (Id to : edge.second)
                 this->addEdge(original_id[from], original_id[to]);
         }
+        this->filteredMedoids[cpair.first] = DGf.medoid();
         c_log << "Stitching successful.\n";
 
         // cleanup for next category

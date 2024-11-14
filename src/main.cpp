@@ -12,8 +12,17 @@ int main (int argc, char* argv[]) {
     
     // Create the indexed graph if instructed from command line arguments, based on indexing type
     chrono::milliseconds duration; 
-    if (args.createIndex)
+    if (args.createIndex){
         duration = createIndex(DG,args);
+
+        // calculate the medoid to store (used as starting node for unfiltered queries)
+        if (args.index_type == FILTERED_VAMANA || args.index_type == STITCHED_VAMANA){
+            vector<Node<vector<float>>> medoids_vec;
+            for (pair<int, Id> fmedoid : DG.findMedoids(args.threshold))    // already calculated in createIndex
+                medoids_vec.push_back(DG.getNodes()[fmedoid.second]);
+            DG.medoid(medoids_vec, true);
+        }
+    }
         
     // Load graph if instructed from command line arguments
     else
@@ -21,6 +30,7 @@ int main (int argc, char* argv[]) {
 
     cout << "Index is ready\n";
     // Store graph if instructed from command line arguments
+
     DG.store(args.graph_store_path);
 
     // Perform queries on the graph and calculate average recall score

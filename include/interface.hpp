@@ -100,15 +100,28 @@ unordered_set<Id> DirectedGraph<T>::findNeighbors(Query<T> q, Args arguments){
     unordered_set<Id> queryNeighbors;
     
     // Check index_type
-    cout << "Searching for neighbors for query: " << q.id + 1 << "/10000. . ." << q.category << endl;
-    if(arguments.index_type == VAMANA || q.category == -1){
+    
+    if(arguments.index_type == VAMANA){
         queryNeighbors = this->greedySearch(this->medoid(), q.value, arguments.k, arguments.L).first;
     }
     else if(arguments.index_type == FILTERED_VAMANA || arguments.index_type == STITCHED_VAMANA){                      // in both cases we call filteredGreedySearch
-        unordered_set<Id> starting_nodes = (unordered_set<Id>) {findMedoids(arguments.threshold).at(q.category)};   // because each node belongs to at most one category.
-        queryNeighbors = this->filteredGreedySearch(starting_nodes, q, arguments.k, arguments.L).first;
+        
+        if (q.category != -1){  // filtered query case
+            unordered_set<Id> starting_nodes = (unordered_set<Id>) {findMedoids(arguments.threshold).at(q.category)};     // because each node belongs to at most one category.
+            queryNeighbors = this->filteredGreedySearch(starting_nodes, q, arguments.k, arguments.L).first;
+        }
+        else{   // unfiltered query: get K neighbors of each category and get the closest K of the union of the neighbors of each category
+
+            for (pair<int, unordered_set<Id>> cpair : this->categories){                   // unfiltered query => find K neighbors in all categories
+                unordered_set<Id> queryNeighbors_f;                                          // and take the best K of all n_categories*K neighbor candidates
+                q.category = cpair.first;                                                   // update the category of the query
+                queryNeighbors_f = findNeighbors(q, arguments);                             // find the neighbors of that category
+                queryNeighbors.insert(queryNeighbors_f.begin(), queryNeighbors_f.end());    // insert them in the neighbor-candidate set
+            }
+            queryNeighbors = this->_closestN(arguments.k, queryNeighbors, q.value);         // keep the closest K neighbors of all neighbor candidates
+        }
     }
-    cout << "Query neighbors found for query: " << q.id + 1<< "/10000. . ." << q.category << endl;
+    
 
     // Return the set containing the query's neighbors
     return queryNeighbors;
