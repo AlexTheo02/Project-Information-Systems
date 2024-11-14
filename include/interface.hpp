@@ -128,6 +128,28 @@ unordered_set<Id> DirectedGraph<T>::findNeighbors(Query<T> q, Args arguments){
 }
 
 template <typename T>
+void DirectedGraph<T>::_thread_findQueryNeighbors_fn(vector<T>& queries, mutex& mx_query_index, int& query_index, vector<unordered_set<Id>>& returnVec, Args arguments){
+
+    mx_query_index.lock();
+    while(query_index < queries.size()){
+        int my_q_index = query_index++;     // store current and increment
+        mx_query_index.unlock();
+
+        if(arguments.index_type == VAMANA){ 
+            Query<T> q(my_q_index, -1, false, queries[my_q_index], this->isEmpty);
+            returnVec[my_q_index] = findNeighbors(q,arguments);
+        }
+        else{ 
+            T newValue(queries[my_q_index].begin() + 4, queries[my_q_index].end());
+            Query<T> q(my_q_index, queries[my_q_index][1], queries[my_q_index][0], newValue, this->isEmpty);
+            returnVec[my_q_index] = findNeighbors(q,arguments);
+        } 
+        mx_query_index.lock();
+    }
+    mx_query_index.unlock();
+}
+
+template <typename T>
 vector<unordered_set<Id>> DirectedGraph<T>::findQueriesNeighbors(Args arguments, int read_arg){
 
     c_log << "In Queries Neighbors" << '\n';
@@ -150,23 +172,20 @@ vector<unordered_set<Id>> DirectedGraph<T>::findQueriesNeighbors(Args arguments,
         ReadBin(arguments.queries_path, read_arg, queries);
     }
 
-    vector<unordered_set<Id>> returnVec;
+    vector<unordered_set<Id>> returnVec(arguments.n_queries);
+    vector<thread> threads;
+    mutex mx_query_index;
+    int query_index = 0;
 
-    // Iterate through the queries
-    for(int i = 0; i < queries.size(); i++){
-        
-        if(arguments.index_type == VAMANA){
-            Query<T> q(i, -1, false, queries[i], this->isEmpty);
-            returnVec.push_back(findNeighbors(q,arguments));
-
-        }else{
-            T newValue(queries[i].begin() + 4, queries[i].end());
-            Query<T> q(i, queries[i][1], queries[i][0], newValue, this->isEmpty);
-            // Append each query's neighbors to the vector
-            returnVec.push_back(findNeighbors(q,arguments));
-        }
-        
+    // load and launch threads.
+    for (int i = 0; i < arguments.n_threads; i++){
+        threads.push_back(thread(&DirectedGraph::_thread_findQueryNeighbors_fn, this, ref(queries), ref(mx_query_index), ref(query_index), ref(returnVec), ref(arguments)));
     }
+
+    // collect the threads
+    for (thread& th : threads)
+        th.join();
+   
 
     // Return the vector
     return returnVec;

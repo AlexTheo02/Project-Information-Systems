@@ -134,6 +134,9 @@ class DirectedGraph{
 
         // Thread function for parallel medoid. Work inside the range defined by [start_index, end_index). Update minima by reference for the merging of the results.
         void _thread_medoid_fn(vector<Node<T>>& nodes, int start_index, int end_index, Id& local_minimum, float& local_dmin);
+
+        // Thread function for parallel querying.
+        void _thread_findQueryNeighbors_fn(vector<T>& queries, mutex& mx_query_index, int& query_index, vector<unordered_set<Id>>& returnVec, Args arguments);
     
     public:
 
