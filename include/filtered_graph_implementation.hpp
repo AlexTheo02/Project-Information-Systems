@@ -46,6 +46,9 @@ const unordered_map<int, Id> DirectedGraph<T>::_filtered_medoid(float threshold)
 // Returns a filtered set
 template <typename T>
 unordered_set<Id> DirectedGraph<T>::filterSet(unordered_set<Id> S, int filter){
+    if (filter == -1){
+        return S;
+    }
     unordered_set<Id> filtered;
     for (Id s : S){
         if (this->nodes[s].category == filter){
