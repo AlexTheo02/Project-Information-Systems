@@ -114,6 +114,15 @@ void DirectedGraph<T>::filteredRobustPrune(Id p, unordered_set<Id> V, float a, i
 
     c_log << "Filtered Robust Prune\n";
 
+    // argument checks
+    if (a < 1) { throw invalid_argument("Parameter a must be >= 1.\n"); }
+
+    if (R <= 0) {throw invalid_argument("Parameter R must be > 0.\n"); }
+
+    if (p < 0 || p >= this->n_nodes){ throw invalid_argument("Invalid Index was provided.\n"); }
+
+    if (this->nodes[p].empty()) { throw invalid_argument("No node was provided.\n"); }
+
     if (mapKeyExists(p, this->Nout))
         V.insert(this->Nout[p].begin(), this->Nout[p].end());
     
@@ -142,6 +151,16 @@ void DirectedGraph<T>::filteredRobustPrune(Id p, unordered_set<Id> V, float a, i
 
 template <typename T>
 bool DirectedGraph<T>::filteredVamanaAlgorithm(int L, int R, float a, float t){
+
+    if (R <= 0){ throw invalid_argument("R must be a positive, non-zero integer.\n"); }
+
+    if (L < 1) { throw invalid_argument("Parameter L must be >= 1.\n"); }
+
+    if (a < 1) { throw invalid_argument("Parameter a must be >= 1.\n"); }
+
+    if (t <= 0 || t > 1) { throw invalid_argument("Parameter t must be between (0,1]"); }
+
+    if (this->nodes.size() == 1) return true;   // no edges possible
 
     c_log << "Filtered Vamana\n";
 
@@ -181,6 +200,16 @@ template <typename T>
 bool DirectedGraph<T>::stitchedVamanaAlgorithm(int Lstitched, int Rstitched, int Lsmall, int Rsmall, float a){
 
     c_log << "Stitched Vamana\n";
+
+    if (Lstitched < 1) { throw invalid_argument("Parameter L must be >= 1.\n"); }
+    
+    if (Rstitched <= 0){ throw invalid_argument("Rstitched must be a positive, non-zero integer.\n"); }
+
+    if (Lsmall < 1) { throw invalid_argument("Parameter Lsmall must be >= 1.\n"); }
+
+    if (Rsmall <= 0){ throw invalid_argument("Rsmall must be a positive, non-zero integer.\n"); }
+
+    if (a < 1) { throw invalid_argument("Parameter a must be >= 1.\n"); }
 
     // initialize G as an empty graph => clear all edges
     if(this->clearEdges() == false)
