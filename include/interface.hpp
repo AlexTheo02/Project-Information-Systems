@@ -211,9 +211,12 @@ vector<unordered_set<Id>> DirectedGraph<T>::findQueriesNeighbors(function<vector
 
 }
 
-// Evaluate given index based on its types and return average recall score
+// Evaluate given index based on its types and return a pair containing average recall score and duration
 template <typename T>
-float evaluateIndex(DirectedGraph<T>& DG, function<vector<Query<T>>(void)> readQueries){
+pair<float, chrono::milliseconds> evaluateIndex(DirectedGraph<T>& DG, function<vector<Query<T>>(void)> readQueries){
+
+    chrono::milliseconds duration = (chrono::milliseconds) 0;
+    chrono::high_resolution_clock::time_point startTime, endTime;
 
     vector<vector<Id>> groundtruth;
     // If the groundtruth path is given, then read the specified file
@@ -234,7 +237,15 @@ float evaluateIndex(DirectedGraph<T>& DG, function<vector<Query<T>>(void)> readQ
         }
     }
 
+    // Start the timer
+    startTime = chrono::high_resolution_clock::now();
     vector<unordered_set<Id>> queriesNeighbors = DG.findQueriesNeighbors(readQueries);
+    // End the timer
+    endTime = chrono::high_resolution_clock::now();
+
+    // Calculate duration
+    duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime);
+
     float total_recall = 0.f, query_recall;
     
     for(int i = 0; i < args.n_queries; i++){
@@ -244,8 +255,11 @@ float evaluateIndex(DirectedGraph<T>& DG, function<vector<Query<T>>(void)> readQ
         total_recall += query_recall;
     }
 
-    return total_recall / args.n_queries;
+    pair<float, chrono::milliseconds> ret;
+    ret.first = total_recall / args.n_queries;
+    ret.second = duration;
 
+    return ret;
 }
 
 template <typename T>

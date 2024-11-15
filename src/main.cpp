@@ -14,6 +14,7 @@ int main (int argc, char* argv[]) {
     chrono::milliseconds duration; 
     if (args.createIndex){
         duration = createIndex(DG);
+        cout << "Time to create the index: "; printFormatMiliseconds(duration);
 
         // calculate the medoid to store (used as starting node for unfiltered queries)
         if (args.index_type == FILTERED_VAMANA || args.index_type == STITCHED_VAMANA){
@@ -34,12 +35,17 @@ int main (int argc, char* argv[]) {
     DG.store(args.graph_store_path);
 
     // Perform queries on the graph and calculate average recall score
-    float averageRecall = evaluateIndex<vector<float>>(ref(DG), (args.index_type == VAMANA) ? read_queries_vecs<vector<float>> : read_queries_bin_contest<vector<float>>);
+    time_t time_now = time(NULL); // get current time
+    struct tm * timeinfo;
+    timeinfo = localtime(&time_now);
+
+    cout << "Starting index evaluation on "<< asctime(timeinfo); // https://cplusplus.com/reference/ctime/localtime/, https://cplusplus.com/reference/ctime/time/
+    pair<float, chrono::milliseconds> results = evaluateIndex<vector<float>>(ref(DG), (args.index_type == VAMANA) ? read_queries_vecs<vector<float>> : read_queries_bin_contest<vector<float>>);
 
     // print recall and duration
     cout << "Evaluation Finished." << endl;
-    cout << "Time to create the index: "; printFormatMiliseconds(duration);
-    cout << "Average recall score: " << averageRecall << endl;
+    cout << "Time to query the index: "; printFormatMiliseconds(results.second);
+    cout << "Average recall score: " << results.first << endl;
 
     return 0;
 }
