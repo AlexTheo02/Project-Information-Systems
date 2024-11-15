@@ -221,6 +221,7 @@ class DirectedGraph{
         // Prunes out-neighbors of node p up until a minimum threshold R of out-neighbors for node p, based on distance criteria with parameter a.
         void robustPrune(Id p, unordered_set<Id> V, float a, int R);
 
+        // Prunes same-category out-neighbors of node p up until a minimum threshold R of out-neighbors for node p, based on distance criteria with parameter a.
         void filteredRobustPrune(Id p, unordered_set<Id> V, float a, int R);
 
         // Transforms the graph into a Directed Graph such that it makes the finding of nearest neighbors easier.
@@ -230,10 +231,11 @@ class DirectedGraph{
         // + a the parameter for robust pruning (a >=1)
         bool vamanaAlgorithm(int L, int R, float a);
 
+        // performs the filtered vamana algorithm to create the filtered index
         // float t threshold is a value in (0,1] that represents a fraction of the data in a specific category to be accounted for when searching for the medoid of that specific category
         bool filteredVamanaAlgorithm(int L, int R, float a, float t); // + t = threshold.
 
-        // 
+        // Performs the stitched vamana algorithm to create the filtered index
         bool stitchedVamanaAlgorithm(int Lstitched, int Rstitched, int Lsmall, int Rsmall, float a);
 
 
@@ -245,15 +247,15 @@ class DirectedGraph{
         // IMPORTANT: makes use of overloaded >> operator to load the graph from a file
         void load(const string& filename);
 
+        // Initializes the Graph as if it has been instantiated just now (resets everything to default except constructor arguments)
+        void init();
+
+
         // Based on the qiven vector, the function returns the query's neighbors
         unordered_set<Id> findNeighbors(Query<T> q);
 
         // Returns the neighbors of all queries found in the given queries_path file.
         // If the file is .vecs format read_arg corresponds to the number of queries and, if the file is in .bin format, it corresponds to the dimension of the query vector
         vector<unordered_set<Id>> findQueriesNeighbors(int read_arg = -1);
-
-
-        // Initializes the Graph as if it has been instantiated just now (resets everything to default except constructor arguments)
-        void init();
 
 };

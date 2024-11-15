@@ -103,18 +103,6 @@ typename Container::value_type sampleFromContainer(const Container& s){
     return *it;                     // dereferencing the iterator to return the pointed element
 }
 
-// // sample from Container but optimized for vector structure
-// template <typename T>
-// T sampleFromVector(const vector<T> vec){
-
-//     if (vec.empty()){ throw invalid_argument("Vector is empty.\n"); }
-
-//     if (vec.size() == 1){ return vec[0]; }  // directly return the singular element from the vector if |vec| is 1.
-    
-    
-//     return vec[rand() % vec.size()];
-// }
-
 // returns a vector of a random permutation of the elements beloning in the set s
 template<typename T>
 vector<T> permutation(const vector<T>& s) {

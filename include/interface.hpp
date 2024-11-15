@@ -92,7 +92,7 @@ chrono::milliseconds createIndex(DirectedGraph<T>& DG){
     return duration;
 }
 
-
+// Based on the qiven vector, the function returns the query's neighbors
 template <typename T>
 unordered_set<Id> DirectedGraph<T>::findNeighbors(Query<T> q){
 
@@ -127,6 +127,7 @@ unordered_set<Id> DirectedGraph<T>::findNeighbors(Query<T> q){
     return queryNeighbors;
 }
 
+// Thread function for parallel querying.
 template <typename T>
 void DirectedGraph<T>::_thread_findQueryNeighbors_fn(vector<T>& queries, mutex& mx_query_index, int& query_index, vector<unordered_set<Id>>& returnVec){
 
@@ -149,6 +150,8 @@ void DirectedGraph<T>::_thread_findQueryNeighbors_fn(vector<T>& queries, mutex& 
     mx_query_index.unlock();
 }
 
+// Returns the neighbors of all queries found in the given queries_path file.
+// If the file is .vecs format read_arg corresponds to the number of queries and, if the file is in .bin format, it corresponds to the dimension of the query vector
 template <typename T>
 vector<unordered_set<Id>> DirectedGraph<T>::findQueriesNeighbors(int read_arg){
 
