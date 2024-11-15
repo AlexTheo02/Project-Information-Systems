@@ -34,7 +34,7 @@ int main (int argc, char* argv[]) {
     DG.store(args.graph_store_path);
 
     // Perform queries on the graph and calculate average recall score
-    float averageRecall = evaluateIndex(DG);
+    float averageRecall = evaluateIndex<vector<float>>(ref(DG), (args.index_type == VAMANA) ? read_queries_vecs<vector<float>> : read_queries_bin_contest<vector<float>>);
 
     // print recall and duration
     cout << "Evaluation Finished." << endl;

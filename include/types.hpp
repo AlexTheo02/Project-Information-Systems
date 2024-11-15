@@ -136,31 +136,16 @@ class DirectedGraph{
         void _thread_medoid_fn(vector<Node<T>>& nodes, int start_index, int end_index, Id& local_minimum, float& local_dmin);
 
         // Thread function for parallel querying.
-        void _thread_findQueryNeighbors_fn(vector<T>& queries, mutex& mx_query_index, int& query_index, vector<unordered_set<Id>>& returnVec);
+        void _thread_findQueryNeighbors_fn(vector<Query<T>>& queries, mutex& mx_query_index, int& query_index, vector<unordered_set<Id>>& returnVec);
     
     public:
 
         // Constructor: Initialize an empty graph
-        DirectedGraph(function<float(const T&, const T&)> distance_function, function<bool(const T&)> is_Empty, vector<T> values = {}, bool isFiltered = false) {
-            this->n_edges = 0;
-            this->n_nodes = 0;
+        DirectedGraph(function<float(const T&, const T&)> distance_function, function<bool(const T&)> is_Empty) {
+            this->init();
             this->d = distance_function;
             this->isEmpty = is_Empty;
             c_log << "Graph created!" << '\n';
-
-            if (isFiltered){
-                for (const T& value : values){
-                    int category = value[0];
-                    // Ignore the first 2 dimensions
-                    T newValue(value.begin() + 2, value.end());
-                    this->createNode(newValue, category);
-                }
-            }
-            else{
-                for (const T& value : values){
-                    this->createNode(value);
-                }
-            }
         }
 
         // Return a set of all Nodes in the graph
@@ -247,7 +232,7 @@ class DirectedGraph{
         // IMPORTANT: makes use of overloaded >> operator to load the graph from a file
         void load(const string& filename);
 
-        // Initializes the Graph as if it has been instantiated just now (resets everything to default except constructor arguments)
+        // Initializes the Graph to its initial default state (apart from distance and isEmpty functions)
         void init();
 
 
@@ -256,6 +241,6 @@ class DirectedGraph{
 
         // Returns the neighbors of all queries found in the given queries_path file.
         // If the file is .vecs format read_arg corresponds to the number of queries and, if the file is in .bin format, it corresponds to the dimension of the query vector
-        vector<unordered_set<Id>> findQueriesNeighbors(int read_arg = -1);
+        vector<unordered_set<Id>> findQueriesNeighbors(function<vector<Query<T>>(void)> readQueries);
 
 };

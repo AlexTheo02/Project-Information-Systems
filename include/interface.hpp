@@ -13,6 +13,45 @@ using namespace std;
 
 // This file is an interface file that contains all the dependencies of the project. Simply include "interface.hpp" in your project and you're good to go!
 
+
+// specific read_query function for .vecs format
+template <typename T>
+vector<Query<T>> read_queries_vecs(void){
+
+    vector<T> queries_raw = read_vecs<float>(args.queries_path, args.n_queries);
+    vector<Query<T>> queries;
+
+    for (int i = 0; i < queries_raw.size(); i++){
+        Query<T> q(i, -1, false, queries_raw[i], vectorEmpty<float>);
+        queries.push_back(q);
+    }
+    return queries;
+};
+
+// specific read_query function for .bin format with specifications as described in the SIGMOD 2024 contest - [insert link]
+template <typename T>
+vector<Query<T>> read_queries_bin_contest(void){
+    vector<T> queries_raw;
+    ReadBin(args.queries_path, args.dim_query, ref(queries_raw));
+
+    vector<Query<T>> queries;
+
+    for (int i = 0; i < queries_raw.size(); i++){
+        T query_value(queries_raw[i].begin() + 4, queries_raw[i].end());
+        Query<T> q(i, queries_raw[i][1], queries_raw[i][0], query_value, vectorEmpty<float>);
+        queries.push_back(q);
+    }
+    return queries;
+};
+
+// This function reads the args.queries_path file and returns a vector of well constructed queries depending on the file format.
+template <typename T>
+vector<Query<T>> read_queries(void){
+    // Implement this function for your own data type.
+    // This function is to be passed in the index evaluation function.
+};
+
+
 // Creates the index on the graph based on the indexing type and return the duration in miliseconds
 template <typename T>
 chrono::milliseconds createIndex(DirectedGraph<T>& DG){
@@ -129,22 +168,15 @@ unordered_set<Id> DirectedGraph<T>::findNeighbors(Query<T> q){
 
 // Thread function for parallel querying.
 template <typename T>
-void DirectedGraph<T>::_thread_findQueryNeighbors_fn(vector<T>& queries, mutex& mx_query_index, int& query_index, vector<unordered_set<Id>>& returnVec){
+void DirectedGraph<T>::_thread_findQueryNeighbors_fn(vector<Query<T>>& queries, mutex& mx_query_index, int& query_index, vector<unordered_set<Id>>& returnVec){
 
     mx_query_index.lock();
     while(query_index < queries.size()){
         int my_q_index = query_index++;     // store current and increment
         mx_query_index.unlock();
 
-        if(args.index_type == VAMANA){ 
-            Query<T> q(my_q_index, -1, false, queries[my_q_index], this->isEmpty);
-            returnVec[my_q_index] = findNeighbors(q);
-        }
-        else{ 
-            T newValue(queries[my_q_index].begin() + 4, queries[my_q_index].end());
-            Query<T> q(my_q_index, queries[my_q_index][1], queries[my_q_index][0], newValue, this->isEmpty);
-            returnVec[my_q_index] = findNeighbors(q);
-        } 
+        returnVec[my_q_index] = findNeighbors(queries[my_q_index]);
+        
         mx_query_index.lock();
     }
     mx_query_index.unlock();
@@ -153,27 +185,11 @@ void DirectedGraph<T>::_thread_findQueryNeighbors_fn(vector<T>& queries, mutex& 
 // Returns the neighbors of all queries found in the given queries_path file.
 // If the file is .vecs format read_arg corresponds to the number of queries and, if the file is in .bin format, it corresponds to the dimension of the query vector
 template <typename T>
-vector<unordered_set<Id>> DirectedGraph<T>::findQueriesNeighbors(int read_arg){
+vector<unordered_set<Id>> DirectedGraph<T>::findQueriesNeighbors(function<vector<Query<T>>(void)> readQueries){
 
     c_log << "In Queries Neighbors" << '\n';
     // Read queries
-    vector<T> queries;
-    
-    // Check index type
-    if(args.index_type == VAMANA){
-        // If default value
-        if(read_arg == -1)
-            read_arg = args.n_queries;
-        
-        // Read query vectors file
-        queries = read_vecs<float>(args.queries_path, read_arg);
-    }else{
-        // If default value
-        if(read_arg == -1)
-            read_arg = args.dim_query;
-        // Read query vectors file
-        ReadBin(args.queries_path, read_arg, queries);
-    }
+    vector<Query<T>> queries = readQueries();
 
     vector<unordered_set<Id>> returnVec(args.n_queries);
     vector<thread> threads;
@@ -197,7 +213,7 @@ vector<unordered_set<Id>> DirectedGraph<T>::findQueriesNeighbors(int read_arg){
 
 // Evaluate given index based on its types and return average recall score
 template <typename T>
-float evaluateIndex(DirectedGraph<T>& DG){
+float evaluateIndex(DirectedGraph<T>& DG, function<vector<Query<T>>(void)> readQueries){
 
     vector<vector<Id>> groundtruth;
     // If the groundtruth path is given, then read the specified file
@@ -218,7 +234,7 @@ float evaluateIndex(DirectedGraph<T>& DG){
         }
     }
 
-    vector<unordered_set<Id>> queriesNeighbors = DG.findQueriesNeighbors();
+    vector<unordered_set<Id>> queriesNeighbors = DG.findQueriesNeighbors(readQueries);
     float total_recall = 0.f, query_recall;
     
     for(int i = 0; i < args.n_queries; i++){
