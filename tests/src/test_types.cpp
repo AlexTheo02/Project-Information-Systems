@@ -574,6 +574,38 @@ void test_vamanaAlgorithm(void){
     return;
 }
 
+void test_init(void){
+    
+    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
+    // Read base vectors
+    vector<vector<float>> vectors = {
+        (vector<float>) {1,1,1,1,1},
+        (vector<float>) {2,2,2,2,2},
+        (vector<float>) {3,3,3,3,3},
+        (vector<float>) {4,4,4,4,4},
+        (vector<float>) {5,5,5,5,5},
+        (vector<float>) {6,6,6,6,6},
+    };
+
+    // Add nodes to graph
+    for (vector<float>& v : vectors){
+        DG.createNode(v);
+    }
+
+    DG.init();
+
+    TEST_CHECK(DG.get_n_nodes() == 0);
+    TEST_CHECK(DG.get_n_edges() == 0);
+    TEST_CHECK(DG.getNodes().empty());
+    TEST_CHECK(DG.get_Nout().empty());
+    
+    try {
+        DG.medoid();
+        TEST_CHECK(false);  // control should not reach here
+    }catch (invalid_argument& ia) {TEST_CHECK(string(ia.what()) == "Vector is empty.\n"); }
+    
+}
+
 
 TEST_LIST = {
     { "test_graphCreation", test_graphCreation },
@@ -587,5 +619,6 @@ TEST_LIST = {
     { "test_greedySearch", test_greedySearch},
     { "test_robustPrune", test_robustPrune},
     { "test_vamanaAlgorithm", test_vamanaAlgorithm},
+    { "test_init", test_init},
     { NULL, NULL }     // zeroed record marking the end of the list
 };
