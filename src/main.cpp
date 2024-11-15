@@ -13,7 +13,7 @@ int main (int argc, char* argv[]) {
     // Create the indexed graph if instructed from command line arguments, based on indexing type
     chrono::milliseconds duration; 
     if (args.createIndex){
-        duration = createIndex(DG,args);
+        duration = createIndex(DG);
 
         // calculate the medoid to store (used as starting node for unfiltered queries)
         if (args.index_type == FILTERED_VAMANA || args.index_type == STITCHED_VAMANA){
@@ -34,7 +34,7 @@ int main (int argc, char* argv[]) {
     DG.store(args.graph_store_path);
 
     // Perform queries on the graph and calculate average recall score
-    float averageRecall = evaluateIndex(DG,args);
+    float averageRecall = evaluateIndex(DG);
 
     // print recall and duration
     cout << "Evaluation Finished." << endl;

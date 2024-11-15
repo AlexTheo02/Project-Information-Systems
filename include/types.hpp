@@ -116,15 +116,15 @@ template <typename T>
 class DirectedGraph{
 
     private:
-        int n_edges;                                            // number of edges present in the graph
-        int n_nodes;                                            // number of nodes present in the graph
-        vector<Node<T>> nodes;                                  // vector containing all the nodes in the graph
-        Id _medoid;                                            // medoid node's id. Used to avoid recalculation of medoid if we want to access it more than once
-        unordered_map<int, Id> filteredMedoids;                // map containing each category key and its corresponding medoid node
-        unordered_map<int, unordered_set<Id>> categories;      // a map containing all unique categories in the data and their corresponding nodes that belong to each
-        unordered_map<Id, unordered_set<Id>> Nout;            // key: node, value: set of outgoing neighbors 
-        function<float(const T&, const T&)> d;                  // Graph's distance function
-        function<bool(const T&)> isEmpty;                       // typename T valid check
+        int n_edges;                                        // number of edges present in the graph
+        int n_nodes;                                        // number of nodes present in the graph
+        vector<Node<T>> nodes;                              // vector containing all the nodes in the graph
+        Id _medoid;                                         // medoid node's id. Used to avoid recalculation of medoid if we want to access it more than once
+        unordered_map<int, Id> filteredMedoids;             // map containing each category key and its corresponding medoid node
+        unordered_map<int, unordered_set<Id>> categories;   // a map containing all unique categories in the data and their corresponding nodes that belong to each
+        unordered_map<Id, unordered_set<Id>> Nout;          // key: node, value: set of outgoing neighbors 
+        function<float(const T&, const T&)> d;              // Graph's distance function
+        function<bool(const T&)> isEmpty;                   // typename T valid check
 
         // implements medoid function using serial programming.
         const Id _serial_medoid(vector<Node<T>>& nodes);
@@ -136,7 +136,7 @@ class DirectedGraph{
         void _thread_medoid_fn(vector<Node<T>>& nodes, int start_index, int end_index, Id& local_minimum, float& local_dmin);
 
         // Thread function for parallel querying.
-        void _thread_findQueryNeighbors_fn(vector<T>& queries, mutex& mx_query_index, int& query_index, vector<unordered_set<Id>>& returnVec, Args arguments);
+        void _thread_findQueryNeighbors_fn(vector<T>& queries, mutex& mx_query_index, int& query_index, vector<unordered_set<Id>>& returnVec);
     
     public:
 
@@ -246,11 +246,11 @@ class DirectedGraph{
         void load(const string& filename);
 
         // Based on the qiven vector, the function returns the query's neighbors
-        unordered_set<Id> findNeighbors(Query<T> q, Args arguments);
+        unordered_set<Id> findNeighbors(Query<T> q);
 
         // Returns the neighbors of all queries found in the given queries_path file.
         // If the file is .vecs format read_arg corresponds to the number of queries and, if the file is in .bin format, it corresponds to the dimension of the query vector
-        vector<unordered_set<Id>> findQueriesNeighbors(Args arguments, int read_arg = -1);
+        vector<unordered_set<Id>> findQueriesNeighbors(int read_arg = -1);
 
 
         // Initializes the Graph as if it has been instantiated just now (resets everything to default except constructor arguments)
