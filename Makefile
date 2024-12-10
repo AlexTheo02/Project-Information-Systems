@@ -78,6 +78,11 @@ all: clean dirs $(EX_MAIN)
 	@echo "Executing $(EX_MAIN):"
 	$(EX_MAIN)
 
+reducer:
+	$(CC) $(CFLAGS) -c src/reduce_contest_data.cpp -o build/reduce_contest_data.o
+	$(CC) $(CFLAGS) -o bin/reduce_contest_data build/reduce_contest_data.o
+
+
 # Rules to build the executables
 $(EX_MAIN): $(OBJS_ALL)
 	@echo "Linking Object Files to Create Executable . . ."
