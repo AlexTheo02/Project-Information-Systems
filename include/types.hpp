@@ -18,6 +18,7 @@
 #include <mutex>
 #include <optional>
 #include <sys/stat.h>
+#include <string>
 
 #include "util.hpp"
 

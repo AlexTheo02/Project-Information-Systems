@@ -51,6 +51,10 @@ vector<Query<T>> read_queries(void){
     // This function is to be passed in the index evaluation function.
 };
 
+bool endsWith(const string& str, const string& suffix) {
+    return str.size() >= suffix.size() &&
+           str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
 
 // Creates the index on the graph based on the indexing type and return the duration in miliseconds
 template <typename T>
@@ -82,9 +86,9 @@ chrono::milliseconds createIndex(DirectedGraph<T>& DG){
             break;
 
         case FILTERED_VAMANA:
-        
+
             // Read data
-            if(args.data_path.ends_with(".bin")){
+            if(endsWith(args.data_path, ".bin")){
                 ReadBin(args.data_path, args.dim_data, data);
             }else{
                 if(!data_file.is_open()){
@@ -117,7 +121,7 @@ chrono::milliseconds createIndex(DirectedGraph<T>& DG){
         case STITCHED_VAMANA:
 
             // Read data
-            if(args.data_path.ends_with(".bin")){
+            if(endsWith(args.data_path, ".bin")){
                 ReadBin(args.data_path, args.dim_data, data);
             }else{
                 if(!data_file.is_open()){
