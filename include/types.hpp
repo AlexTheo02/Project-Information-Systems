@@ -124,7 +124,7 @@ class DirectedGraph{
         function<float(const T&, const T&)> d;              // Graph's distance function
         function<bool(const T&)> isEmpty;                   // typename T valid check
 
-        // implements medoid function using serial programming.
+        // Implements medoid function using serial programming.
         const Id _serial_medoid(vector<Node<T>>& nodes);
 
         // Implements medoid function using parallel programming with threads. Concurrency is set by the argument args.n_threads.
@@ -135,6 +135,15 @@ class DirectedGraph{
 
         // Thread function for parallel querying.
         void _thread_findQueryNeighbors_fn(vector<Query<T>>& queries, mutex& mx_query_index, int& query_index, vector<unordered_set<Id>>& returnVec);
+
+        // Implements stitchedVamana algorithm using serial programming
+        bool _serial_stitchedVamana(int Lstitched, int Rstitched, int Lsmall, int Rsmall, float a); 
+
+        // Implements stitchedVamana algorithm for index creation using parallel programming with threads. Concurrency is set by the argument args.n_threads.
+        bool _parallel_stitchedVamana(int Lstitched, int Rstitched, int Lsmall, int Rsmall, float a);
+
+        // Thread function for parallel stitchedVamana index creation
+        void _thread_stitchedVamana_fn(int& Lstitched, int& Rstitched, int& Lsmall, int& Rsmall, float& a, int& category_index, mutex& mx_category_index, mutex& mx_merge, vector<int>& category_names, char& rv);
     
     public:
 
@@ -221,6 +230,8 @@ class DirectedGraph{
         // Performs the stitched vamana algorithm to create the filtered index
         bool stitchedVamanaAlgorithm(int Lstitched, int Rstitched, int Lsmall, int Rsmall, float a);
 
+        // Performs the stitched vamana algorithm to create the filtered index
+        bool optimizedStitchedVamanaAlgorithm(int Lstitched, int Rstitched, int Lsmall, int Rsmall, float a);
 
         // Stores the current state of a graph into the specified file.
         // IMPORTANT: makes use of overloaded << operator to store the graph into a file.
