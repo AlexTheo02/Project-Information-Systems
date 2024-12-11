@@ -214,6 +214,16 @@ bool DirectedGraph<T>::stitchedVamanaAlgorithm(int Lstitched, int Rstitched, int
 
     if (a < 1) { throw invalid_argument("Parameter a must be >= 1.\n"); }
 
+    if (args.n_threads <= 0) throw invalid_argument("args.n_threads constant is invalid. Value must be args.n_threads >= 1.\n");
+
+    return (args.n_threads == 1)
+        ? this->_serial_stitchedVamana(Lstitched, Rstitched, Lsmall, Rsmall, a)
+        : this->_parallel_stitchedVamana(Lstitched, Rstitched, Lsmall, Rsmall, a); 
+}
+
+template <typename T>
+bool DirectedGraph<T>::_serial_stitchedVamana(int Lstitched, int Rstitched, int Lsmall, int Rsmall, float a){
+
     // initialize G as an empty graph => clear all edges
     if(this->clearEdges() == false)
         return false;
@@ -236,7 +246,15 @@ bool DirectedGraph<T>::stitchedVamanaAlgorithm(int Lstitched, int Rstitched, int
             cout << "Something went wrong in vamana algorithm.\n";
             return false;
         }
-        c_log << "Creating Index for Category: " << cpair.first << " created.\nStitching with main graph.\n";
+        c_log << "Creating Index for Category: " << cpair.first << " created.\n";
+        
+        
+        c_log << "Pruning.\n";
+        for (Node<T>& node : DGf.nodes){
+            DGf.robustPrune(node.id, DGf.Nout[node.id], a, Rstitched);
+        }
+        
+        c_log << "Pruning complete.Stitching with main graph.\n";
 
         // union of edges: this->Nout ∪= DGf.Nout
         for (pair<Id, unordered_set<Id>> edge : DGf.get_Nout()){
@@ -251,14 +269,119 @@ bool DirectedGraph<T>::stitchedVamanaAlgorithm(int Lstitched, int Rstitched, int
         original_id.clear();
         DGf.init();
     }
-    c_log << "Initial Stitched Vamana Index Created. Pruning.\n";
-    return false;
+    c_log << "Stitched Vamana Index Created.\n";
 
-    // robust prune
-    for (Node<T>& node : this->nodes){
-        this->filteredRobustPrune(node.id, this->Nout[node.id], a, Rstitched);
-    }
-    c_log << "Pruning successfully completed. Index is ready.\n";
 
     return true;
+}
+
+
+template <typename T>
+void DirectedGraph<T>::_thread_stitchedVamana_fn(int& Lstitched, int& Rstitched, int& Lsmall, int& Rsmall, float& a, int& category_index, mutex& mx_category_index, mutex& mx_merge, vector<int>& category_names, char& rv){
+    
+
+    mx_category_index.lock();
+    while(category_index < this->categories.size()){
+        int my_category_index = category_index++;
+        mx_category_index.unlock();
+
+        int my_category = category_names[my_category_index];
+
+        vector<Id> original_id;                         // a vector that maps DGf node ids to the original this ids
+
+        DirectedGraph<T> DGf(this->d, this->isEmpty);
+
+        for (Id node : this->categories[my_category]){
+            DGf.createNode(this->nodes[node].value);    // create nodes as unfiltered data (specific category)
+            original_id.push_back(node);
+        }
+
+        c_log << "Creating Index for Category: " << my_category << '\n';
+
+        // Creating Index for nodes of specific category as unfiltered data
+        int Rsmall_f = min(Rsmall, (int)this->categories[my_category].size() - 1);    // handle case when Rsmall > |Pf| - 1 for certain filters f
+        if (!DGf.vamanaAlgorithm(Lsmall, Rsmall_f, a)){
+            cout << "Something went wrong in vamana algorithm.\n";
+            rv = false;
+            return;
+        }
+        c_log << "Creating Index for Category: " << my_category << " created.\n";
+
+        c_log << "Pruning.\n";
+        for (Node<T>& node : DGf.nodes){
+            DGf.robustPrune(node.id, DGf.Nout[node.id], a, Rstitched);
+        }
+
+        c_log << "Pruning complete.Stitching with main graph.\n";
+        
+        mx_merge.lock();
+        // union of edges: this->Nout ∪= DGf.Nout
+        for (pair<Id, unordered_set<Id>> edge : DGf.get_Nout()){
+            Id from = edge.first;
+            for (Id to : edge.second)
+                this->addEdge(original_id[from], original_id[to]);
+        }
+        this->filteredMedoids[my_category] = original_id[DGf.medoid()];
+        mx_merge.unlock();
+        c_log << "Stitching successful.\n";
+
+        // cleanup for next category
+        original_id.clear();
+        DGf.init();
+
+        mx_category_index.lock();
+    }
+    mx_category_index.unlock();
+}
+
+template <typename T>
+bool DirectedGraph<T>::_parallel_stitchedVamana(int Lstitched, int Rstitched, int Lsmall, int Rsmall, float a){
+
+    // initialize G as an empty graph => clear all edges
+    if(this->clearEdges() == false)
+        return false;
+
+    vector<thread> threads;
+    vector<char> rvs;   // return values of threads - actually bool type
+
+    // vector containing all unique categories
+    vector<int> category_names;
+
+    for (pair<int, unordered_set<Id>> cpair : this->categories)
+        category_names.push_back(cpair.first);
+
+    int category_index = 0;
+
+    mutex mx_category_index, mx_merge;
+
+    for (int i = 0; i < args.n_threads; i++){
+        rvs.push_back(true);
+        threads.push_back(thread(
+            &DirectedGraph::_thread_stitchedVamana_fn,
+            this,
+            ref(Lstitched),
+            ref(Rstitched),
+            ref(Lsmall),
+            ref(Rsmall),
+            ref(a),
+            ref(category_index),
+            ref(mx_category_index),
+            ref(mx_merge),
+            ref(category_names),
+            ref(rvs[i])));
+    }
+
+    for (thread& th : threads)
+        th.join();
+
+    for (bool rv : rvs){
+        if (rv == false){
+            c_log << "Something went wrong in the Stitched Vamana Index Creation.\n";
+            return false;
+        }
+    }
+
+    c_log << "Stitched Vamana Index Created.\n";
+    return true;
+
 }
