@@ -52,6 +52,54 @@ void test_euclideanDistance(void){
     TEST_MSG("Symmetry check");
 }
 
+void test_simd_euclideanDistance(void){
+
+    float tol = 0.001f; // For result comparison (precision issues)
+
+    // ------------------------------------------------------------------------------------------- Empty values check
+    vector<float> v1;
+    vector<float> v2;
+    try{
+        float res = simd_euclideanDistance(v1,v2);
+        TEST_CHECK(false); // control should not reach here
+    }catch(const invalid_argument& ia) { TEST_CHECK(string(ia.what()) == "Argument Containers are not of 100 or 128 dimensions"); };
+
+    // ------------------------------------------------------------------------------------------- Different dimensions check
+    v1 = {0.23f, 1.01f, 33.0f};
+    v2 = {0.232f, 1.02f};
+    
+    TEST_MSG("Different dimensions check, (3,2)");
+    try{
+        float res = simd_euclideanDistance(v1,v2);
+        TEST_CHECK(false); // control should not reach here
+    }catch(const invalid_argument& ia) { TEST_CHECK(string(ia.what()) == "Dimension Mismatch between Arguments"); };
+
+    // symmetry check
+    try{
+        float res = simd_euclideanDistance(v2,v1);
+        TEST_CHECK(false); // control should not reach here
+    }catch(const invalid_argument& ia) { TEST_CHECK(string(ia.what()) == "Dimension Mismatch between Arguments"); };
+
+    v1.clear();
+    v2.clear();
+    // ------------------------------------------------------------------------------------------- Normal values testing
+
+    vector<float> v128_1(128, 1.0f);
+    vector<float> v128_2(128, 0.0f);
+
+    float expected = 128.0f; // Squared distance expected value
+    tol = 0.001f;     // Define tolerance level
+
+    float result = simd_euclideanDistance(v128_1, v128_2);
+
+    TEST_CHECK(fabs(result - expected) <= tol);
+
+    // ------------------------------------------------------------------------------------------- Symmetry check
+    result = simd_euclideanDistance(v128_2,v128_1);
+    TEST_CHECK(fabs(result - expected) <= tol);
+    TEST_MSG("Symmetry check");
+}
+
 void test_setIn(void){  
 
     unordered_set<int> s;
@@ -237,6 +285,7 @@ void test_permutation(void){
 
 TEST_LIST = {
     { "test_euclideanDistance", test_euclideanDistance },
+    { "test_simd_euclideanDistance", test_simd_euclideanDistance },
     { "test_setIn", test_setIn },
     { "test_mapKeyExists", test_mapKeyExists},
     { "test_setSubtraction", test_setSubtraction },
