@@ -363,6 +363,7 @@ bool DirectedGraph<T>::Rgraph(int R){
     return true;
 }
 
+
 // ------------------------------------------------------------------------------------------------ GREEDY SEARCH
 
 // Greedily searches the graph for the k nearest neighbors of query xq (in an area of size L), starting the search from the node s.
@@ -385,20 +386,85 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(
 
     // Create empty sets
     unordered_set<Id> Lc = {s}, V, diff; // Initialize Lc with s
+
+    int C = 0;
+    int I = 0;
     
     while(!(diff = setSubtraction(Lc,V)).empty()){
         Id pmin = this->_myArgMin(diff, xq);    // pmin is the node with the minimum distance from query xq
 
         // If node has outgoing neighbors
         if (mapKeyExists(pmin, this->Nout)){
+            I++;
             Lc.insert(this->Nout[pmin].begin(), this->Nout[pmin].end());
         }
         V.insert(pmin);
 
         if (Lc.size() > L){
+            C++;
             Lc = _closestN(L, Lc, xq);    // function: find N closest points from a specific xq from given set and return them
         }
     }
+
+    string file_path = (greedySearchMode) ? "./evaluations/greedySearchCountsQuerying.txt"
+                                          : "./evaluations/greedySearchCountsIndex.txt";
+    int greedySearchCount = 0;
+    int total_C = 0;
+    int total_I = 0;
+    int minC = C;
+    int minI = I;
+    int maxC = C;
+    int maxI = I;
+
+    struct stat fileInfo;
+    if (stat(file_path.c_str(), &fileInfo) == 0 && fileInfo.st_size != 0) {
+
+        ifstream file(file_path);
+
+        if (!file.is_open()) {
+            cerr << "Error: could not open " << file_path << endl;
+            // return EXIT_FAILURE;
+        }
+        file >> greedySearchCount;
+        file.ignore();
+
+        file >> total_C;
+        file.ignore();
+
+        file >> total_I;
+        file.ignore();
+
+        file >> minC;
+        file.ignore();
+
+        file >> minI;
+        file.ignore();
+
+        file >> maxC;
+        file.ignore();
+
+        file >> maxI;
+        file.ignore();
+
+        file.close();
+
+    }
+
+    ofstream outFile(file_path, ios::trunc); // Open for writing
+    if (!outFile.is_open()) {
+        cerr << "Error: could not open " << file_path << " for writing." << endl;
+        // return EXIT_FAILURE;
+    }
+
+    outFile << greedySearchCount + 1 << endl;
+    outFile << total_C + C << endl;
+    outFile << total_I + I << endl;
+    outFile << ((minC < C) ? minC : C) << endl;
+    outFile << ((minI < I) ? minI : I) << endl;
+    outFile << ((maxC > C) ? maxC : C) << endl;
+    outFile << ((maxI > I) ? maxI : I) << endl;
+
+    outFile.close();
 
     pair<unordered_set<Id>, unordered_set<Id>> ret;
     

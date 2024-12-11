@@ -5,7 +5,7 @@ SHELL := /bin/bash
 CC = g++
 
 # Compiler Flags
-CFLAGS = -I./include -O3
+CFLAGS = -I./include -O3 -mavx2 -mfma
 
 # Linker Flags
 LDFLAGS = -pthread -lm -std=c++17
