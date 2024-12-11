@@ -4,7 +4,7 @@ using namespace std;
 
 int main (int argc, char* argv[]) {
     
-    // Arguments given are correct, no checking will be made
+    // !!IMPORTANT: Arguments given are correct, no checking will be made
     // program_name data_file data_dim out_file n_reduced queries_file queries_dim groundtruth_path
     
     string data_file = argv[1];
