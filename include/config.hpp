@@ -30,7 +30,7 @@ using namespace std;
 //      (4. Specialized Hash Functions for specific Types) - was used in a previous implementation, commented out
 //
 // For your specified datatype T, you should have the ostream << and istream >> operators overloaded. 
-
+static int greedySearchMode = 0;
 
 // enum for index type
 enum IndexType {
@@ -125,9 +125,9 @@ struct Args{
             if (this->n_queries == -1)  this->n_queries = 100;              // 100
             if (this->n_groundtruths == -1)  this->n_groundtruths = 100;    // 100
 
-            this->data_path = "data/siftsmall/siftsmall_base.fvecs";
-            this->queries_path = "data/siftsmall/siftsmall_query.fvecs";
-            this->groundtruth_path = "data/siftsmall/siftsmall_groundtruth.ivecs";
+            if (this->data_path == "") this->data_path = "data/siftsmall/siftsmall_base.fvecs";
+            if (this->queries_path == "") this->queries_path = "data/siftsmall/siftsmall_query.fvecs";
+            if (this->groundtruth_path == "") this->groundtruth_path = "data/siftsmall/siftsmall_groundtruth.ivecs";
         }
         else if (this->index_type == FILTERED_VAMANA || this->index_type == STITCHED_VAMANA){
 
@@ -137,9 +137,9 @@ struct Args{
             if (this->dim_data == -1) this->dim_data = 102;
             if (this->dim_query == -1) this->dim_query = 104;
 
-            this->data_path = "data/contest-data-release-1m.bin";
-            this->queries_path = "data/contest-queries-release-1m.bin";
-            this->groundtruth_path = "data/contest-groundtruth-custom-1m.txt";
+            if (this->data_path == "") this->data_path = "data/contest-data-release-1m.bin";
+            if (this->queries_path == "") this->queries_path = "data/contest-queries-release-1m.bin";
+            if (this->groundtruth_path == "") this->groundtruth_path = "data/contest-groundtruth-custom-1m.txt";
 
             if (this->index_type == STITCHED_VAMANA) this->R = 64;  // R = Rstitched
         }

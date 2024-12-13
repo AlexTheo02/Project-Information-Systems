@@ -51,6 +51,10 @@ vector<Query<T>> read_queries(void){
     // This function is to be passed in the index evaluation function.
 };
 
+bool endsWith(const string& str, const string& suffix) {
+    return str.size() >= suffix.size() &&
+           str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
 
 // Creates the index on the graph based on the indexing type and return the duration in miliseconds
 template <typename T>
@@ -59,6 +63,7 @@ chrono::milliseconds createIndex(DirectedGraph<T>& DG){
     chrono::high_resolution_clock::time_point startTime, endTime;
 
     vector<vector<float>> data;
+    ifstream data_file(args.data_path);
 
     switch (args.index_type){
         case VAMANA:
@@ -81,9 +86,19 @@ chrono::milliseconds createIndex(DirectedGraph<T>& DG){
             break;
 
         case FILTERED_VAMANA:
+
             // Read data
-            
-            ReadBin(args.data_path, args.dim_data, data);
+            if(endsWith(args.data_path, ".bin")){
+                ReadBin(args.data_path, args.dim_data, data);
+            }else{
+                if(!data_file.is_open()){
+                    cout << "Could not open file\n";
+                    exit(EXIT_FAILURE);
+                }
+
+                data_file >> data;
+                data_file.close();
+            }
 
             // Populate the Graph
             for (const T& value : data){
@@ -104,8 +119,19 @@ chrono::milliseconds createIndex(DirectedGraph<T>& DG){
             break;
 
         case STITCHED_VAMANA:
+
             // Read data
-            ReadBin(args.data_path, args.dim_data, data);
+            if(endsWith(args.data_path, ".bin")){
+                ReadBin(args.data_path, args.dim_data, data);
+            }else{
+                if(!data_file.is_open()){
+                    cout << "Could not open file\n";
+                    exit(EXIT_FAILURE);
+                }
+
+                data_file >> data;
+                data_file.close();
+            }
 
             // Populate the Graph
             for (const T& value : data){
@@ -141,13 +167,18 @@ unordered_set<Id> DirectedGraph<T>::findNeighbors(Query<T> q){
     // Check index_type
     
     if(args.index_type == VAMANA){
+        greedySearchMode = 1;
         queryNeighbors = this->greedySearch(this->medoid(), q.value, args.k, args.L).first;
     }
     else if(args.index_type == FILTERED_VAMANA || args.index_type == STITCHED_VAMANA){                      // in both cases we call filteredGreedySearch
         
         if (q.category != -1){  // filtered query case
-            unordered_set<Id> starting_nodes = (unordered_set<Id>) {findMedoids(args.threshold).at(q.category)}; // because each node belongs to at most one category.
-            queryNeighbors = this->filteredGreedySearch(starting_nodes, q, args.k, args.L).first;
+            greedySearchMode = 1;
+            unordered_map<int, Id> medoids = findMedoids(args.threshold);
+            if(mapKeyExists(q.category, medoids)){
+                unordered_set<Id> starting_nodes = (unordered_set<Id>) {findMedoids(args.threshold).at(q.category)}; // because each node belongs to at most one category.
+                queryNeighbors = this->filteredGreedySearch(starting_nodes, q, args.k, args.L).first;
+            }
         }
         else{   // unfiltered query: get K neighbors of each category and get the closest K of the union of the neighbors of each category
 
@@ -180,6 +211,7 @@ void DirectedGraph<T>::_thread_findQueryNeighbors_fn(vector<Query<T>>& queries, 
         mx_query_index.lock();
     }
     mx_query_index.unlock();
+
 }
 
 // Returns the neighbors of all queries found in the given queries_path file.
@@ -205,7 +237,6 @@ vector<unordered_set<Id>> DirectedGraph<T>::findQueriesNeighbors(function<vector
     for (thread& th : threads)
         th.join();
    
-
     // Return the vector
     return returnVec;
 
