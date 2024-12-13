@@ -85,9 +85,9 @@ run_eval:
 	make
 	$(EX_EVAL)
 
-reducer:
-	$(CC) $(CFLAGS) -c src/reduce_contest_data.cpp -o build/reduce_contest_data.o
-	$(CC) $(CFLAGS) -o bin/reduce_contest_data build/reduce_contest_data.o
+gt: dirs
+	$(CC) $(CFLAGS) -c $(SRC_DIR)/generate_groundtruth.cpp -o $(BUILD_DIR)/generate_groundtruth.o
+	$(CC) $(CFLAGS) -o $(BIN_DIR)/generate_groundtruth $(BUILD_DIR)/generate_groundtruth.o
 
 
 # Rules to build the executables

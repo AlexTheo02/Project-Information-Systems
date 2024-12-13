@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
     timeinfo = localtime(&time_now);
 
     cout << "Starting index evaluation on "<< asctime(timeinfo); // https://cplusplus.com/reference/ctime/localtime/, https://cplusplus.com/reference/ctime/time/
-    pair<float, chrono::milliseconds> results = evaluateIndex<vector<float>>(ref(DG), (args.index_type == VAMANA) ? read_queries_vecs<vector<float>> : read_queries_bin_contest<vector<float>>);
+    pair<float, chrono::milliseconds> results = evaluateIndex<vector<float>>(ref(DG), (args.index_type == VAMANA && !endsWith(args.queries_path, ".bin")) ? read_queries_vecs<vector<float>> : read_queries_bin_contest<vector<float>>);
 
     // print recall and duration
     cout << "Evaluation Finished." << endl;

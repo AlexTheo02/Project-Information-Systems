@@ -387,8 +387,8 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(
     // Create empty sets
     unordered_set<Id> Lc = {s}, V, diff; // Initialize Lc with s
 
-    int C = 0;
-    int I = 0;
+    C = 0;
+    I = 0;
     
     while(!(diff = setSubtraction(Lc,V)).empty()){
         Id pmin = this->_myArgMin(diff, xq);    // pmin is the node with the minimum distance from query xq
@@ -406,65 +406,23 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(
         }
     }
 
-    string file_path = (greedySearchMode) ? "./evaluations/greedySearchCountsQuerying.txt"
-                                          : "./evaluations/greedySearchCountsIndex.txt";
-    int greedySearchCount = 0;
-    int total_C = 0;
-    int total_I = 0;
-    int minC = C;
-    int minI = I;
-    int maxC = C;
-    int maxI = I;
+    string file_path = (greedySearchMode) ? "./evaluations/greedySearchQueryStats.txt"
+                                          : "./evaluations/greedySearchIndexStats.txt";
 
-    struct stat fileInfo;
-    if (stat(file_path.c_str(), &fileInfo) == 0 && fileInfo.st_size != 0) {
-
-        ifstream file(file_path);
-
-        if (!file.is_open()) {
-            cerr << "Error: could not open " << file_path << endl;
-            // return EXIT_FAILURE;
-        }
-        file >> greedySearchCount;
-        file.ignore();
-
-        file >> total_C;
-        file.ignore();
-
-        file >> total_I;
-        file.ignore();
-
-        file >> minC;
-        file.ignore();
-
-        file >> minI;
-        file.ignore();
-
-        file >> maxC;
-        file.ignore();
-
-        file >> maxI;
-        file.ignore();
-
-        file.close();
-
-    }
-
-    ofstream outFile(file_path, ios::trunc); // Open for writing
+    ofstream outFile;
+    greedySearchCount ? outFile.open(file_path, ios::app) : outFile.open(file_path, ios::trunc); // Open for writing
     if (!outFile.is_open()) {
         cerr << "Error: could not open " << file_path << " for writing." << endl;
         // return EXIT_FAILURE;
     }
-
-    outFile << greedySearchCount + 1 << endl;
-    outFile << total_C + C << endl;
-    outFile << total_I + I << endl;
-    outFile << ((minC < C) ? minC : C) << endl;
-    outFile << ((minI < I) ? minI : I) << endl;
-    outFile << ((maxC > C) ? maxC : C) << endl;
-    outFile << ((maxI > I) ? maxI : I) << endl;
+    if (greedySearchCount == 0){
+        outFile << "greedySearchCount" << "," << "C" << "," << "I" << endl;
+    }
+    outFile << greedySearchCount << "," << C << "," << I << endl;
 
     outFile.close();
+
+    greedySearchCount ++;
 
     pair<unordered_set<Id>, unordered_set<Id>> ret;
     

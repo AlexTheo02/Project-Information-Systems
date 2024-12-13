@@ -80,7 +80,6 @@ float parallel_euclideanDistance(const T& t1, const T& t2) {
     return sum;
 }
 
-
 // calculates the euclidean distance between two containers of the same dimension that its elements can be accessed with the [ ] operator.
 template <typename T>
 float euclideanDistance(const T& t1, const T& t2){
@@ -107,7 +106,7 @@ float euclideanDistance(const T& t1, const T& t2){
 float simd_euclideanDistance(const vector<float>& t1, const vector<float>& t2){
 
     int dim = t1.size();
-
+    
     if (dim != t2.size()){ throw invalid_argument("Dimension Mismatch between Arguments"); }
     if (dim != 100 && dim != 128){ throw invalid_argument("Argument Containers are not of 100 or 128 dimensions"); }
 
