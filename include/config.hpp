@@ -51,7 +51,7 @@ struct Args{
     int L = -1;
     int R = -1;
     float a = -1;
-    int n_threads = -1;             // parallel functions (DirectedGraph::medoid uses threads if available)
+    int n_threads = -1;             // parallel functions [LIST OF FUNCTIONS THAT CAN BE PARALLELIZED TODO] <------------------------------- TODO 
     float threshold = -1;
     bool debug_mode = false;        // c_log follows this flag (see c_log documentation for more)
     int Lsmall = -1;
@@ -68,6 +68,13 @@ struct Args{
     string groundtruth_path = "";
     bool createIndex = false;           // flag whether to create new vamana index using the vamana algorithm
 
+    // arguments regarding optimization
+    int euclideanType = 0;      // 0 - normal euclidean, 1 - simd euclidean, 2 - parallel euclidean
+    bool randomStart = false;   // false = medoid, true = random sample
+    bool usePQueue = false;     // false = Lc is set O(1) insertion, & use closestN O(N), true = Lc is a Pqueue, closest N is optimized but insertion is O(logL)
+    bool useRGraph = true;      // true = Use Rgraph in Vamana, false = skip Random Initialization.
+    int extraRandomEdges = 0;     // <=0 = don't add extra random edges <after index creation>, >0 = add them (after index creation because index creation assumes unique subgraphs)
+
     Args(){};   // default constructor - empty (values are loaded with Args::parseArgs method)
 
     void parseArgs(int argc, char* argv[]){
@@ -82,7 +89,6 @@ struct Args{
             else if (currentArg == "-L")                { this->L = atoi(argv[++i]); }
             else if (currentArg == "-R")                { this->R = atoi(argv[++i]); }
             else if (currentArg == "-a")                { this->a = atof(argv[++i]); }
-            else if (currentArg == "-n_threads")        { this->n_threads = atoi(argv[++i]); }
             else if (currentArg == "-t")                { this->threshold = atof(argv[++i]); }
             else if (currentArg == "--debug")           { this->debug_mode = true; }
             else if (currentArg == "-Ls")               { this->Lsmall = atoi(argv[++i]); }
@@ -104,7 +110,15 @@ struct Args{
             else if (currentArg == "--filtered")        { this->index_type = FILTERED_VAMANA; }
             else if (currentArg == "--stitched")        { this->index_type = STITCHED_VAMANA; }
 
-            else if (currentArg == "--create")         { this->createIndex = true; }
+            else if (currentArg == "--create")          { this->createIndex = true; }
+
+            // optimizations
+            else if (currentArg == "-n_threads")        { this->n_threads = atoi(argv[++i]); }
+            else if (currentArg == "--randomStart")     { this->randomStart = true; }
+            else if (currentArg == "-distance")         { this->euclideanType = atoi(argv[++i]); }
+            else if (currentArg == "--pqueue")          { this->usePQueue = true; }
+            else if (currentArg == "--no_rgraph")       { this->useRGraph = false; }
+            else if (currentArg == "-extra_edges")      { this->extraRandomEdges = atoi(argv[++i]); }
 
             else { throw invalid_argument("Invalid command line arguments"); }
         }
@@ -114,7 +128,7 @@ struct Args{
         if (this->L == -1)          this->L = 100;
         if (this->R == -1)          this->R = 14;
         if (this->a == -1)          this->a = 1.0f;
-        if (this->n_threads == -1)  this->n_threads = 8;
+        if (this->n_threads == -1)  this->n_threads = 1;
         if (this->threshold == -1)  this->threshold = 0.5f;
         if (this->Lsmall == -1)     this->Lsmall = 100;
         if (this->Rsmall == -1)     this->Rsmall = 32;

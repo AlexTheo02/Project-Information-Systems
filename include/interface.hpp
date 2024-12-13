@@ -170,15 +170,13 @@ unordered_set<Id> DirectedGraph<T>::findNeighbors(Query<T> q){
     
     // Check index_type
     if(args.index_type == VAMANA){
-        queryNeighbors = this->greedySearch(this->medoid(), q.value, args.k, args.L).first;
+        queryNeighbors = this->greedySearch(this->startingNode(), q.value, args.k, args.L).first;
     }
     else if(args.index_type == FILTERED_VAMANA || args.index_type == STITCHED_VAMANA){                      // in both cases we call filteredGreedySearch
         if (q.category != -1){  // filtered query case
             unordered_map<int, Id> medoids = findMedoids(args.threshold);
             if(mapKeyExists(q.category, medoids)){
-                unordered_set<Id> starting_nodes = (unordered_set<Id>) {medoids.at(q.category)}; // because each node belongs to at most one category.
-                queryNeighbors = this->filteredGreedySearch(starting_nodes, q, args.k, args.L).first;
-
+                queryNeighbors = this->filteredGreedySearch(this->startingNode(q.category), q, args.k, args.L).first;
             }
         }
         else{   // unfiltered query: get K neighbors of each category and get the closest K of the union of the neighbors of each category

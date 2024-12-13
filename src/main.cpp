@@ -1,14 +1,32 @@
 #include "interface.hpp"
 using namespace std;
 
+DirectedGraph<vector<float>>* DGptr = nullptr;
+
 int main(int argc, char* argv[]) {
 
     args.parseArgs(argc,argv);
 
     args.printArgs();
 
-    // all data points in our datasets are vector<float> so the graph is initialized the same for all cases (euclidean distance and vector empty)
-    DirectedGraph<vector<float>> DG(simd_euclideanDistance, vectorEmpty<float>);
+    int placeholder_arg = 0;
+
+
+    // choose distance function depending on the argument
+    if (args.euclideanType == 0){
+        DGptr = new DirectedGraph<vector<float>>(euclideanDistance<vector<float>>, vectorEmpty<float>);
+    }
+    else if (args.euclideanType == 1){
+        DGptr = new DirectedGraph<vector<float>>(simd_euclideanDistance, vectorEmpty<float>);
+    }
+    else if (args.euclideanType == 2){
+        DGptr = new DirectedGraph<vector<float>>(parallel_euclideanDistance<vector<float>>, vectorEmpty<float>);
+    }
+    else { throw invalid_argument("distance must be in {0,1,2}. | 0 - euclidean, 1 - simd_euclidean, 2 - parallel euclidean"); }
+    
+    // dereferencing the pointer (functions were built expecting a reference and not a pointer. Changing them would be too much unnecessary work)
+    DirectedGraph<vector<float>> DG = *DGptr;
+
     
     // Create the indexed graph if instructed from command line arguments, based on indexing type
     chrono::milliseconds duration; 

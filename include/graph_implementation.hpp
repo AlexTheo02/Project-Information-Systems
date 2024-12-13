@@ -347,7 +347,7 @@ bool DirectedGraph<T>::Rgraph(int R){
     if (R == 0){ c_log << "WARNING: R is set to 0 and therefore all nodes in the graph are cleared.\n"; }
     
     // clear all edges in the graph to create an R random graph anew.
-    if (!this->clearEdges())
+    if (!this->clearEdges())        // argument here, so this function can be used as the add extra edges function
         return false;
 
     c_log << "Rgraph edges cleared" << '\n';
