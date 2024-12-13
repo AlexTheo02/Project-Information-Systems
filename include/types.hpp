@@ -187,6 +187,9 @@ class DirectedGraph{
         // Calculates the medoid of the nodes in the graph based on the given distance function
         const Id medoid(optional<vector<Node<T>>> nodes_arg = nullopt, optional<bool> update_stored = nullopt);
 
+        // Returns a starting node for the Greedy Search and Filtered Greedy Search Algorithm. Random point or medoid, as specified in args.
+        const Id startingNode(optional<int> category = nullopt);
+
         // calculates the Filtered Medoids
         const unordered_map<int, Id> findMedoids(float threshold);
 
@@ -210,7 +213,7 @@ class DirectedGraph{
         const pair<unordered_set<Id>, unordered_set<Id>> greedySearch(Id s, T xq, int k, int L);
 
         // Returns a set with the k closest neighbors (returned.first) and a set of all visited nodes (returned.second).
-        const pair<unordered_set<Id>, unordered_set<Id>> filteredGreedySearch(unordered_set<Id>& S, Query<T> q, int k, int L);
+        const pair<unordered_set<Id>, unordered_set<Id>> filteredGreedySearch(Id s, Query<T> q, int k, int L);
 
         // Prunes out-neighbors of node p up until a minimum threshold R of out-neighbors for node p, based on distance criteria with parameter a.
         void robustPrune(Id p, unordered_set<Id> V, float a, int R);
@@ -232,9 +235,6 @@ class DirectedGraph{
         // Performs the stitched vamana algorithm to create the filtered index
         bool stitchedVamanaAlgorithm(int Lstitched, int Rstitched, int Lsmall, int Rsmall, float a);
 
-        // Performs the stitched vamana algorithm to create the filtered index
-        bool optimizedStitchedVamanaAlgorithm(int Lstitched, int Rstitched, int Lsmall, int Rsmall, float a);
-
         // Stores the current state of a graph into the specified file.
         // IMPORTANT: makes use of overloaded << operator to store the graph into a file.
         void store(const string& filename) const;
@@ -253,5 +253,11 @@ class DirectedGraph{
         // Returns the neighbors of all queries found in the given queries_path file.
         // If the file is .vecs format read_arg corresponds to the number of queries and, if the file is in .bin format, it corresponds to the dimension of the query vector
         vector<unordered_set<Id>> findQueriesNeighbors(function<vector<Query<T>>(void)> readQueries);
+
+
+        // optimizations
+
+        // adds args.extraRandomEdges extra random edges to the index. Call only after calling vamana.
+        void addExtraRandomEdges(); // - can be made parallel - as R graph - maybe modify Rgraph to initialize the graph initially
 
 };

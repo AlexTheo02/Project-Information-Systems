@@ -59,16 +59,16 @@ unordered_set<Id> DirectedGraph<T>::filterSet(unordered_set<Id> S, int filter){
 }
 
 template <typename T>
-const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::filteredGreedySearch(unordered_set<Id>& S, Query<T> q, int k, int L){
+const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::filteredGreedySearch(Id s, Query<T> q, int k, int L){
 
     c_log << "Filtered Greedy Search\n";
 
     // Argument checks
 
     // No filters are present, perform unfiltered greedy search
-    if (q.empty()) { return this->greedySearch(this->medoid(), q.value, k, L); }
+    if (q.empty()) { return this->greedySearch(this->startingNode(), q.value, k, L); }
 
-    if (S.empty()){ throw invalid_argument("No start node was provided.\n"); }
+    if (s == 0){ throw invalid_argument("No start node was provided.\n"); }
 
     if (k < 0){ throw invalid_argument("K must be greater than or equal to 0.\n"); }
 
@@ -80,15 +80,13 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::filteredGreed
     unordered_set<Id> Lc, V, diff;
     Node<T> sNode;
 
-    for (Id s : S){
-        // Get node using id from S
-        sNode = this->nodes[s];
-        
-        // Category match
-        if (sNode.category == q.category) {
-            I++;
-            Lc.insert(s);
-        }
+    // Get node using id from s
+    sNode = this->nodes[s];
+    
+    // Category match
+    if (sNode.category == q.category) {
+        I++;
+        Lc.insert(s);
     }
 
     while (!(diff = setSubtraction(Lc,V)).empty()){
@@ -237,17 +235,18 @@ bool DirectedGraph<T>::filteredVamanaAlgorithm(int L, int R, float a, float t){
         return false;
 
     // what is a good value of T for filteredMedoids?
-    unordered_map<int, Id> st = this->findMedoids(t);  // paper says starting points should be the medoids found in [algorithm 2]
     vector<Node<T>> perm = permutation(this->nodes);
     
 
     for (Node<T>& si : perm){
-        unordered_set<Id> starting_nodes_i = (unordered_set<Id>) {st[si.category]};   // because each node belongs to at most one category.
+        // Id starting_node_i = this->startingNode(); // st[si.category];   // because each node belongs to at most one category.
+        // unordered_map<int, Id> st = this->findMedoids(t);  // paper says starting points should be the medoids found in [algorithm 2]
+        
 
         // create query with si value to pass to filteredGreedySearch
         Query<T> q(si.id, si.category, true, si.value, this->isEmpty);
 
-        unordered_set<Id> Vi = this->filteredGreedySearch(starting_nodes_i, q, 0, L).second;
+        unordered_set<Id> Vi = this->filteredGreedySearch(this->startingNode(q.category), q, 0, L).second;
 
         filteredRobustPrune(si.id, Vi, a, R);
 
@@ -449,4 +448,22 @@ bool DirectedGraph<T>::_parallel_stitchedVamana(int Lstitched, int Rstitched, in
     c_log << "Stitched Vamana Index Created.\n";
     return true;
 
+}
+
+template <typename T>
+const Id DirectedGraph<T>::startingNode(optional<int> category){
+    
+    int arg_placeholder_random1_or_medoid0 = 0;
+
+    if (category == nullopt){  // category doesn't matter. Medoid or Sample from all nodes in graph
+        if (args.randomStart) return sampleFromContainer(this->nodes).id;
+        else return this->medoid();
+    }
+    else{   // category matters. Specific Category Medoid or Sample from specific category
+
+        if (!mapKeyExists(category.value(), this->categories)) { throw invalid_argument("Category not found. No nodes of that category exist in the graph."); }
+
+        if (args.randomStart) return sampleFromContainer(this->categories[category.value()]);
+        else return this->findMedoids(args.threshold).at(category.value());
+    }
 }

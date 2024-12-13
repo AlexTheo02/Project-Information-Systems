@@ -80,57 +80,6 @@ float parallel_euclideanDistance(const T& t1, const T& t2) {
     return sum;
 }
 
-// euclidean distance leveraging SIMD parallelism using 256bit registers, specifically for float vectors of dimension 100 or 128 (exactly).
-float simd_euclideanDistance(const vector<float>& t1, const vector<float>& t2){
-
-    int dim = t1.size();
-
-    if (dim != t2.size()){ throw invalid_argument("Dimension Mismatch between Arguments"); }
-    if (dim != 100 && dim != 128){ throw invalid_argument("Argument Containers are not of 100 or 128 dimensions"); }
-
-    __m256 sum = _mm256_setzero_ps();   // initialize a 256-bit register to zero value
-
-    if (dim == 128){
-        for (int i = 0; i < 128; i += 8){  // Change to backward loop
-            // std::vector stores data sequentially, but it is not guaranteed that the memory is aligned in 32-bit segments. Therefore we can leverage pointer memory access, but in an unaligned fashion (loadu)
-            __m256 vec1 = _mm256_loadu_ps(&t1[i]);   // load (unaligned) packed single precision (= float) value into a 256-bit register
-            __m256 vec2 = _mm256_loadu_ps(&t2[i]);   // load (unaligned) packed single precision (= float) value into a 256-bit register
-            __m256 diff = _mm256_sub_ps(vec1, vec2); // subtract values using 256-bit register operations
-            sum = _mm256_fmadd_ps(diff, diff, sum);  // fused multiply-add operation: multiply diff*diff and add with sum. returns sum = diff*diff + sum
-        }
-        float results[8];
-        _mm256_storeu_ps(results, sum); // store the results of the 256-register to 8 float variables.
-
-        return results[0] + results[1] + results[2] + results[3] + results[4] + results[5] + results[6] + results[7];   // sum up the values and return
-    }
-
-    // Case dim == 100
-
-    for (int i = 0; i < 96; i += 8){ 
-        // std::vector stores data sequentially, but it is not guaranteed that the memory is aligned in 32-bit segments. Therefore we can leverage pointer memory access, but in an unaligned fashion (loadu)
-        __m256 vec1 = _mm256_loadu_ps(&t1[i]);   // load (unaligned) packed single precision (= float) value into a 256-bit register
-        __m256 vec2 = _mm256_loadu_ps(&t2[i]);   // load (unaligned) packed single precision (= float) value into a 256-bit register
-        __m256 diff = _mm256_sub_ps(vec1, vec2); // subtract values using 256-bit register operations
-        sum = _mm256_fmadd_ps(diff, diff, sum);  // fused multiply-add operation: multiply diff*diff and add with sum. returns diff*diff + sum
-    }
-    float results[8], result;
-    _mm256_storeu_ps(results, sum); // store the results of the 256-register to 8 float variables.
-
-    result = results[0] + results[1] + results[2] + results[3] + results[4] + results[5] + results[6] + results[7];   // sum up the values and return
-
-    // handle remaining 4 values using an 128-bit register
-    __m128 rem1 = _mm_loadu_ps(&t1[96]);
-    __m128 rem2 = _mm_loadu_ps(&t2[96]);
-    __m128 diff_rem = _mm_sub_ps(rem1, rem2);
-    __m128 sq_diff_rem = _mm_mul_ps(diff_rem, diff_rem);
-    float result_rem[4];
-    _mm_store_ps(result_rem, sq_diff_rem);
-    
-    return result + result_rem[0] + result_rem[1] + result_rem[2] + result_rem[3];
-}
-
-
-
 
 // calculates the euclidean distance between two containers of the same dimension that its elements can be accessed with the [ ] operator.
 template <typename T>

@@ -40,14 +40,17 @@ void benchmark_euclidean(function<float(T,T)> d ,vector<T> vectors){
 // index creation (stitched Vamana) is serial (is parallel AN TO KANOUME PROTA)
 
 // 1. medoids -> random points : metrics: index creation time, recall_score
-// 2. parallel index creation (stitched Vamana - study paper if applicable for FilteredVamana) - MUST
+// 2. parallel index creation (stitched Vamana - study paper if applicable for FilteredVamana) - MUST -------------- TODO FILTERED VAMANA
 // 3. parallel querying (exoume idi)
 // 4. parallel euclidean - MUST (simd)
-// 5. hold a map of size T (window) LRU/MRU replacement policy - benefit or just extra space?
+// 5. hold a map of size T (window) LRU/MRU replacement policy - benefit or just extra space? NOT.
 // 6. ClosestK na dokimasoume to Lc pou tis pernietai san orisma na einai priority Queue (logn insertion time, O(K) return - linear)
 //     posa insertions VS return/partial_sort with nth_element - linear anti nlogn
 //     an pano apo K insertions nomizo useless optimization
-// 
+
+// 7. Is RGraph useless? If not, RGraph -> parallel with threads - map[out] = {outneighbors} -> no mutex required - 1 thread for each edge (exclusivity) | add_edge increments the edgecount => solution partial counts and replace final edgecount with the sum of the partials N*R ? (close)
+// 8. Rgraph for filtered?  random edges between independent subgraphs
+// OR post-processing (after index creation), add additional random edges.
 
 
 
