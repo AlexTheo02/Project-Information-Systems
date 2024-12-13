@@ -6,28 +6,25 @@ void test_filteredGreedySearch(){
 
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
 
-
-    unordered_set<Id> invalidSet, validSet{1,2,3};
-    unordered_set<Id> singleSet{1};
     Id invalidId, validId = 1;
     vector<float> validVector{1,2,3};
     Query<vector<float>> validQuery(validId,1,true,validVector,vectorEmpty<float>);
     Query<vector<float>> invalidQuery;
 
-    // Uninitialized set
+    // Uninitialized or error-Id
     try {
-        pair<unordered_set<Id>, unordered_set<Id>> ret = DG.filteredGreedySearch(invalidSet, validQuery, 4, 5);
+        pair<unordered_set<Id>, unordered_set<Id>> ret = DG.filteredGreedySearch(invalidId, validQuery, 4, 5);
     }catch(invalid_argument& ia) { TEST_CHECK(string(ia.what()) == "No start node was provided.\n"); }
 
     // if k <= 0
     try{
-        pair<unordered_set<Id>, unordered_set<Id>> ret = DG.filteredGreedySearch(validSet, validQuery, -1, 5);
+        pair<unordered_set<Id>, unordered_set<Id>> ret = DG.filteredGreedySearch(validId, validQuery, -1, 5);
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "K must be greater than or equal to 0.\n"); }
 
     // if L < k
     try{
-        pair<unordered_set<Id>, unordered_set<Id>> ret = DG.filteredGreedySearch(validSet, validQuery, 2, 1);
+        pair<unordered_set<Id>, unordered_set<Id>> ret = DG.filteredGreedySearch(validId, validQuery, 2, 1);
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "L must be greater or equal to K.\n"); }
 

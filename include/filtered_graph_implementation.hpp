@@ -68,7 +68,7 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::filteredGreed
     // No filters are present, perform unfiltered greedy search
     if (q.empty()) { return this->greedySearch(this->startingNode(), q.value, k, L); }
 
-    if (s == 0){ throw invalid_argument("No start node was provided.\n"); }
+    if (s == -1){ throw invalid_argument("No start node was provided.\n"); }
 
     if (k < 0){ throw invalid_argument("K must be greater than or equal to 0.\n"); }
 
