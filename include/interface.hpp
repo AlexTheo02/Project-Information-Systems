@@ -68,7 +68,12 @@ chrono::milliseconds createIndex(DirectedGraph<T>& DG){
     switch (args.index_type){
         case VAMANA:
             // Read base vectors file
-            data = read_vecs<float>(args.data_path, args.n_data);
+            if(endsWith(args.data_path, ".bin")){
+                ReadBin(args.data_path, args.dim_data, data);
+            }
+            else{
+                data = read_vecs<float>(args.data_path, args.n_data);
+            }
 
             // Populate the Graph
             for (auto& v : data){
@@ -160,24 +165,20 @@ chrono::milliseconds createIndex(DirectedGraph<T>& DG){
 // Based on the qiven vector, the function returns the query's neighbors
 template <typename T>
 unordered_set<Id> DirectedGraph<T>::findNeighbors(Query<T> q){
-
     // Set for storing the query's neighbors
     unordered_set<Id> queryNeighbors;
     
     // Check index_type
-    
     if(args.index_type == VAMANA){
-        greedySearchMode = 1;
         queryNeighbors = this->greedySearch(this->medoid(), q.value, args.k, args.L).first;
     }
     else if(args.index_type == FILTERED_VAMANA || args.index_type == STITCHED_VAMANA){                      // in both cases we call filteredGreedySearch
-        
         if (q.category != -1){  // filtered query case
-            greedySearchMode = 1;
             unordered_map<int, Id> medoids = findMedoids(args.threshold);
             if(mapKeyExists(q.category, medoids)){
-                unordered_set<Id> starting_nodes = (unordered_set<Id>) {findMedoids(args.threshold).at(q.category)}; // because each node belongs to at most one category.
+                unordered_set<Id> starting_nodes = (unordered_set<Id>) {medoids.at(q.category)}; // because each node belongs to at most one category.
                 queryNeighbors = this->filteredGreedySearch(starting_nodes, q, args.k, args.L).first;
+
             }
         }
         else{   // unfiltered query: get K neighbors of each category and get the closest K of the union of the neighbors of each category
@@ -192,7 +193,6 @@ unordered_set<Id> DirectedGraph<T>::findNeighbors(Query<T> q){
         }
     }
     
-
     // Return the set containing the query's neighbors
     return queryNeighbors;
 }
@@ -200,7 +200,6 @@ unordered_set<Id> DirectedGraph<T>::findNeighbors(Query<T> q){
 // Thread function for parallel querying.
 template <typename T>
 void DirectedGraph<T>::_thread_findQueryNeighbors_fn(vector<Query<T>>& queries, mutex& mx_query_index, int& query_index, vector<unordered_set<Id>>& returnVec){
-
     mx_query_index.lock();
     while(query_index < queries.size()){
         int my_q_index = query_index++;     // store current and increment
@@ -211,7 +210,6 @@ void DirectedGraph<T>::_thread_findQueryNeighbors_fn(vector<Query<T>>& queries, 
         mx_query_index.lock();
     }
     mx_query_index.unlock();
-
 }
 
 // Returns the neighbors of all queries found in the given queries_path file.
@@ -232,7 +230,7 @@ vector<unordered_set<Id>> DirectedGraph<T>::findQueriesNeighbors(function<vector
     for (int i = 0; i < args.n_threads; i++){
         threads.push_back(thread(&DirectedGraph::_thread_findQueryNeighbors_fn, this, ref(queries), ref(mx_query_index), ref(query_index), ref(returnVec)));
     }
-
+    
     // collect the threads
     for (thread& th : threads)
         th.join();
@@ -249,11 +247,14 @@ pair<float, chrono::milliseconds> evaluateIndex(DirectedGraph<T>& DG, function<v
     chrono::milliseconds duration = (chrono::milliseconds) 0;
     chrono::high_resolution_clock::time_point startTime, endTime;
 
+    greedySearchCount = 0;
+    greedySearchMode = 1;
+
     vector<vector<Id>> groundtruth;
     // If the groundtruth path is given, then read the specified file
     if(args.groundtruth_path != ""){
 
-        if(args.index_type == VAMANA)
+        if(args.index_type == VAMANA && !endsWith(args.groundtruth_path, ".txt"))
             groundtruth = read_vecs<Id>(args.groundtruth_path, args.n_groundtruths);
         else{
             // Open the file and read its contents
