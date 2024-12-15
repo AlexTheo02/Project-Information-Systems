@@ -174,20 +174,22 @@ unordered_set<Id> DirectedGraph<T>::findNeighbors(Query<T> q){
     }
     else if(args.index_type == FILTERED_VAMANA || args.index_type == STITCHED_VAMANA){                      // in both cases we call filteredGreedySearch
         if (q.category != -1){  // filtered query case
-            unordered_map<int, Id> medoids = findMedoids(args.threshold);
-            if(mapKeyExists(q.category, medoids)){
-                queryNeighbors = this->filteredGreedySearch(this->startingNode(q.category), q, args.k, args.L).first;
-            }
+            queryNeighbors = this->filteredGreedySearch(this->startingNode(q.category), q, args.k, args.L).first;
         }
         else{   // unfiltered query: get K neighbors of each category and get the closest K of the union of the neighbors of each category
 
-            for (pair<int, unordered_set<Id>> cpair : this->categories){                    // unfiltered query => find K neighbors in all categories
-                unordered_set<Id> queryNeighbors_f;                                         // and take the best K of all n_categories*K neighbor candidates
-                q.category = cpair.first;                                                   // update the category of the query
-                queryNeighbors_f = findNeighbors(q);                             // find the neighbors of that category
-                queryNeighbors.insert(queryNeighbors_f.begin(), queryNeighbors_f.end());    // insert them in the neighbor-candidate set
+            if (!args.accumulateUnfiltered){
+                queryNeighbors = this->filteredGreedySearch(this->startingNode(), q, args.k, args.L).first; // CONSIDER OPTIMIZATIONS FOR UNFILTERED QUERIES STARTING NODE - TODO
             }
-            queryNeighbors = this->_closestN(args.k, queryNeighbors, q.value);         // keep the closest K neighbors of all neighbor candidates
+            else {  // costs |C| * findNeighbors + O(|C|*100) (nth element)
+                for (pair<int, unordered_set<Id>> cpair : this->categories){                    // unfiltered query => find K neighbors in all categories
+                    unordered_set<Id> queryNeighbors_f;                                         // and take the best K of all n_categories*K neighbor candidates
+                    q.category = cpair.first;                                                   // update the category of the query
+                    queryNeighbors_f = findNeighbors(q);                             // find the neighbors of that category
+                    queryNeighbors.insert(queryNeighbors_f.begin(), queryNeighbors_f.end());    // insert them in the neighbor-candidate set
+                }
+                queryNeighbors = this->_closestN(args.k, queryNeighbors, q.value);         // keep the closest K neighbors of all neighbor candidates
+            }
         }
     }
     
@@ -223,6 +225,10 @@ vector<unordered_set<Id>> DirectedGraph<T>::findQueriesNeighbors(function<vector
     vector<thread> threads;
     mutex mx_query_index;
     int query_index = 0;
+
+    if (args.index_type == FILTERED_VAMANA || STITCHED_VAMANA && !args.randomStart){
+        this->findMedoids(args.threshold);    // compute the medoids to ensure the dictionary is complete and won't be resized/rehashed, invalidating any references of other threads.
+    }
 
     // load and launch threads.
     for (int i = 0; i < args.n_threads; i++){

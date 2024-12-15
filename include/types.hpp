@@ -139,6 +139,12 @@ class DirectedGraph{
         // Thread function for parallel querying.
         void _thread_findQueryNeighbors_fn(vector<Query<T>>& queries, mutex& mx_query_index, int& query_index, vector<unordered_set<Id>>& returnVec);
 
+        bool _serial_Rgraph(int R);
+
+        bool _parallel_Rgraph(int R);
+
+        void _thread_Rgraph_fn(int& R, int& node_index, mutex& mx_index, char& rv);
+
         bool _serial_filteredVamana(int L, int  R, float a, float t, vector<Id>& perm);
 
         bool _parallel_filteredVamana(int L, int  R, float a, float t, vector<pair<int, vector<Id>>>& sorted_categories);

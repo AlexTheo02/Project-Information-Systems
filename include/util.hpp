@@ -166,9 +166,11 @@ bool mapKeyExists(const T1& key, const unordered_map<T1, T2>& map){
 // Subtract set2 from set1. Returns a new set.
 template <typename T>
 unordered_set<T> setSubtraction(const unordered_set<T>& set1, const unordered_set<T>& set2){
+
     unordered_set<T> result = set1;
 
     for (auto& elem : set2){
+        
         result.erase(elem);
     }
     return result;
@@ -322,7 +324,7 @@ void ReadBin(const std::string &file_path,
     data[counter++] = std::move(row);
   }
   ifs.close();
-  std::cout << "Finish Reading Data" << endl;
+  std::cout << "Finished Reading Data" << endl;
 }
 
 // prints a vector
