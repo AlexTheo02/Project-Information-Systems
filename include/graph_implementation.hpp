@@ -348,10 +348,23 @@ bool DirectedGraph<T>::Rgraph(int R){
     if (R == 0){ c_log << "WARNING: R is set to 0 and therefore all nodes in the graph are cleared.\n"; }
     
     // clear all edges in the graph to create an R random graph anew.
-    if (!this->clearEdges())        // argument here, so this function can be used as the add extra edges function
+    if (!args.extraRandomEdges && !this->clearEdges())        // argument here, so this function can be used as the add extra edges function
         return false;
 
     c_log << "Rgraph edges cleared" << '\n';
+
+    if (args.n_threads == 1){
+
+        return _serial_Rgraph(R);
+    }else{
+
+        return _parallel_Rgraph(R);
+    }
+
+}
+
+template<typename T>
+bool DirectedGraph<T>::_serial_Rgraph(int R){
 
     for (Node<T>& n : this->nodes){            // for each node
         for (int i = 0; i < R; i++){    // repeat R times: sample from set and add until valid
@@ -362,6 +375,80 @@ bool DirectedGraph<T>::Rgraph(int R){
         }
     }
     return true;
+}
+
+template<typename T>
+bool DirectedGraph<T>::_parallel_Rgraph(int R){
+    int node_index = 0;
+    mutex mx_index;
+
+    vector<thread> threads;
+
+    vector<char> rvs;   // return values of threads - actually bool type
+
+    // this->Nout.reserve(this->n_nodes);
+
+    for (int i = 0; i < args.n_threads; i++){
+        rvs.push_back(true);
+
+        threads.push_back(thread(
+            &DirectedGraph::_thread_Rgraph_fn,
+            this,
+            ref(R),
+            ref(node_index),
+            ref(mx_index),
+            ref(rvs[i])));
+    }
+
+    for (thread& th : threads)
+        th.join();
+
+
+    for (bool rv : rvs){
+        if (rv == false){
+            c_log << "Something went wrong in the Rgraph thread function.\n";
+            return false;
+        }
+    }
+
+    cout << "Rgraph completed.\n";
+    return true;
+
+}
+
+template<typename T>
+void DirectedGraph<T>::_thread_Rgraph_fn(int& R, int& node_index, mutex& mx_index, char& rv){
+
+    mx_index.lock();
+    while(node_index < this->n_nodes){
+        int my_index = node_index++;
+        mx_index.unlock();
+        
+
+        Node<T>& n = this->nodes[my_index];
+        for (int i = 0; i < R; i++){    // repeat R times: sample from set and add until valid
+            Node<T> nr;
+            int num_loops = 0; // timeout after sampling 2 * n_nodes
+            bool should_continue;
+            do{
+                nr = sampleFromContainer(this->nodes);
+                mx_index.lock();
+                should_continue = this->addEdge(n.id, nr.id);
+                mx_index.unlock();
+                num_loops++;
+            }while(!should_continue && num_loops < 2*this->n_nodes); // addEdge fails when: 1. n == nr, 2. edge(n,nr) already exists
+            if(num_loops >= 2 * this->n_nodes){
+                c_log << "WARNING: Rgraph sampling has timed out\n";
+                rv = false;
+
+            } 
+        }
+        mx_index.lock();
+    }
+    mx_index.unlock();
+
+    rv = true;
+
 }
 
 
@@ -392,6 +479,7 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(
     I = 0;
     
     while(!(diff = setSubtraction(Lc,V)).empty()){
+        
         Id pmin = this->_myArgMin(diff, xq);    // pmin is the node with the minimum distance from query xq
 
         // If node has outgoing neighbors
@@ -399,13 +487,17 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(
             I++;
             Lc.insert(this->Nout[pmin].begin(), this->Nout[pmin].end());
         }
+        
         V.insert(pmin);
 
         if (Lc.size() > L){
             C++;
             Lc = _closestN(L, Lc, xq);    // function: find N closest points from a specific xq from given set and return them
         }
+
     }
+
+    
 
     string file_path = (greedySearchMode) ? "./evaluations/greedySearchQueryStats.txt"
                                           : "./evaluations/greedySearchIndexStats.txt";
@@ -501,10 +593,6 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){
     c_log << "Graph initialized successfully!" << '\n';
 
 
-    c_log << "Searching for medoid node . . ." << '\n';
-    Id s = this->medoid();
-    c_log << "Medoid node found successfully!" << '\n';
-
     c_log << "Finalizing Vamana Index using the Vamana Algorithm . . ." << '\n';
 
     vector<Id> nodes_ids(this->n_nodes);
@@ -512,9 +600,9 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){
 
     vector<Id> perm_id = permutation(nodes_ids);
 
-    for (Id& si_id : perm_id){
+    for (const Id& si_id : perm_id){
         Node<T>& si = this->nodes[si_id];
-        pair<unordered_set<Id>, unordered_set<Id>> rv = greedySearch(this->nodes[s].id, si.value, 1, L); 
+        pair<unordered_set<Id>, unordered_set<Id>> rv = greedySearch(this->startingNode(), si.value, 1, L); 
 
         unordered_set<Id> Lc = rv.first;
         unordered_set<Id> V = rv.second;
