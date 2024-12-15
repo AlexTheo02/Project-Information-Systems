@@ -384,12 +384,9 @@ bool DirectedGraph<T>::_parallel_Rgraph(int R){
 
     vector<thread> threads;
 
-    vector<char> rvs;   // return values of threads - actually bool type
-
-    // this->Nout.reserve(this->n_nodes);
+    vector<char> rvs(args.n_threads, true);   // return values of threads - actually bool type
 
     for (int i = 0; i < args.n_threads; i++){
-        rvs.push_back(true);
 
         threads.push_back(thread(
             &DirectedGraph::_thread_Rgraph_fn,
