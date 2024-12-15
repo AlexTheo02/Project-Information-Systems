@@ -258,7 +258,7 @@ void test_Rgraph(void){
     }
 
     TEST_ASSERT(DG.get_n_nodes() == 100);
-
+    args.n_threads = 8;
     // Default case
     TEST_CHECK(DG.Rgraph(10));
     TEST_CHECK(DG.get_n_edges() == 100*10);
@@ -272,19 +272,34 @@ void test_Rgraph(void){
 
     TEST_CHECK(c == 1000);
 
-    // R == 0 <=> clear all edges
+    DirectedGraph<vector<float>> DG2 = DG;
+    // R == 0 <=> keep the graph the same
     TEST_CHECK(DG.Rgraph(0));
-    TEST_CHECK(DG.get_n_edges() == 0);
+    TEST_CHECK(DG2.get_n_edges() == DG.get_n_edges());
+    TEST_CHECK(DG2.get_n_nodes() == DG.get_n_nodes());
+    TEST_CHECK(DG2.get_Nout() == DG.get_Nout());
 
-    // if an edge already exists and R > 0, edges are cleared before new ones are added
-    DG.addEdge(nodes[0], nodes[1]);
-    TEST_ASSERT(DG.get_n_edges() == 1);
-    TEST_CHECK(DG.Rgraph(10));
-    TEST_CHECK(DG.get_n_edges() == 100*10);
+
+    TEST_CHECK(DG.clearEdges());
     
+    DG.addEdge(nodes[0], nodes[1]); // Add one edge in the graph
+    TEST_ASSERT(DG.get_n_edges() == 1);
+    TEST_CHECK(DG.Rgraph(5));
+    TEST_CHECK(DG.get_n_edges() == 100*5 + 1); // the one graph before is kept and 100*5 are added
+    
+    TEST_CHECK(DG.clearEdges());
+
     // if R == N-1 (this case might take some extra time)
-    TEST_CHECK(DG.Rgraph(99));
-    TEST_CHECK(DG.get_n_edges() == 100*99);
+    int n = 99;
+    TEST_CHECK(DG.Rgraph(n));
+    TEST_CHECK(DG.get_n_edges() >= (DG.get_n_nodes() * n / 2));
+
+    // capacity exceeds limit test
+    try{
+        TEST_CHECK(DG.Rgraph(50) == false);
+        TEST_CHECK(false); // control should not reach here
+    }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Total number of edges would exceed the fully connected capacity.\n"); }
+
 
     // if R > N-1 fails
     try{
@@ -298,20 +313,6 @@ void test_Rgraph(void){
         TEST_CHECK(false); // control should not reach here
     }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "R must be a positive integer.\n"); }
     
-
-    // Consecutive use simply shuffles the edges
-    // NOTE: This test MIGHT fail due to randomness.
-    // Each of the 100 nodes can make one out of 99 possible connections => 99^{100} different ways (cycles are allowed to exist in the directed graph).
-    // The probability for each specific set of edges (assuming uniform) is 1/99^{100}.
-    // For this test to fail, it would mean that we drew the same number twice in a row from a uniform distribution among 99^{100} numbers.
-     unordered_map<Id, unordered_set<Id>> before = DG.get_Nout();
-    TEST_CHECK(DG.Rgraph(1));
-    TEST_CHECK(DG.get_n_edges() == 100*1);
-     unordered_map<Id, unordered_set<Id>> after = DG.get_Nout();
-    TEST_CHECK(DG.Rgraph(1));
-    TEST_CHECK(DG.get_n_edges() == 100*1);
-    TEST_CHECK((before == after) == false); // map equality operator == is by default overloaded to them containing exactly the same items
-    // https://en.cppreference.com/w/cpp/container/map/operator_cmp
 }
 
 

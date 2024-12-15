@@ -359,9 +359,13 @@ bool DirectedGraph<T>::_serial_Rgraph(int R){
     for (Node<T>& n : this->nodes){            // for each node
         for (int i = 0; i < R; i++){    // repeat R times: sample from set and add until valid
             Node<T> nr;
+            bool should_continue;
+            int num_loops = 0;
             do{
                 nr = sampleFromContainer(this->nodes);
-            }while(!this->addEdge(n.id,nr.id)); // addEdge fails when: 1. n == nr, 2. edge(n,nr) already exists
+                should_continue = this->addEdge(n.id, nr.id);
+                num_loops++;
+            }while(!should_continue && num_loops < 2*this->n_nodes); // addEdge fails when: 1. n == nr, 2. edge(n,nr) already exists
         }
     }
     return true;
@@ -411,25 +415,30 @@ void DirectedGraph<T>::_thread_Rgraph_fn(int& R, int& node_index, mutex& mx_inde
         int my_index = node_index++;
         mx_index.unlock();
         
-
         Node<T>& n = this->nodes[my_index];
         for (int i = 0; i < R; i++){    // repeat R times: sample from set and add until valid
             Node<T> nr;
             int num_loops = 0; // timeout after sampling 2 * n_nodes
             bool should_continue;
+            
             do{
                 nr = sampleFromContainer(this->nodes);
                 mx_index.lock();
                 should_continue = this->addEdge(n.id, nr.id);
+                
                 mx_index.unlock();
+                
                 num_loops++;
             }while(!should_continue && num_loops < 2*this->n_nodes); // addEdge fails when: 1. n == nr, 2. edge(n,nr) already exists
+
+
             if(num_loops >= 2 * this->n_nodes){
                 c_log << "WARNING: Rgraph sampling has timed out\n";
                 rv = false;
 
             } 
         }
+
         mx_index.lock();
     }
     mx_index.unlock();

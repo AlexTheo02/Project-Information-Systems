@@ -109,7 +109,10 @@ void test_Store_and_Load(){
 
     // ------------------------------------------------------------------------------------------- Graphs with edges
 
+    DG.clearEdges();
     // Create a random graph with R = 5
+
+    args.n_threads = 8;
     DG.Rgraph(5);
 
     // Store the graph in a textfile
