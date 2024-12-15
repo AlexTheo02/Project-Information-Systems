@@ -40,7 +40,7 @@ void benchmark_euclidean(function<float(T,T)> d ,vector<T> vectors){
 // index creation (stitched Vamana) is serial (is parallel AN TO KANOUME PROTA)
 
 // 1. medoids -> random points : metrics: index creation time, recall_score
-// 2. parallel index creation (stitched Vamana - study paper if applicable for FilteredVamana) - MUST -------------- TODO FILTERED VAMANA
+// 2. parallel index creation (stitched Vamana - study paper if applicable for FilteredVamana) - MUST -------------- TODO FILTERED VAMANA = DONE
 // 3. parallel querying (exoume idi)
 // 4. parallel euclidean - MUST (simd)
 // 5. hold a map of size T (window) LRU/MRU replacement policy - benefit or just extra space? NOT.

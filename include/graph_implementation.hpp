@@ -41,6 +41,7 @@ bool DirectedGraph<T>::addEdge(const Id from, const Id to){
     }
 
     int previous_size = this->Nout[from].size(); 
+    if (previous_size == 0) this->Nout[from].reserve(args.R + 1);   // reserve space to avoid rehashing and unnecessary race conditions
     this->Nout[from].insert(to);
     int next_size = this->Nout[from].size(); 
 

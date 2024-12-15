@@ -271,13 +271,8 @@ bool DirectedGraph<T>::_parallel_filteredVamana(int L, int  R, float a, float t,
     vector<char> rvs;   // return values of threads - actually bool type
 
     this->findMedoids(t);   // pre-computing medoids for sync issues
-    // vector<Id> perm = {1865, 2404, 4674, 6392, 2256, 2386, 9409, 9007, 3177, 4220, 421, 3495, 2859, 6290, 7476, 9249, 8443, 8121, 7075, 4531, 3574, 328, 9476, 458, 4402, 3356, 5865, 3566, 8634, 4844, 8714, 4208, 2503, 3690, 8858, 4291, 1834, 1674, 2328, 2390, 4241, 5187, 4255, 7013, 5201, 6543, 420, 9322, 3220, 6729, 4403, 8662, 4439, 8117, 8540, 8096, 5347, 8291, 6462, 663, 8204, 4462, 791, 7925, 8302, 8586, 1719, 2936, 6455, 87, 9710, 9178, 3441, 7168, 4426, 1228, 67, 6852, 1541, 9110, 4526, 974, 153, 6807, 7780, 5020, 4642, 1900, 9451, 6582, 1604, 2172, 2666, 7016, 8128, 2238, 3472, 7058, 244, 2900, 6386, 942, 2408, 7701, 2122, 2120, 4259, 6322, 3350, 3754, 8496, 3634, 3335, 1034, 3541, 4692, 8697, 3217, 6518, 997, 2712, 2647, 8963, 9006, 5989, 4000, 5960, 6656, 8312, 1821, 8748, 7233, 7776, 259, 711, 9018, 9779, 5308, 375, 1517, 6803, 5892, 5762, 7545, 7903, 6364, 5859, 3640, 1850, 1933, 8920, 6835, 7746, 5623, 4753, 7332, 2740, 846, 3617, 2444, 5232, 7466, 4754, 3929, 293, 8048, 9868, 463, 7994, 2699, 9594, 441, 671, 4965, 1968, 2219, 2831, 6245, 5386, 1580, 3342, 9010, 5526, 5321, 8140, 198, 3500, 5429, 6469, 8501, 8657, 9407, 9687, 1465, 550};
-    // vector<Id> perm = permutation(sorted_categories[7].second);
-    // this->_serial_filteredVamana(L,R,a,t,perm);
 
-    // return true;
-
-    this->Nout.reserve(this->n_nodes);
+    this->Nout.reserve(this->n_nodes);  // avoid unnecessary rehashing
 
     for (int i = 0; i < args.n_threads; i++){
         rvs.push_back(true);
@@ -312,37 +307,53 @@ bool DirectedGraph<T>::_parallel_filteredVamana(int L, int  R, float a, float t,
 }
 
 template <typename T>
-void DirectedGraph<T>::_thread_filteredVamana_fn(int& L, int& R, float& a, float& t, int& current_index, mutex& mx_index, char& rv, vector<pair<int, vector<Id>>>& sorted_categories){
-
-
+void DirectedGraph<T>::_thread_filteredVamana_fn(int& L, int& R, float& a, float& t, int& current_index, mutex& mx, char& rv, vector<pair<int, vector<Id>>>& sorted_categories){
     
-    mx_index.lock();
+    mx.lock();
     while(current_index < sorted_categories.size()){
         int my_index = current_index++;
-        mx_index.unlock();
+        mx.unlock();
 
-        // cout << my_index << endl;
         vector<Id> perm = permutation(sorted_categories[my_index].second);
-        // vector<Id> perm = {1865, 2404, 4674, 6392, 2256, 2386, 9409, 9007, 3177, 4220, 421, 3495, 2859, 6290, 7476, 9249, 8443, 8121, 7075, 4531, 3574, 328, 9476, 458, 4402, 3356, 5865, 3566, 8634, 4844, 8714, 4208, 2503, 3690, 8858, 4291, 1834, 1674, 2328, 2390, 4241, 5187, 4255, 7013, 5201, 6543, 420, 9322, 3220, 6729, 4403, 8662, 4439, 8117, 8540, 8096, 5347, 8291, 6462, 663, 8204, 4462, 791, 7925, 8302, 8586, 1719, 2936, 6455, 87, 9710, 9178, 3441, 7168, 4426, 1228, 67, 6852, 1541, 9110, 4526, 974, 153, 6807, 7780, 5020, 4642, 1900, 9451, 6582, 1604, 2172, 2666, 7016, 8128, 2238, 3472, 7058, 244, 2900, 6386, 942, 2408, 7701, 2122, 2120, 4259, 6322, 3350, 3754, 8496, 3634, 3335, 1034, 3541, 4692, 8697, 3217, 6518, 997, 2712, 2647, 8963, 9006, 5989, 4000, 5960, 6656, 8312, 1821, 8748, 7233, 7776, 259, 711, 9018, 9779, 5308, 375, 1517, 6803, 5892, 5762, 7545, 7903, 6364, 5859, 3640, 1850, 1933, 8920, 6835, 7746, 5623, 4753, 7332, 2740, 846, 3617, 2444, 5232, 7466, 4754, 3929, 293, 8048, 9868, 463, 7994, 2699, 9594, 441, 671, 4965, 1968, 2219, 2831, 6245, 5386, 1580, 3342, 9010, 5526, 5321, 8140, 198, 3500, 5429, 6469, 8501, 8657, 9407, 9687, 1465, 550};
-
-        // vector<Id> perm = {2390, 7476, 7925, 4692, 671, 4462, 328, 8302, 259, 4241, 8291, 6518, 1821, 974, 5187, 4844, 9687, 3754, 441, 1228, 3500, 8496, 7701, 5989, 1604, 6835, 2647, 2740, 5623, 3177, 7058, 6656, 3342, 550, 1541, 8540, 9476, 1719, 1850, 2936, 198, 9110, 8204, 8501, 4753, 4291, 3495, 2408, 4403, 1517, 3220, 4526, 4426, 87, 2404, 1900, 9710, 3217, 5429, 791, 153, 8096, 5762, 6852, 8586, 244, 7466, 5865, 2238, 375, 4259, 9010, 5960, 3541, 997, 6322, 6455, 2900, 2444, 5386, 2256, 6729, 6807, 1034, 7233, 5347, 1834, 293, 2699, 9007, 9178, 663, 4965, 7780, 2122, 3350, 942, 9018, 6245, 3356, 5201, 6543, 420, 2172, 67, 1968, 463, 1933, 8714, 3441, 4674, 6582, 711, 421, 9779, 1465, 9409, 1674, 2503, 8963, 8858, 2859, 3617, 7746, 6462, 3634, 7994, 7075, 6386, 7545, 9249, 9006, 3574, 2120, 8662, 9451, 2712, 8748, 7776, 5321, 7016, 8697, 4208, 6392, 4255, 7013, 7168, 5526, 6290, 8117, 7332, 4402, 6803, 4220, 7903, 5232, 8657, 2328, 3472, 9868, 3690, 2666, 4531, 1580, 8634, 2219, 846, 1865, 3335, 2386, 5892, 5020, 9407, 8128, 9594, 4754, 5859, 3566, 8312, 9322, 8121, 8048, 6469, 2831, 8443, 5308, 3929, 8140, 4439, 3640, 4642, 4000, 6364, 458, 8920};
-
-
-        mx_index.lock();
-        cout << "----------------------------------------------\n";
-        cout << my_index << endl;
-        cout << perm << endl;
-        mx_index.unlock();
-        this->_serial_filteredVamana(L,R,a,t,perm);
-
-        cout << my_index << " Ended\n";
-
-        // cout << "Filtered Vamana Ended with my index: "<< my_index << endl;
         
+        for (Id& si_id : perm){
 
-        mx_index.lock();
+            Node<T> si = this->nodes[si_id];
+            // Id starting_node_i = this->startingNode(); // st[si.category];   // because each node belongs to at most one category.
+            // unordered_map<int, Id> st = this->findMedoids(t);  // paper says starting points should be the medoids found in [algorithm 2]
+            
+
+            // create query with si value to pass to filteredGreedySearch
+            Query<T> q(si.id, si.category, true, si.value, this->isEmpty);
+
+            unordered_set<Id> Vi = this->filteredGreedySearch(this->startingNode(q.category), q, 0, L).second;
+
+            mx.lock();
+            filteredRobustPrune(si.id, Vi, a, R);
+            mx.unlock();
+
+            if (mapKeyExists(si.id, this->Nout)){
+                
+                mx.lock();
+                unordered_map<Id, unordered_set<Id>> NoutCopy(this->Nout.begin(), this->Nout.end());
+                mx.unlock();
+
+                for (const Id j : NoutCopy[si.id]){  // for every neighbor j of si
+
+                    mx.lock();
+
+                    this->addEdge(j, si.id);   // does it in either case (simpler code, robust prune clears all neighbors after copying to candidate set V anyway)
+                    int noutSize = this->Nout[j].size();
+                    if (noutSize > R)
+                        filteredRobustPrune(j, this->Nout[j], a, R);
+
+                    mx.unlock();
+                }
+            }
+        }
+        mx.lock();
     }
-    mx_index.unlock();
+    mx.unlock();
 
 }
 
@@ -390,7 +401,7 @@ bool DirectedGraph<T>::_serial_stitchedVamana(int Lstitched, int Rstitched, int 
         // Creating Index for nodes of specific category as unfiltered data
         int Rsmall_f = min(Rsmall, (int)cpair.second.size() - 1);    // handle case when Rsmall > |Pf| - 1 for certain filters f
         if (!DGf.vamanaAlgorithm(Lsmall, Rsmall_f, a)){
-            cout << "Something went wrong in vamana algorithm.\n";
+            c_log << "Something went wrong in vamana algorithm.\n";
             return false;
         }
         c_log << "Creating Index for Category: " << cpair.first << " created.\n";
@@ -448,7 +459,7 @@ void DirectedGraph<T>::_thread_stitchedVamana_fn(int& Lstitched, int& Rstitched,
         // Creating Index for nodes of specific category as unfiltered data
         int Rsmall_f = min(Rsmall, (int)this->categories[my_category].size() - 1);    // handle case when Rsmall > |Pf| - 1 for certain filters f
         if (!DGf.vamanaAlgorithm(Lsmall, Rsmall_f, a)){
-            cout << "Something went wrong in vamana algorithm.\n";
+            c_log << "Something went wrong in vamana algorithm.\n";
             rv = false;
             return;
         }

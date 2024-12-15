@@ -143,7 +143,7 @@ class DirectedGraph{
 
         bool _parallel_filteredVamana(int L, int  R, float a, float t, vector<pair<int, vector<Id>>>& sorted_categories);
 
-        void _thread_filteredVamana_fn(int& L, int& R, float& a, float& t, int& current_index, mutex& mx_index, char& rv, vector<pair<int, vector<Id>>>& sorted_categories);
+        void _thread_filteredVamana_fn(int& L, int& R, float& a, float& t, int& current_index, mutex& mx, char& rv, vector<pair<int, vector<Id>>>& sorted_categories);
 
         // Implements stitchedVamana algorithm using serial programming
         bool _serial_stitchedVamana(int Lstitched, int Rstitched, int Lsmall, int Rsmall, float a); 
