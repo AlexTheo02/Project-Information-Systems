@@ -8,14 +8,13 @@
 // medoids
 template <typename T>
 const unordered_map<int, Id> DirectedGraph<T>::findMedoids(float threshold){
-
+    
     c_log << "Filtered Medoids\n";
 
     // argument checks
     if (threshold <= 0 || threshold > 1){ throw invalid_argument("threshold must be in (0,1]\n"); }
-
     if (!this->filteredMedoids.empty()) { return this->filteredMedoids; }
-
+    
     return _filtered_medoid(threshold);
 }
 
@@ -40,6 +39,7 @@ const unordered_map<int, Id> DirectedGraph<T>::_filtered_medoid(float threshold)
         this->filteredMedoids[cpair.first] = this->medoid(Rf);
     }
     c_log << "MEDOIDS FOUND" << "\n";
+    
     return this->filteredMedoids;
 }
 
@@ -49,12 +49,15 @@ unordered_set<Id> DirectedGraph<T>::filterSet(unordered_set<Id> S, int filter){
     if (filter == -1){
         return S;
     }
+    if(S.empty()) return S;
     unordered_set<Id> filtered;
+
     for (Id s : S){
         if (this->nodes[s].category == filter){
             filtered.insert(s);
         }
     }
+    
     return filtered;
 }
 
@@ -193,11 +196,44 @@ bool DirectedGraph<T>::filteredVamanaAlgorithm(int L, int R, float a, float t){
     if(this->clearEdges() == false)
         return false;
 
-    // what is a good value of T for filteredMedoids?
-    vector<Node<T>> perm = permutation(this->nodes);
-    
+    if (args.n_threads == 1){
 
-    for (Node<T>& si : perm){
+        vector<Id> nodes_ids(this->n_nodes);
+        iota(nodes_ids.begin(), nodes_ids.end(), 0);
+
+        vector<Id> perm_id = permutation(nodes_ids);
+
+        return this->_serial_filteredVamana(L, R, a, t, ref(perm_id));
+    }
+    else{
+        
+        // Heuristic for better thread job scheduling: sort based on diminishing workload (Longest Processing Time First) (REFERENCE HERE) TODO
+        // Copy elements into a vector of pairs to sort
+        vector<pair<int, vector<Id>>> sorted_categories;
+
+        // Convert the categories into a vector containing a pair of an int(category id) and a vector containing all the ids of that category's nodes
+        for (pair<int, unordered_set<Id>> cpair : this->categories) {
+            sorted_categories.emplace_back(cpair.first, vector<Id>(cpair.second.begin(), cpair.second.end()));
+        }
+
+        // Sort the vector based on the size of the vector in the second element
+        sort(sorted_categories.begin(), sorted_categories.end(),
+                [](const pair<int, vector<Id>>& cpair1, const pair<int, vector<Id>>& cpair2) {
+                    return cpair1.second.size() > cpair2.second.size();
+                });
+        
+        
+        return this->_parallel_filteredVamana(L, R, a, t, sorted_categories);
+    }
+    
+}
+
+template <typename T>
+bool DirectedGraph<T>::_serial_filteredVamana(int L, int  R, float a, float t, vector<Id>& perm){
+
+    for (Id& si_id : perm){
+
+        Node<T> si = this->nodes[si_id];
         // Id starting_node_i = this->startingNode(); // st[si.category];   // because each node belongs to at most one category.
         // unordered_map<int, Id> st = this->findMedoids(t);  // paper says starting points should be the medoids found in [algorithm 2]
         
@@ -210,16 +246,115 @@ bool DirectedGraph<T>::filteredVamanaAlgorithm(int L, int R, float a, float t){
         filteredRobustPrune(si.id, Vi, a, R);
 
         if (mapKeyExists(si.id, this->Nout)){
-        
-            for (const Id j : this->Nout[si.id]){  // for every neighbor j of si
+            
+            unordered_map<Id, unordered_set<Id>> NoutCopy(this->Nout.begin(), this->Nout.end());
+            for (const Id j : NoutCopy[si.id]){  // for every neighbor j of si
 
                 this->addEdge(j, si.id);   // does it in either case (simpler code, robust prune clears all neighbors after copying to candidate set V anyway)
-                if (this->Nout[j].size() > R)
+                int noutSize = this->Nout[j].size();
+                if (noutSize > R)
                     filteredRobustPrune(j, this->Nout[j], a, R);
             }
         }
     }
     return true;
+}
+
+template <typename T>
+bool DirectedGraph<T>::_parallel_filteredVamana(int L, int  R, float a, float t, vector<pair<int, vector<Id>>>& sorted_categories){
+
+    int current_index = 0;
+    mutex mx_index;
+
+    vector<thread> threads;
+
+    vector<char> rvs;   // return values of threads - actually bool type
+
+    this->findMedoids(t);   // pre-computing medoids for sync issues
+
+    this->Nout.reserve(this->n_nodes);  // avoid unnecessary rehashing
+
+    for (int i = 0; i < args.n_threads; i++){
+        rvs.push_back(true);
+
+        threads.push_back(thread(
+            &DirectedGraph::_thread_filteredVamana_fn,
+            this,
+            ref(L),
+            ref(R),
+            ref(a),
+            ref(t),
+            ref(current_index),
+            ref(mx_index),
+            ref(rvs[i]),
+            ref(sorted_categories)));
+    }
+
+    for (thread& th : threads)
+        th.join();
+
+
+    for (bool rv : rvs){
+        if (rv == false){
+            c_log << "Something went wrong in the Filtered Vamana Index Creation.\n";
+            return false;
+        }
+    }
+
+    c_log << "Filtered Vamana Index Created.\n";
+    return true;
+
+}
+
+template <typename T>
+void DirectedGraph<T>::_thread_filteredVamana_fn(int& L, int& R, float& a, float& t, int& current_index, mutex& mx, char& rv, vector<pair<int, vector<Id>>>& sorted_categories){
+    
+    mx.lock();
+    while(current_index < sorted_categories.size()){
+        int my_index = current_index++;
+        mx.unlock();
+
+        vector<Id> perm = permutation(sorted_categories[my_index].second);
+        
+        for (Id& si_id : perm){
+
+            Node<T> si = this->nodes[si_id];
+            // Id starting_node_i = this->startingNode(); // st[si.category];   // because each node belongs to at most one category.
+            // unordered_map<int, Id> st = this->findMedoids(t);  // paper says starting points should be the medoids found in [algorithm 2]
+            
+
+            // create query with si value to pass to filteredGreedySearch
+            Query<T> q(si.id, si.category, true, si.value, this->isEmpty);
+
+            unordered_set<Id> Vi = this->filteredGreedySearch(this->startingNode(q.category), q, 0, L).second;
+
+            mx.lock();
+            filteredRobustPrune(si.id, Vi, a, R);
+            mx.unlock();
+
+            if (mapKeyExists(si.id, this->Nout)){
+                
+                mx.lock();
+                unordered_map<Id, unordered_set<Id>> NoutCopy(this->Nout.begin(), this->Nout.end());
+                mx.unlock();
+
+                for (const Id j : NoutCopy[si.id]){  // for every neighbor j of si
+
+                    mx.lock();
+
+                    this->addEdge(j, si.id);   // does it in either case (simpler code, robust prune clears all neighbors after copying to candidate set V anyway)
+                    int noutSize = this->Nout[j].size();
+                    if (noutSize > R)
+                        filteredRobustPrune(j, this->Nout[j], a, R);
+
+                    mx.unlock();
+                }
+            }
+        }
+        mx.lock();
+    }
+    mx.unlock();
+
 }
 
 template <typename T>
@@ -266,7 +401,7 @@ bool DirectedGraph<T>::_serial_stitchedVamana(int Lstitched, int Rstitched, int 
         // Creating Index for nodes of specific category as unfiltered data
         int Rsmall_f = min(Rsmall, (int)cpair.second.size() - 1);    // handle case when Rsmall > |Pf| - 1 for certain filters f
         if (!DGf.vamanaAlgorithm(Lsmall, Rsmall_f, a)){
-            cout << "Something went wrong in vamana algorithm.\n";
+            c_log << "Something went wrong in vamana algorithm.\n";
             return false;
         }
         c_log << "Creating Index for Category: " << cpair.first << " created.\n";
@@ -324,7 +459,7 @@ void DirectedGraph<T>::_thread_stitchedVamana_fn(int& Lstitched, int& Rstitched,
         // Creating Index for nodes of specific category as unfiltered data
         int Rsmall_f = min(Rsmall, (int)this->categories[my_category].size() - 1);    // handle case when Rsmall > |Pf| - 1 for certain filters f
         if (!DGf.vamanaAlgorithm(Lsmall, Rsmall_f, a)){
-            cout << "Something went wrong in vamana algorithm.\n";
+            c_log << "Something went wrong in vamana algorithm.\n";
             rv = false;
             return;
         }
@@ -411,8 +546,6 @@ bool DirectedGraph<T>::_parallel_stitchedVamana(int Lstitched, int Rstitched, in
 
 template <typename T>
 const Id DirectedGraph<T>::startingNode(optional<int> category){
-    
-    int arg_placeholder_random1_or_medoid0 = 0;
 
     if (category == nullopt){  // category doesn't matter. Medoid or Sample from all nodes in graph
         if (args.randomStart) return sampleFromContainer(this->nodes).id;
@@ -423,6 +556,7 @@ const Id DirectedGraph<T>::startingNode(optional<int> category){
         if (!mapKeyExists(category.value(), this->categories)) { throw invalid_argument("Category not found. No nodes of that category exist in the graph."); }
 
         if (args.randomStart) return sampleFromContainer(this->categories[category.value()]);
-        else return this->findMedoids(args.threshold).at(category.value());
+        else { unordered_map<int, Id> medoids = this->findMedoids(args.threshold);
+                return medoids[category.value()]; }
     }
 }

@@ -69,7 +69,7 @@ struct Args{
     bool createIndex = false;           // flag whether to create new vamana index using the vamana algorithm
 
     // arguments regarding optimization
-    int euclideanType = 0;      // 0 - normal euclidean, 1 - simd euclidean, 2 - parallel euclidean
+    int euclideanType = 1;      // 0 - normal euclidean, 1 - simd euclidean, 2 - parallel euclidean
     bool randomStart = false;   // false = medoid, true = random sample
     bool usePQueue = false;     // false = Lc is set O(1) insertion, & use closestN O(N), true = Lc is a Pqueue, closest N is optimized but insertion is O(logL)
     bool useRGraph = true;      // true = Use Rgraph in Vamana, false = skip Random Initialization.
