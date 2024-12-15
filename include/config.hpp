@@ -67,6 +67,7 @@ struct Args{
     string queries_path = "";
     string groundtruth_path = "";
     bool createIndex = false;           // flag whether to create new vamana index using the vamana algorithm
+    bool dummy = false;
 
     // arguments regarding optimization
     int euclideanType = 1;      // 0 - normal euclidean, 1 - simd euclidean, 2 - parallel euclidean
@@ -74,6 +75,9 @@ struct Args{
     bool usePQueue = false;     // false = Lc is set O(1) insertion, & use closestN O(N), true = Lc is a Pqueue, closest N is optimized but insertion is O(logL)
     bool useRGraph = true;      // true = Use Rgraph in Vamana, false = skip Random Initialization.
     int extraRandomEdges = 0;     // <=0 = don't add extra random edges <after index creation>, >0 = add them (after index creation because index creation assumes unique subgraphs)
+    bool accumulateUnfiltered = false;  // uses accumulation and aggregation of |C| filtered queries for the final result (as if unfiltered = all filters)
+    string greedySearchIndexStatsPath = "";
+    string greedySearchQueryStatsPath = "";
 
     Args(){};   // default constructor - empty (values are loaded with Args::parseArgs method)
 
@@ -111,6 +115,8 @@ struct Args{
             else if (currentArg == "--stitched")        { this->index_type = STITCHED_VAMANA; }
 
             else if (currentArg == "--create")          { this->createIndex = true; }
+            
+            else if (currentArg == "--dummy")           { this->dummy = true; }
 
             // optimizations
             else if (currentArg == "-n_threads")        { this->n_threads = atoi(argv[++i]); }
@@ -119,6 +125,10 @@ struct Args{
             else if (currentArg == "--pqueue")          { this->usePQueue = true; }
             else if (currentArg == "--no_rgraph")       { this->useRGraph = false; }
             else if (currentArg == "-extra_edges")      { this->extraRandomEdges = atoi(argv[++i]); }
+            else if (currentArg == "--acc_unfiltered")  { this->accumulateUnfiltered = true; }
+            else if (currentArg == "-collectDataIndex") { this->greedySearchIndexStatsPath = argv[++i]; }
+            else if (currentArg == "-collectDataQuery") { this->greedySearchQueryStatsPath = argv[++i]; }
+
 
             else { throw invalid_argument("Invalid command line arguments"); }
         }
@@ -135,6 +145,18 @@ struct Args{
 
         if (this->graph_load_path == "")    this->createIndex = true;
 
+        if (this->dummy){
+            this->n_data = 10000;
+            this->n_queries = 10000;
+            this->n_groundtruths = 10000;
+
+            this->data_path = "./data/dummy/dummy-data.bin";
+            this->queries_path = "./data/dummy/dummy-queries.bin";
+            this->groundtruth_path = "./data/dummy/dummy-groundtruth.txt";
+
+            this->dim_data = 102;
+            this->dim_query = 104;
+        }
 
         if (this->index_type == VAMANA){
 
@@ -145,6 +167,9 @@ struct Args{
             if (this->data_path == "") this->data_path = "data/siftsmall/siftsmall_base.fvecs";
             if (this->queries_path == "") this->queries_path = "data/siftsmall/siftsmall_query.fvecs";
             if (this->groundtruth_path == "") this->groundtruth_path = "data/siftsmall/siftsmall_groundtruth.ivecs";
+
+            if (this->greedySearchIndexStatsPath == "") this->greedySearchIndexStatsPath =  "./evaluations/VAMANA_greedySearchIndexStats.csv";
+            if (this->greedySearchQueryStatsPath == "") this->greedySearchQueryStatsPath =  "./evaluations/VAMANA_greedySearchQueryStats.csv";
         }
         else if (this->index_type == FILTERED_VAMANA || this->index_type == STITCHED_VAMANA){
 
@@ -158,7 +183,15 @@ struct Args{
             if (this->queries_path == "") this->queries_path = "data/contest-queries-release-1m.bin";
             if (this->groundtruth_path == "") this->groundtruth_path = "data/contest-groundtruth-custom-1m.txt";
 
-            if (this->index_type == STITCHED_VAMANA) this->R = 64;  // R = Rstitched
+            if (this->index_type == STITCHED_VAMANA){
+                this->R = 64;  // R = Rstitched
+                if (this->greedySearchIndexStatsPath == "") this->greedySearchIndexStatsPath =  "./evaluations/STITCHED_greedySearchIndexStats.csv";
+                if (this->greedySearchQueryStatsPath == "") this->greedySearchQueryStatsPath =  "./evaluations/STITCHED_greedySearchQueryStats.csv";
+            }
+            else{
+                if (this->greedySearchIndexStatsPath == "") this->greedySearchIndexStatsPath =  "./evaluations/FILTERED_greedySearchIndexStats.csv";
+                if (this->greedySearchQueryStatsPath == "") this->greedySearchQueryStatsPath =  "./evaluations/FILTERED_greedySearchQueryStats.csv";
+            }
         }
         else throw invalid_argument("You must specify the Index Type. Valid options: [--vamana, --filtered, --stitched]\n");
     }

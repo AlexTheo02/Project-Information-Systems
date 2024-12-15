@@ -324,7 +324,7 @@ void ReadBin(const std::string &file_path,
     data[counter++] = std::move(row);
   }
   ifs.close();
-  std::cout << "Finish Reading Data" << endl;
+  std::cout << "Finished Reading Data" << endl;
 }
 
 // prints a vector

@@ -335,7 +335,7 @@ unordered_set<Id> DirectedGraph<T>::_closestN(int N, const unordered_set<Id>& S,
 
 // ------------------------------------------------------------------------------------------------ RGRAPH
 
-// creates a random R graph with the existing nodes. Return TRUE if successful, FALSE otherwise
+// adds R randomly selected outgoing neighbors for each node in the graph. Return TRUE if successful, FALSE otherwise
 template <typename T>
 bool DirectedGraph<T>::Rgraph(int R){
 
@@ -343,24 +343,14 @@ bool DirectedGraph<T>::Rgraph(int R){
 
     if (R > this->n_nodes - 1){ throw invalid_argument("R cannot exceed N-1 (N = the total number of nodes in the Graph).\n"); }
 
+    if (this->n_edges + this->n_nodes*R > this->n_nodes * (this->n_nodes - 1)) { throw invalid_argument("Total number of edges would exceed the fully connected capacity.\n"); }
+
     if (R <= log(this->n_nodes)){ c_log << "WARNING: R <= logn and therefore the graph will not be well connected.\n"; }
     
     if (R == 0){ c_log << "WARNING: R is set to 0 and therefore all nodes in the graph are cleared.\n"; }
-    
-    // clear all edges in the graph to create an R random graph anew.
-    if (!args.extraRandomEdges && !this->clearEdges())        // argument here, so this function can be used as the add extra edges function
-        return false;
 
-    c_log << "Rgraph edges cleared" << '\n';
-
-    if (args.n_threads == 1){
-
-        return _serial_Rgraph(R);
-    }else{
-
-        return _parallel_Rgraph(R);
-    }
-
+    if (args.n_threads == 1){ return _serial_Rgraph(R); }
+    else{ return _parallel_Rgraph(R); }
 }
 
 template<typename T>
@@ -408,7 +398,7 @@ bool DirectedGraph<T>::_parallel_Rgraph(int R){
         }
     }
 
-    cout << "Rgraph completed.\n";
+    c_log << "Rgraph completed.\n";
     return true;
 
 }
@@ -494,10 +484,8 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(
 
     }
 
-    
-
-    string file_path = (greedySearchMode) ? "./evaluations/greedySearchQueryStats.txt"
-                                          : "./evaluations/greedySearchIndexStats.txt";
+    string file_path = (greedySearchMode) ? args.greedySearchQueryStatsPath
+                                          : args.greedySearchIndexStatsPath;
 
     ofstream outFile;
     greedySearchCount ? outFile.open(file_path, ios::app) : outFile.open(file_path, ios::trunc); // Open for writing
@@ -582,10 +570,11 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){
 
     if (a < 1) { throw invalid_argument("Parameter a must be >= 1.\n"); }
 
-    
-
     c_log << "Initializing a random R-Regular Directed Graph with out-degree R = " << R << ". . ." << '\n';
-    if (this->Rgraph(R) == false)
+    this->clearEdges();
+
+
+    if (args.useRGraph && this->Rgraph(R) == false)
         return false;
     c_log << "Graph initialized successfully!" << '\n';
 
@@ -616,6 +605,11 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){
             }
         }
     }
+
+    if (args.extraRandomEdges > 0){
+        this->Rgraph(args.extraRandomEdges); // adds additional random edges
+    }
+
     return true;
 }
 
@@ -685,6 +679,7 @@ void DirectedGraph<T>::load(const string& filename){
 template<typename T>
 void DirectedGraph<T>::init(){
 
+    this->clearEdges();
     this->n_edges = 0;
     this->n_nodes = 0;
     this->nodes.clear();

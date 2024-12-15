@@ -111,8 +111,8 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::filteredGreed
         }
     }
     
-    string file_path = (greedySearchMode) ? "./evaluations/greedySearchQueryStats.txt"
-                                          : "./evaluations/greedySearchIndexStats.txt";
+    string file_path = (greedySearchMode) ? args.greedySearchQueryStatsPath
+                                          : args.greedySearchIndexStatsPath;
 
     ofstream outFile;
     greedySearchCount ? outFile.open(file_path, ios::app) : outFile.open(file_path, ios::trunc); // Open for writing
@@ -191,6 +191,7 @@ bool DirectedGraph<T>::filteredVamanaAlgorithm(int L, int R, float a, float t){
     if (this->nodes.size() == 1) return true;   // no edges possible
 
     c_log << "Filtered Vamana\n";
+    bool rv;
 
     // initialize G as an empty graph => clear all edges
     if(this->clearEdges() == false)
@@ -203,7 +204,7 @@ bool DirectedGraph<T>::filteredVamanaAlgorithm(int L, int R, float a, float t){
 
         vector<Id> perm_id = permutation(nodes_ids);
 
-        return this->_serial_filteredVamana(L, R, a, t, ref(perm_id));
+        rv =  this->_serial_filteredVamana(L, R, a, t, ref(perm_id));
     }
     else{
         
@@ -223,9 +224,12 @@ bool DirectedGraph<T>::filteredVamanaAlgorithm(int L, int R, float a, float t){
                 });
         
         
-        return this->_parallel_filteredVamana(L, R, a, t, sorted_categories);
+        rv =  this->_parallel_filteredVamana(L, R, a, t, sorted_categories);
     }
     
+    if (args.extraRandomEdges > 0) this->Rgraph(args.extraRandomEdges); // adds additional random edges
+    
+    return rv;
 }
 
 template <typename T>
@@ -373,9 +377,17 @@ bool DirectedGraph<T>::stitchedVamanaAlgorithm(int Lstitched, int Rstitched, int
 
     if (args.n_threads <= 0) throw invalid_argument("args.n_threads constant is invalid. Value must be args.n_threads >= 1.\n");
 
-    return (args.n_threads == 1)
+    int extraRandomEdges = args.extraRandomEdges;
+    if (args.extraRandomEdges > 0) args.extraRandomEdges = 0;   // Vamana for specific category should not add additional random edges
+
+    bool rv =  (args.n_threads == 1)
         ? this->_serial_stitchedVamana(Lstitched, Rstitched, Lsmall, Rsmall, a)
-        : this->_parallel_stitchedVamana(Lstitched, Rstitched, Lsmall, Rsmall, a); 
+        : this->_parallel_stitchedVamana(Lstitched, Rstitched, Lsmall, Rsmall, a);
+
+    args.extraRandomEdges = extraRandomEdges;
+    if (args.extraRandomEdges > 0) this->Rgraph(args.extraRandomEdges); // adds additional random edges (only in the completed stitched graph, not subgraphs)
+
+    return rv;
 }
 
 template <typename T>
@@ -552,7 +564,10 @@ const Id DirectedGraph<T>::startingNode(optional<int> category){
     }
     else{   // category matters. Specific Category Medoid or Sample from specific category
 
-        if (!mapKeyExists(category.value(), this->categories)) { throw invalid_argument("Category not found. No nodes of that category exist in the graph."); }
+        if (!mapKeyExists(category.value(), this->categories)) { 
+            c_log << "WARNING: Category not found. No nodes of that category exist in the graph. Returning starting node of any category\n";
+            return this->startingNode();
+        }
 
         if (args.randomStart) return sampleFromContainer(this->categories[category.value()]);
         else { unordered_map<int, Id> medoids = this->findMedoids(args.threshold);

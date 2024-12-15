@@ -39,11 +39,10 @@ void benchmark_euclidean(function<float(T,T)> d ,vector<T> vectors){
 // querying is parallel
 // index creation (stitched Vamana) is serial (is parallel AN TO KANOUME PROTA)
 
-// 1. medoids -> random points : metrics: index creation time, recall_score
+// 1. medoids -> random points : metrics: index creation time, recall_score - DONE(- evaluation)
 // 2. parallel index creation (stitched Vamana - study paper if applicable for FilteredVamana) - MUST -------------- TODO FILTERED VAMANA = DONE
-// 3. parallel querying (exoume idi)
-// 4. parallel euclidean - MUST (simd)
-// 5. hold a map of size T (window) LRU/MRU replacement policy - benefit or just extra space? NOT.
+// 3. parallel querying (exoume idi) - DONE
+// 4. parallel euclidean - MUST (simd) - DONE
 // 6. ClosestK na dokimasoume to Lc pou tis pernietai san orisma na einai priority Queue (logn insertion time, O(K) return - linear)
 //     posa insertions VS return/partial_sort with nth_element - linear anti nlogn
 //     an pano apo K insertions nomizo useless optimization
