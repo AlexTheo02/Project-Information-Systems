@@ -15,6 +15,8 @@ bool Id::operator<(const int other) const { return this->value < other; }
 
 bool Id::operator>=(const int other) const { return this->value >= other; }
 
+Id& Id::operator++() { this->value++; return *this; }
+
 
 // Overload the >> operator for Id
 istream& operator>>(istream& stream, Id& id) {

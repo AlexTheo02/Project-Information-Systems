@@ -505,9 +505,14 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){
     c_log << "Medoid node found successfully!" << '\n';
 
     c_log << "Finalizing Vamana Index using the Vamana Algorithm . . ." << '\n';
-    vector<Node<T>> perm = permutation(this->nodes);
 
-    for (Node<T>& si : perm){
+    vector<Id> nodes_ids(this->n_nodes);
+    iota(nodes_ids.begin(), nodes_ids.end(), 0);
+
+    vector<Id> perm_id = permutation(nodes_ids);
+
+    for (Id& si_id : perm_id){
+        Node<T>& si = this->nodes[si_id];
         pair<unordered_set<Id>, unordered_set<Id>> rv = greedySearch(this->nodes[s].id, si.value, 1, L); 
 
         unordered_set<Id> Lc = rv.first;

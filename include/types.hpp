@@ -43,6 +43,7 @@ struct Id {
     bool operator<(const Id& other) const;      // less with Id
     bool operator<(const int other) const;      // less with in
     bool operator>=(const int other) const;     // geq with int
+    Id& operator++();                           // ++id = id with incremented value
 };
 
 // Specialize std::hash for the Id struct (required because Id is used in unordered_containers(set, map) that are implemented with hash tables)
@@ -137,6 +138,12 @@ class DirectedGraph{
 
         // Thread function for parallel querying.
         void _thread_findQueryNeighbors_fn(vector<Query<T>>& queries, mutex& mx_query_index, int& query_index, vector<unordered_set<Id>>& returnVec);
+
+        bool _serial_filteredVamana(int L, int  R, float a, float t, vector<Id>& perm);
+
+        bool _parallel_filteredVamana(int L, int  R, float a, float t, vector<pair<int, vector<Id>>>& sorted_categories);
+
+        void _thread_filteredVamana_fn(int& L, int& R, float& a, float& t, int& current_index, mutex& mx_index, char& rv, vector<pair<int, vector<Id>>>& sorted_categories);
 
         // Implements stitchedVamana algorithm using serial programming
         bool _serial_stitchedVamana(int Lstitched, int Rstitched, int Lsmall, int Rsmall, float a); 
