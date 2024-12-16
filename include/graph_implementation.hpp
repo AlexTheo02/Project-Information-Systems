@@ -275,7 +275,6 @@ Id DirectedGraph<T>::_myArgMin(const unordered_set<Id>& nodeSet, T t){
 
     for (const Id id : nodeSet){
         dist = this->d(this->nodes[id].value, t);
-
        
         if (dist <= minDist){    // New minimum distance found
             minId = id;
@@ -315,10 +314,14 @@ unordered_set<Id> DirectedGraph<T>::_closestN(int N, const unordered_set<Id>& S,
     // transform the set to a vector for partitioning around a pivot
     vector<Id> Svec(S.begin(), S.end());
 
+    // DistanceFromPointComparator<T> comparator(X, ASCENDING, this->d, cref(this->nodes));
+
     // partition the vector based on the distance from point X up around the N-th element
     nth_element(Svec.begin(), Svec.begin() + N, Svec.end(),
                 [X,this] (int id1, int id2) {return (this->d(X, this->nodes[id1].value) < d(X, this->nodes[id2].value));});
                 // lambda(id1,id2) = determines which of the two points corresponding to id1 and id2 is closest to X given metric distance d.
+
+    // nth_element(Svec.begin(), Svec.begin() + N, Svec.end(), comparator);
 
     // the vector after the use of nth_element has the following properties:
     // the N-th element is in the position that it would've been if the vector was sorted in its entirety
@@ -468,6 +471,14 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(
 
     if (L < k){ throw invalid_argument("L must be greater or equal to K.\n"); }
 
+    return (args.usePQueue)
+        ? this->_pqueue_greedySearch(s, xq, k, L)
+        : this->_set_greedySearch(s, xq, k, L);
+}
+
+template <typename T>
+const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::_set_greedySearch(Id s, T xq, int k, int L){
+
     // Create empty sets
     unordered_set<Id> Lc = {s}, V, diff; // Initialize Lc with s
 
@@ -480,7 +491,7 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(
 
         // If node has outgoing neighbors
         if (mapKeyExists(pmin, this->Nout)){
-            I++;
+            I += this->Nout[pmin].size();
             Lc.insert(this->Nout[pmin].begin(), this->Nout[pmin].end());
         }
         
@@ -490,7 +501,6 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(
             C++;
             Lc = _closestN(L, Lc, xq);    // function: find N closest points from a specific xq from given set and return them
         }
-
     }
 
     string file_path = (greedySearchMode) ? args.greedySearchQueryStatsPath
@@ -514,6 +524,80 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(
     pair<unordered_set<Id>, unordered_set<Id>> ret;
     
     ret.first = _closestN(k, Lc, xq);
+    ret.second = V;
+
+    return ret;
+}
+
+template <typename T>
+const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::_pqueue_greedySearch(Id s, T xq, int k, int L){
+    
+    // Create empty sets and initialize the priority queue
+    unordered_set<Id> V, diff; 
+    function<bool(Id, Id)> comparator = 
+        [xq,this] (int id1, int id2) {
+            return (this->d(xq, this->nodes[id1].value) < this->d(xq, this->nodes[id2].value));   // descending comparator (maxHeap)
+        };
+
+    priority_queue<Id, vector<Id>, function<bool(Id, Id)>> Lc(comparator);
+
+    // Initialize Lc with s
+    Lc.push(s);
+    
+    C = 0;
+    I = 0;
+    
+    while(!(diff = PQSubtraction(Lc,V)).empty()){
+        
+        Id pmin = this->_myArgMin(diff, xq);    // pmin is the node with the minimum distance from query xq
+
+        V.insert(pmin);
+        
+        // If node has outgoing neighbors
+        if (mapKeyExists(pmin, this->Nout)){
+
+            // if should insert
+            for (const Id& neighbor : this->Nout[pmin]){
+                if (Lc.size() < L){
+                    Lc.push(neighbor);
+                }
+                else if (this->d(this->nodes[neighbor].value, xq) < this->d(this->nodes[Lc.top()].value, xq)){
+                    Lc.pop();
+                    Lc.push(neighbor);
+                    I++;
+                }
+            }
+        }
+        
+    }
+
+    string file_path = (greedySearchMode) ? args.greedySearchQueryStatsPath
+                                          : args.greedySearchIndexStatsPath;
+
+    ofstream outFile;
+    greedySearchCount ? outFile.open(file_path, ios::app) : outFile.open(file_path, ios::trunc); // Open for writing
+    if (!outFile.is_open()) {
+        cerr << "Error: could not open " << file_path << " for writing." << endl;
+        // return EXIT_FAILURE;
+    }
+    if (greedySearchCount == 0){
+        outFile << "greedySearchCount" << "," << "C" << "," << "I" << endl;
+    }
+    outFile << greedySearchCount << "," << C << "," << I << endl;
+
+    outFile.close();
+
+    greedySearchCount ++;
+
+    pair<unordered_set<Id>, unordered_set<Id>> ret;
+    
+    for (int i = 0; i < Lc.size() - k; i++)
+        Lc.pop();
+
+    for (int i = 0; i < Lc.size(); i++){
+        ret.first.insert(Lc.top());
+        Lc.pop();
+    }
     ret.second = V;
 
     return ret;

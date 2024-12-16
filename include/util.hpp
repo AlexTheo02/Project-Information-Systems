@@ -9,6 +9,7 @@
 #include <functional>
 #include <map>
 #include <set>
+#include <queue>
 #include <cstdlib>
 #include <string>
 #include <cstring>
@@ -170,6 +171,24 @@ unordered_set<T> setSubtraction(const unordered_set<T>& set1, const unordered_se
     unordered_set<T> result = set1;
 
     for (auto& elem : set2){
+        
+        result.erase(elem);
+    }
+    return result;
+}
+
+// subtracts elements belonging container 1 from container 2 and returns them in a new set
+template <typename T>
+unordered_set<T> PQSubtraction(priority_queue<T, vector<T>, function<bool(T,T)>> pq, const unordered_set<T>& s){ // pass the pq by value
+
+    unordered_set<T> result;
+
+    while (!pq.empty()){
+        result.insert(pq.top());    // retrieve the top element
+        pq.pop();                   // delete it
+    }
+
+    for (auto& elem : s){
         
         result.erase(elem);
     }

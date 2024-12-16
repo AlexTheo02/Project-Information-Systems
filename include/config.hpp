@@ -43,6 +43,11 @@ enum IndexType {
     STITCHED_VAMANA
 };
 
+enum SortOrder {
+    ASCENDING,
+    DESCENDING
+};
+
 // Struct containing all possible arguments from the CLI.
 // call Args::parseArgs with argc and argv to initialize the struct
 struct Args{

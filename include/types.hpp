@@ -159,7 +159,20 @@ class DirectedGraph{
 
         // Thread function for parallel stitchedVamana index creation
         void _thread_stitchedVamana_fn(int& Lstitched, int& Rstitched, int& Lsmall, int& Rsmall, float& a, int& category_index, mutex& mx_category_index, mutex& mx_merge, vector<int>& category_names, char& rv);
-    
+
+        // Set Greedy Search
+        const pair<unordered_set<Id>, unordered_set<Id>> _set_greedySearch(Id s, T xq, int k, int L);
+
+        // Pqueue Greedy Search
+        const pair<unordered_set<Id>, unordered_set<Id>> _pqueue_greedySearch(Id s, T xq, int k, int L);
+
+        // Set Filtered Greedy Search
+        const pair<unordered_set<Id>, unordered_set<Id>> _set_filteredGreedySearch(Id s, Query<T> q, int k, int L);
+
+        // Pqueue Filtered Greedy Search
+        const pair<unordered_set<Id>, unordered_set<Id>> _pqueue_filteredGreedySearch(Id s, Query<T> q, int k, int L);
+
+
     public:
 
         // Constructor: Initialize an empty graph
