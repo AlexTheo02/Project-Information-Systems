@@ -61,6 +61,8 @@ struct Args{
     int n_groundtruths = -1;
     int dim_data = -1;
     int dim_query = -1;
+    bool crop_filters = false;
+    vector<int> __discardedQueryIndices;    // this vector contains the indices of the discarded queries (the filtered queries of categories 2 and 3, or even filtered queries if --crop_filters was set)
     string graph_store_path = "";
     string graph_load_path = "";
     string data_path = "";
@@ -102,6 +104,7 @@ struct Args{
             else if (currentArg == "-n_groundtruths")   { this->n_groundtruths = atoi(argv[++i]); }
             else if (currentArg == "-dim_data")         { this->dim_data = atoi(argv[++i]); }
             else if (currentArg == "-dim_query")        { this->dim_query = atoi(argv[++i]); }
+            else if (currentArg == "--crop_filters")    { this->crop_filters = true; }
 
             else if (currentArg == "-store")            { this->graph_store_path = argv[++i]; }
             else if (currentArg == "-load")             { this->graph_load_path = argv[++i]; }

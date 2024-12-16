@@ -38,9 +38,33 @@ vector<Query<T>> read_queries_bin_contest(void){
 
     for (int i = 0; i < queries_raw.size(); i++){
         T query_value(queries_raw[i].begin() + 4, queries_raw[i].end());
-        Query<T> q(i, queries_raw[i][1], queries_raw[i][0], query_value, vectorEmpty<float>);
-        queries.push_back(q);
+
+        if (args.crop_filters){
+            // create unfiltered query from filtered query data
+
+            if (queries_raw[i][0] == 0){   // get only the unfiltered queries. Discard filtered queries.
+                Query<T> q(i, -1, false, query_value, vectorEmpty<float>);
+                queries.push_back(q);
+            }
+            // keep the indices of the discarded queries to not consider them during groundtruth evaluation
+            else{
+                args.__discardedQueryIndices.push_back(i);  // discarding queries of type 1 (because of --crop_filters), 2 or 3 (timestamps)
+            }
+        }
+        else{
+
+            if (queries_raw[i][0] == 0 || queries_raw[i][0] == 1){
+                Query<T> q(i, queries_raw[i][1], queries_raw[i][0], query_value, vectorEmpty<float>);
+                queries.push_back(q);
+            }
+            else{
+                args.__discardedQueryIndices.push_back(i);  // discarding queries of type 2 or 3 (timestamps)
+            }
+        }
     }
+    args.n_queries = queries.size();        // size update to account for discarded queries
+    args.n_groundtruths = queries.size();   // same as above
+
     return queries;
 };
 
@@ -77,6 +101,9 @@ chrono::milliseconds createIndex(DirectedGraph<T>& DG){
 
             // Populate the Graph
             for (auto& v : data){
+                if (args.crop_filters){
+                    v = T(v.begin() + 2, v.end());
+                }
                 DG.createNode(v);
             }
 
@@ -283,6 +310,12 @@ pair<float, chrono::milliseconds> evaluateIndex(DirectedGraph<T>& DG, function<v
     duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime);
 
     float total_recall = 0.f, query_recall;
+
+    // discard appropriate query answers from groundtruths
+    int deleted = 0;
+    for (int indexToRemove : args.__discardedQueryIndices){
+        groundtruth.erase(groundtruth.begin() + indexToRemove - deleted++); // assumming __discardedQueryIndices are sorted in ascending order, and contain valid and corresponding indices with queries.
+    }
     
     for(int i = 0; i < args.n_queries; i++){
         // Calculate the current recall and add it to the sum of all recall scores
