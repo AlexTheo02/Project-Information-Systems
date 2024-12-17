@@ -32,9 +32,6 @@ using namespace std;
 // For your specified datatype T, you should have the ostream << and istream >> operators overloaded. 
 static int greedySearchMode = 0;
 static int greedySearchCount = 0;
-static int C = 0;
-static int I = 0;
-static int LcSize = 0;
 
 // enum for index type
 enum IndexType {
@@ -115,7 +112,7 @@ struct Args{
             else if (currentArg == "-dim_data")         { this->dim_data = atoi(argv[++i]); }
             else if (currentArg == "-dim_query")        { this->dim_query = atoi(argv[++i]); }
             else if (currentArg == "--crop_filters")    { this->crop_filters = true; }
-            else if (currentArg == "--crop_unfiltered")    { this->crop_unfiltered = true; }
+            else if (currentArg == "--crop_unfiltered") { this->crop_unfiltered = true; }
 
             else if (currentArg == "-store")            { this->graph_store_path = argv[++i]; }
             else if (currentArg == "-load")             { this->graph_load_path = argv[++i]; }
@@ -128,21 +125,23 @@ struct Args{
             else if (currentArg == "--filtered")        { this->index_type = FILTERED_VAMANA; }
             else if (currentArg == "--stitched")        { this->index_type = STITCHED_VAMANA; }
 
-            else if (currentArg == "--no_create")          { this->no_create = true; }
-            else if (currentArg == "--no_query")          { this->no_query = true; }
+            else if (currentArg == "--no_create")       { this->no_create = true; }
+            else if (currentArg == "--no_query")        { this->no_query = true; }
             
             else if (currentArg == "--dummy")           { this->dummy = true; }
 
             // optimizations
             else if (currentArg == "-n_threads")        { this->n_threads = atoi(argv[++i]); }
-            else if (currentArg == "--random_start")     { this->randomStart = true; }
+            else if (currentArg == "--random_start")    { this->randomStart = true; }
             else if (currentArg == "-distance")         { this->euclideanType = atoi(argv[++i]); }
             else if (currentArg == "--pqueue")          { this->usePQueue = true; }
             else if (currentArg == "--no_rgraph")       { this->useRGraph = false; }
             else if (currentArg == "-extra_edges")      { this->extraRandomEdges = atoi(argv[++i]); }
             else if (currentArg == "--acc_unfiltered")  { this->accumulateUnfiltered = true; }
-            else if (currentArg == "-collect_data_index") { this->greedySearchIndexStatsPath = argv[++i]; }
-            else if (currentArg == "-collect_data_query") { this->greedySearchQueryStatsPath = argv[++i]; }
+
+            // evaluation
+            else if (currentArg == "-collect_data_index")   { this->greedySearchIndexStatsPath = argv[++i]; }
+            else if (currentArg == "-collect_data_query")   { this->greedySearchQueryStatsPath = argv[++i]; }
 
 
             else { throw invalid_argument("Invalid command line arguments"); }

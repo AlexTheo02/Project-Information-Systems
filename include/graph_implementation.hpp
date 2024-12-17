@@ -478,49 +478,50 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(
 template <typename T>
 const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::_set_greedySearch(Id s, T xq, int k, int L){
 
-    ofstream outFile = GS_costs_init();
-    float _cost = 0;
-    int _t = 0;
+    // ofstream outFile = GS_costs_init();
+    // float _cost = 0;
 
     // Create empty sets
     unordered_set<Id> Lc = {s}, V, diff; // Initialize Lc with s
 
-    _cost = 0;
-    GS_costs_write(outFile, _t++, _cost);
+    // _cost = 0;
+    // GS_costs_write(outFile, _cost);
 
     
     while(!(diff = setSubtraction(Lc,V)).empty()){
-        _cost = 0;
+        // _cost = 0;
         Id pmin = this->_myArgMin(diff, xq);    // pmin is the node with the minimum distance from query xq
 
         // If node has outgoing neighbors
         if (mapKeyExists(pmin, this->Nout)){
-            _cost = this->Nout[pmin].size();    // how many insertions
+            // int sz_before = Lc.size();
             Lc.insert(this->Nout[pmin].begin(), this->Nout[pmin].end());
+            // int sz_after = Lc.size();
+            // _cost = sz_after - sz_before;    // how many successful insertions
         }
         
         V.insert(pmin);
 
         if (Lc.size() > L){
-            _cost += Lc.size();
+            // _cost += Lc.size();
             Lc = _closestN(L, Lc, xq);    // function: find N closest points from a specific xq from given set and return them
         }
-        GS_costs_write(outFile, _t++, _cost);
+        // GS_costs_write(outFile, _cost);
     }
 
     pair<unordered_set<Id>, unordered_set<Id>> ret;
     
-    if (k < Lc.size())
-        _cost = Lc.size();
-    else
-        _cost = 0;
-    GS_costs_write(outFile, _t++, _cost);
+    // if (k < Lc.size())
+    //     _cost = Lc.size();
+    // else
+    //     _cost = 0;
+    // GS_costs_write(outFile, _cost);
 
     ret.first = _closestN(k, Lc, xq);
     ret.second = V;
 
-    outFile.close();
-    greedySearchCount++;
+    // outFile.close();
+    // greedySearchCount++;
 
     return ret;
 }
@@ -528,9 +529,8 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::_set_greedySe
 template <typename T>
 const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::_pqueue_greedySearch(Id s, T xq, int k, int L){
 
-    ofstream outFile = GS_costs_init();
-    int _t = 0;
-    float _cost = 0;
+    // ofstream outFile = GS_costs_init();
+    // float _cost = 0;
     
     // Create empty sets and initialize the priority queue
     unordered_set<Id> V, diff; 
@@ -542,8 +542,8 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::_pqueue_greed
     priority_queue<Id, vector<Id>, function<bool(Id, Id)>> Lc(comparator);
 
     // Initialize Lc with s
-    _cost = log(1); // = 0
-    GS_costs_write(outFile, _t++, _cost);
+    // _cost = log(1); // = 0
+    // GS_costs_write(outFile, _cost);
     Lc.push(s);
         
     while(!(diff = PQSubtraction(Lc,V)).empty()){
@@ -555,27 +555,27 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::_pqueue_greed
         // If node has outgoing neighbors
         if (mapKeyExists(pmin, this->Nout)){
 
-            _cost = 0;
+            // _cost = 0;
             // if should insert
             for (const Id& neighbor : this->Nout[pmin]){
                 if (Lc.size() < L){
-                    _cost += log(Lc.size());
+                    // _cost += log(Lc.size());
                     Lc.push(neighbor);
                 }
                 else if (this->d(this->nodes[neighbor].value, xq) < this->d(this->nodes[Lc.top()].value, xq)){
                     Lc.pop();
-                    _cost += log(Lc.size());
+                    // _cost += log(Lc.size());
                     Lc.push(neighbor);
                 }
             }
-            GS_costs_write(outFile, _t++, _cost);
+            // GS_costs_write(outFile, _cost);
         }
     }
 
     pair<unordered_set<Id>, unordered_set<Id>> ret;
 
-    _cost = Lc.size();
-    GS_costs_write(outFile, _t++, _cost);
+    // _cost = Lc.size();
+    // GS_costs_write(outFile, _cost);
 
     int Lsize = Lc.size();
     for (int i = 0; i < Lsize - k; i++){
@@ -589,8 +589,8 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::_pqueue_greed
     }
     ret.second = V;
 
-    outFile.close();
-    greedySearchCount++;
+    // outFile.close();
+    // greedySearchCount++;
 
     return ret;
 }

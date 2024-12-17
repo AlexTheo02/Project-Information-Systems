@@ -472,8 +472,8 @@ void GS_costs_end(ofstream outFile){
     outFile.close();
 }
 
-void GS_costs_write(ofstream& outFile, int t, float cost){
-    outFile << greedySearchCount << ", " << t << ", " << cost << endl;
+void GS_costs_write(ofstream& outFile, float cost){
+    outFile << greedySearchCount << ", " << cost << endl;
 }
 
 
