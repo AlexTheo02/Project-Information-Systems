@@ -29,40 +29,37 @@ int main(int argc, char* argv[]) {
 
     
     // Create the indexed graph if instructed from command line arguments, based on indexing type
-    chrono::milliseconds duration; 
-    if (args.createIndex){
+    if (!args.no_create){
+        chrono::microseconds duration;
         duration = createIndex(DG);
-        cout << "Time to create the index: "; printFormatMiliseconds(duration);
-
-        // calculate the medoid to store (used as starting node for unfiltered queries)
-        if (args.index_type == FILTERED_VAMANA || args.index_type == STITCHED_VAMANA){
-            vector<Node<vector<float>>> medoids_vec;
-            for (pair<int, Id> fmedoid : DG.findMedoids(args.threshold))    // already calculated in createIndex
-                medoids_vec.push_back(DG.getNodes()[fmedoid.second]);
-            DG.medoid(medoids_vec, true);
-        }
+        cout << "Time to create the index: " << FormatMicroseconds(duration) << endl;
+        s_log << "Number of edges: " << DG.get_n_edges() << "\n";
     }
         
     // Load graph if instructed from command line arguments
     else
         DG.load(args.graph_load_path);
 
-    cout << "Index is ready\n";
+    c_log << "Index is ready\n";
     // Store graph if instructed from command line arguments
 
     DG.store(args.graph_store_path);
+
+    // If instructed to not perform queries, stop execution here
+    if (args.no_query) { return 0; }
+
 
     // Perform queries on the graph and calculate average recall score
     time_t time_now = time(NULL); // get current time
     struct tm * timeinfo;
     timeinfo = localtime(&time_now);
 
-    cout << "Starting index evaluation on "<< asctime(timeinfo); // https://cplusplus.com/reference/ctime/localtime/, https://cplusplus.com/reference/ctime/time/
-    pair<float, chrono::milliseconds> results = evaluateIndex<vector<float>>(ref(DG), (args.index_type == VAMANA && !endsWith(args.queries_path, ".bin")) ? read_queries_vecs<vector<float>> : read_queries_bin_contest<vector<float>>);
+    c_log << "Starting index evaluation on "<< asctime(timeinfo); // https://cplusplus.com/reference/ctime/localtime/, https://cplusplus.com/reference/ctime/time/
+    pair<float, chrono::microseconds> results = evaluateIndex<vector<float>>(ref(DG), (args.index_type == VAMANA && !endsWith(args.queries_path, ".bin")) ? read_queries_vecs<vector<float>> : read_queries_bin_contest<vector<float>>);
 
     // print recall and duration
-    cout << "Evaluation Finished." << endl;
-    cout << "Time to query the index: "; printFormatMiliseconds(results.second);
+    c_log << "Evaluation Finished.\n";
+    cout << "Time to query the index: " << FormatMicroseconds(results.second) << endl;
     cout << "Average recall score: " << results.first << endl;
 
     return 0;

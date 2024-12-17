@@ -325,14 +325,14 @@ void SaveKNN(const std::vector<std::vector<uint32_t>> &knns,
 void ReadBin(const std::string &file_path,
              const int num_dimensions,
              std::vector<std::vector<float>> &data) {
-  std::cout << "Reading Data: " << file_path << std::endl;
+  c_log << "Reading Data: " << file_path << '\n';
   std::ifstream ifs;
   ifs.open(file_path, std::ios::binary);
   assert(ifs.is_open());
   uint32_t N;  // num of points
   ifs.read((char *)&N, sizeof(uint32_t));
   data.resize(N);
-  std::cout << "# of points: " << N << std::endl;
+  c_log << "# of points: " << N << '\n';
   std::vector<float> buff(num_dimensions);
   int counter = 0;
   while (ifs.read((char *)buff.data(), num_dimensions * sizeof(float))) {
@@ -343,7 +343,7 @@ void ReadBin(const std::string &file_path,
     data[counter++] = std::move(row);
   }
   ifs.close();
-  std::cout << "Finished Reading Data" << endl;
+  c_log << "Finished Reading Data\n";
 }
 
 // prints a vector
@@ -420,6 +420,24 @@ void printFormatMiliseconds(chrono::milliseconds duration){
     << setw(2) << setfill('0') << hours << ":"
     << setw(2) << setfill('0') << minutes << ":"
     << setw(2) << setfill('0') << seconds << endl;
+}
+
+string FormatMicroseconds(chrono::microseconds duration){
+    int hours = duration.count() / 3600000000;
+    int minutes = (duration.count() % 3600000000) / 60000000;
+    int seconds = (duration.count() % 60000000) / 1000000;
+    int milliseconds = (duration.count() % 1000000) / 1000;
+    int microseconds = duration.count() % 1000;
+
+    ostringstream oss;
+    oss 
+    << setw(2) << setfill('0') << hours << ":"
+    << setw(2) << setfill('0') << minutes << ":"
+    << setw(2) << setfill('0') << seconds << "."
+    << setw(3) << setfill('0') << milliseconds << "'"
+    << setw(3) << setfill('0') << microseconds;
+
+    return oss.str();
 }
 
 // Requirements and requirement-placeholders

@@ -137,7 +137,7 @@ class DirectedGraph{
         void _thread_medoid_fn(vector<Node<T>>& nodes, int start_index, int end_index, Id& local_minimum, float& local_dmin);
 
         // Thread function for parallel querying.
-        void _thread_findQueryNeighbors_fn(vector<Query<T>>& queries, mutex& mx_query_index, int& query_index, vector<unordered_set<Id>>& returnVec);
+        void _thread_findQueryNeighbors_fn(vector<Query<T>>& queries, mutex& mx_query_index, int& query_index, vector<pair<unordered_set<Id>, pair<chrono::microseconds, bool>>>& returnVec);
 
         bool _serial_Rgraph(int R);
 
@@ -278,7 +278,7 @@ class DirectedGraph{
 
         // Returns the neighbors of all queries found in the given queries_path file.
         // If the file is .vecs format read_arg corresponds to the number of queries and, if the file is in .bin format, it corresponds to the dimension of the query vector
-        vector<unordered_set<Id>> findQueriesNeighbors(function<vector<Query<T>>(void)> readQueries);
+        vector<pair<unordered_set<Id>, pair<chrono::microseconds, bool>>> findQueriesNeighbors(function<vector<Query<T>>(void)> readQueries);
 
 
         // optimizations

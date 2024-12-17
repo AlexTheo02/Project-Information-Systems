@@ -57,6 +57,7 @@ struct Args{
     int n_threads = -1;             // parallel functions [LIST OF FUNCTIONS THAT CAN BE PARALLELIZED TODO] <------------------------------- TODO 
     float threshold = -1;
     bool debug_mode = false;        // c_log follows this flag (see c_log documentation for more)
+    bool stat_mode = false;              // stat follows this flag (see stat documentation for more)
     int Lsmall = -1;
     int Rsmall = -1;
     int n_data = -1;
@@ -65,13 +66,15 @@ struct Args{
     int dim_data = -1;
     int dim_query = -1;
     bool crop_filters = false;
+    bool crop_unfiltered = false;
     vector<int> __discardedQueryIndices;    // this vector contains the indices of the discarded queries (the filtered queries of categories 2 and 3, or even filtered queries if --crop_filters was set)
     string graph_store_path = "";
     string graph_load_path = "";
     string data_path = "";
     string queries_path = "";
     string groundtruth_path = "";
-    bool createIndex = false;           // flag whether to create new vamana index using the vamana algorithm
+    bool no_create = false;           // flag whether to create new vamana index using the vamana algorithm
+    bool no_query = false;
     bool dummy = false;
 
     // arguments regarding optimization
@@ -94,44 +97,47 @@ struct Args{
         for (int i = 1; i < argc; i++){
             string currentArg = argv[i];
 
-            if (currentArg == "-k")                         { this->k = atoi(argv[++i]); }
-            else if (currentArg == "-L")                    { this->L = atoi(argv[++i]); }
-            else if (currentArg == "-R")                    { this->R = atoi(argv[++i]); }
-            else if (currentArg == "-a")                    { this->a = atof(argv[++i]); }
-            else if (currentArg == "-t")                    { this->threshold = atof(argv[++i]); }
-            else if (currentArg == "--debug")               { this->debug_mode = true; }
-            else if (currentArg == "-Ls")                   { this->Lsmall = atoi(argv[++i]); }
-            else if (currentArg == "-Rs")                   { this->Rsmall = atoi(argv[++i]); }
-            else if (currentArg == "-n_data")               { this->n_data = atoi(argv[++i]); }
-            else if (currentArg == "-n_queries")            { this->n_queries = atoi(argv[++i]); }
-            else if (currentArg == "-n_groundtruths")       { this->n_groundtruths = atoi(argv[++i]); }
-            else if (currentArg == "-dim_data")             { this->dim_data = atoi(argv[++i]); }
-            else if (currentArg == "-dim_query")            { this->dim_query = atoi(argv[++i]); }
-            else if (currentArg == "--crop_filters")        { this->crop_filters = true; }
+            if (currentArg == "-k")                     { this->k = atoi(argv[++i]); }
+            else if (currentArg == "-L")                { this->L = atoi(argv[++i]); }
+            else if (currentArg == "-R")                { this->R = atoi(argv[++i]); }
+            else if (currentArg == "-a")                { this->a = atof(argv[++i]); }
+            else if (currentArg == "-t")                { this->threshold = atof(argv[++i]); }
+            else if (currentArg == "--debug")           { this->debug_mode = true; }
+            else if (currentArg == "--stat")            { this->stat_mode = true; }
+            else if (currentArg == "-Ls")               { this->Lsmall = atoi(argv[++i]); }
+            else if (currentArg == "-Rs")               { this->Rsmall = atoi(argv[++i]); }
+            else if (currentArg == "-n_data")           { this->n_data = atoi(argv[++i]); }
+            else if (currentArg == "-n_queries")        { this->n_queries = atoi(argv[++i]); }
+            else if (currentArg == "-n_groundtruths")   { this->n_groundtruths = atoi(argv[++i]); }
+            else if (currentArg == "-dim_data")         { this->dim_data = atoi(argv[++i]); }
+            else if (currentArg == "-dim_query")        { this->dim_query = atoi(argv[++i]); }
+            else if (currentArg == "--crop_filters")    { this->crop_filters = true; }
+            else if (currentArg == "--crop_unfiltered") { this->crop_unfiltered = true; }
 
-            else if (currentArg == "-store")                { this->graph_store_path = argv[++i]; }
-            else if (currentArg == "-load")                 { this->graph_load_path = argv[++i]; }
+            else if (currentArg == "-store")            { this->graph_store_path = argv[++i]; }
+            else if (currentArg == "-load")             { this->graph_load_path = argv[++i]; }
 
-            else if (currentArg == "-data")                 { this->data_path = argv[++i]; } 
-            else if (currentArg == "-queries")              { this->queries_path = argv[++i]; }
-            else if (currentArg == "-groundtruth")          { this->groundtruth_path = argv[++i]; }
+            else if (currentArg == "-data")             { this->data_path = argv[++i]; } 
+            else if (currentArg == "-queries")          { this->queries_path = argv[++i]; }
+            else if (currentArg == "-groundtruth")      { this->groundtruth_path = argv[++i]; }
 
-            else if (currentArg == "--vamana")              { this->index_type = VAMANA; }
-            else if (currentArg == "--filtered")            { this->index_type = FILTERED_VAMANA; }
-            else if (currentArg == "--stitched")            { this->index_type = STITCHED_VAMANA; }
+            else if (currentArg == "--vamana")          { this->index_type = VAMANA; }
+            else if (currentArg == "--filtered")        { this->index_type = FILTERED_VAMANA; }
+            else if (currentArg == "--stitched")        { this->index_type = STITCHED_VAMANA; }
 
-            else if (currentArg == "--create")              { this->createIndex = true; }
+            else if (currentArg == "--no_create")       { this->no_create = true; }
+            else if (currentArg == "--no_query")        { this->no_query = true; }
             
-            else if (currentArg == "--dummy")               { this->dummy = true; }
+            else if (currentArg == "--dummy")           { this->dummy = true; }
 
             // optimizations
-            else if (currentArg == "-n_threads")            { this->n_threads = atoi(argv[++i]); }
-            else if (currentArg == "--random_start")        { this->randomStart = true; }
-            else if (currentArg == "-distance")             { this->euclideanType = atoi(argv[++i]); }
-            else if (currentArg == "--pqueue")              { this->usePQueue = true; }
-            else if (currentArg == "--no_rgraph")           { this->useRGraph = false; }
-            else if (currentArg == "-extra_edges")          { this->extraRandomEdges = atoi(argv[++i]); }
-            else if (currentArg == "--acc_unfiltered")      { this->accumulateUnfiltered = true; }
+            else if (currentArg == "-n_threads")        { this->n_threads = atoi(argv[++i]); }
+            else if (currentArg == "--random_start")    { this->randomStart = true; }
+            else if (currentArg == "-distance")         { this->euclideanType = atoi(argv[++i]); }
+            else if (currentArg == "--pqueue")          { this->usePQueue = true; }
+            else if (currentArg == "--no_rgraph")       { this->useRGraph = false; }
+            else if (currentArg == "-extra_edges")      { this->extraRandomEdges = atoi(argv[++i]); }
+            else if (currentArg == "--acc_unfiltered")  { this->accumulateUnfiltered = true; }
 
             // evaluation
             else if (currentArg == "-collect_data_index")   { this->greedySearchIndexStatsPath = argv[++i]; }
@@ -151,7 +157,9 @@ struct Args{
         if (this->Lsmall == -1)     this->Lsmall = 100;
         if (this->Rsmall == -1)     this->Rsmall = 32;
 
-        if (this->graph_load_path == "")    this->createIndex = true;
+        if (this->graph_load_path == "" && this->no_create) {
+            throw invalid_argument("Please specify a load path when using --no_create using -load your/path/here");
+        }
 
         if (this->dummy){
             this->n_data = 10000;
@@ -252,6 +260,14 @@ struct Args{
 
         if(this->index_type == STITCHED_VAMANA) cout << "Lsmall: " << this->Lsmall << endl;
         if(this->index_type == STITCHED_VAMANA) cout << "Rsmall: " << this->Rsmall << endl;
+
+        if (this->extraRandomEdges > 0) cout << "Number of extra random edges: " << this->extraRandomEdges << endl;
+        if (this->crop_filters) cout << "Crop filters" << endl;
+        if (this->crop_unfiltered) cout << "Crop unfiltered" << endl;
+        if (this->accumulateUnfiltered) cout << "Accumulate unfiltered" << endl;
+        if (this->usePQueue) cout << "Using priority queue" << endl;
+        if (!this->useRGraph) cout << "Not using rgraph initialization" << endl;
+
     }
 };
 
@@ -277,6 +293,26 @@ class ConsoleLog{
 };
 // instantiation of static object
 static ConsoleLog c_log;    // each source file that includes config.hpp will have its own instance of c_log
+
+// Custom Cout-like Object that respects the args.stat flag on whether to print or not.
+// Cannot be used with endl. Please use << '\n'; instead of << endl;
+// Can be chained with simple printable types: stat << a << b << ... ;
+class StatLog{
+
+    public:
+
+    StatLog(){};   // empty constructor
+
+    // overloading the << operator
+    template <typename T>
+    StatLog& operator<<(const T& t){
+        if (args.stat_mode)
+            cout << t;
+        return *this;
+    }
+};
+// instantiation of static object
+static StatLog s_log;    // each source file that includes config.hpp will have its own instance of stat
 
 
 
