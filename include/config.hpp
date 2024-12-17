@@ -34,6 +34,7 @@ static int greedySearchMode = 0;
 static int greedySearchCount = 0;
 static int C = 0;
 static int I = 0;
+static int LcSize = 0;
 
 // enum for index type
 enum IndexType {

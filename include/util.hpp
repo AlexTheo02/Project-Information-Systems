@@ -435,6 +435,27 @@ bool alwaysEmpty(const T& t) { return true; }
 template<typename T>
 bool vectorEmpty(const vector<T>& v){ return v.empty(); }
 
+ofstream GS_costs_init(){
+    string file_path = (greedySearchMode) ? args.greedySearchQueryStatsPath
+                                          : args.greedySearchIndexStatsPath;
+    ofstream outFile;
+    greedySearchCount ? outFile.open(file_path, ios::app) : outFile.open(file_path, ios::trunc); // Open for writing
+    if (!outFile.is_open()) {
+        cerr << "Error: could not open " << file_path << " for writing." << endl;
+        // return EXIT_FAILURE;
+    }
+    if (greedySearchCount == 0){
+        outFile << "greedySearchCount" << "," << "t" << "," << "cost" << endl;
+    }
+    return outFile;
+}
 
+void GS_costs_end(ofstream outFile){
+    outFile.close();
+}
+
+void GS_costs_write(ofstream& outFile, int t, float cost){
+    outFile << greedySearchCount << ", " << t << ", " << cost << endl;
+}
 
 
