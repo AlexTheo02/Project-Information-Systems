@@ -51,6 +51,18 @@ vector<Query<T>> read_queries_bin_contest(void){
                 args.__discardedQueryIndices.push_back(i);  // discarding queries of type 1 (because of --crop_filters), 2 or 3 (timestamps)
             }
         }
+        else if (args.crop_unfiltered){
+            // create unfiltered query from filtered query data
+
+            if (queries_raw[i][0] == 1){   // get only the unfiltered queries. Discard filtered queries.
+                Query<T> q(i, 1, true, query_value, vectorEmpty<float>);
+                queries.push_back(q);
+            }
+            // keep the indices of the discarded queries to not consider them during groundtruth evaluation
+            else{
+                args.__discardedQueryIndices.push_back(i);  // discarding queries of type 1 (because of --crop_filters), 2 or 3 (timestamps)
+            }
+        }
         else{
 
             if (queries_raw[i][0] == 0 || queries_raw[i][0] == 1){
@@ -80,10 +92,10 @@ bool endsWith(const string& str, const string& suffix) {
            str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
 }
 
-// Creates the index on the graph based on the indexing type and return the duration in miliseconds
+// Creates the index on the graph based on the indexing type and return the duration in microseconds
 template <typename T>
-chrono::milliseconds createIndex(DirectedGraph<T>& DG){
-    chrono::milliseconds duration = (chrono::milliseconds) 0;
+chrono::microseconds createIndex(DirectedGraph<T>& DG){
+    chrono::microseconds duration = (chrono::microseconds) 0;
     chrono::high_resolution_clock::time_point startTime, endTime;
 
     vector<vector<float>> data;
@@ -113,7 +125,7 @@ chrono::milliseconds createIndex(DirectedGraph<T>& DG){
             endTime = chrono::high_resolution_clock::now();
 
             // Calculate duration
-            duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime);
+            duration = chrono::duration_cast<chrono::microseconds>(endTime - startTime);
             
             break;
 
@@ -146,7 +158,7 @@ chrono::milliseconds createIndex(DirectedGraph<T>& DG){
             endTime = chrono::high_resolution_clock::now();
 
             // Calculate duration
-            duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime);
+            duration = chrono::duration_cast<chrono::microseconds>(endTime - startTime);
 
             break;
 
@@ -179,7 +191,7 @@ chrono::milliseconds createIndex(DirectedGraph<T>& DG){
             endTime = chrono::high_resolution_clock::now();
 
             // Calculate duration
-            duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime);
+            duration = chrono::duration_cast<chrono::microseconds>(endTime - startTime);
 
             break;
         
@@ -226,14 +238,18 @@ unordered_set<Id> DirectedGraph<T>::findNeighbors(Query<T> q){
 
 // Thread function for parallel querying.
 template <typename T>
-void DirectedGraph<T>::_thread_findQueryNeighbors_fn(vector<Query<T>>& queries, mutex& mx_query_index, int& query_index, vector<unordered_set<Id>>& returnVec){
+void DirectedGraph<T>::_thread_findQueryNeighbors_fn(vector<Query<T>>& queries, mutex& mx_query_index, int& query_index, vector<pair<unordered_set<Id>, pair<chrono::microseconds, bool>>>& returnVec){
     mx_query_index.lock();
     while(query_index < queries.size()){
         int my_q_index = query_index++;     // store current and increment
         mx_query_index.unlock();
 
-        returnVec[my_q_index] = findNeighbors(queries[my_q_index]);
-        
+        chrono::high_resolution_clock::time_point start_time = chrono::high_resolution_clock::now();
+        returnVec[my_q_index].first = findNeighbors(queries[my_q_index]);
+        chrono::high_resolution_clock::time_point end_time = chrono::high_resolution_clock::now();
+        returnVec[my_q_index].second.first = chrono::duration_cast<chrono::microseconds>(end_time - start_time);
+        returnVec[my_q_index].second.second = queries[my_q_index].filtered;
+
         mx_query_index.lock();
     }
     mx_query_index.unlock();
@@ -242,13 +258,13 @@ void DirectedGraph<T>::_thread_findQueryNeighbors_fn(vector<Query<T>>& queries, 
 // Returns the neighbors of all queries found in the given queries_path file.
 // If the file is .vecs format read_arg corresponds to the number of queries and, if the file is in .bin format, it corresponds to the dimension of the query vector
 template <typename T>
-vector<unordered_set<Id>> DirectedGraph<T>::findQueriesNeighbors(function<vector<Query<T>>(void)> readQueries){
+vector<pair<unordered_set<Id>, pair<chrono::microseconds, bool>>> DirectedGraph<T>::findQueriesNeighbors(function<vector<Query<T>>(void)> readQueries){
 
     c_log << "In Queries Neighbors" << '\n';
     // Read queries
     vector<Query<T>> queries = readQueries();
 
-    vector<unordered_set<Id>> returnVec(args.n_queries);
+    vector<pair<unordered_set<Id>, pair<chrono::microseconds, bool>>> returnVec(args.n_queries);
     vector<thread> threads;
     mutex mx_query_index;
     int query_index = 0;
@@ -273,9 +289,9 @@ vector<unordered_set<Id>> DirectedGraph<T>::findQueriesNeighbors(function<vector
 
 // Evaluate given index based on its types and return a pair containing average recall score and duration
 template <typename T>
-pair<float, chrono::milliseconds> evaluateIndex(DirectedGraph<T>& DG, function<vector<Query<T>>(void)> readQueries){
+pair<float, chrono::microseconds> evaluateIndex(DirectedGraph<T>& DG, function<vector<Query<T>>(void)> readQueries){
 
-    chrono::milliseconds duration = (chrono::milliseconds) 0;
+    chrono::microseconds duration = (chrono::microseconds) 0;
     chrono::high_resolution_clock::time_point startTime, endTime;
 
     greedySearchCount = 0;
@@ -302,12 +318,12 @@ pair<float, chrono::milliseconds> evaluateIndex(DirectedGraph<T>& DG, function<v
 
     // Start the timer
     startTime = chrono::high_resolution_clock::now();
-    vector<unordered_set<Id>> queriesNeighbors = DG.findQueriesNeighbors(readQueries);
+    vector<pair<unordered_set<Id>, pair<chrono::microseconds, bool>>> queriesNeighbors = DG.findQueriesNeighbors(readQueries);
     // End the timer
     endTime = chrono::high_resolution_clock::now();
 
     // Calculate duration
-    duration = chrono::duration_cast<chrono::milliseconds>(endTime - startTime);
+    duration = chrono::duration_cast<chrono::microseconds>(endTime - startTime);
 
     float total_recall = 0.f, query_recall;
 
@@ -316,15 +332,19 @@ pair<float, chrono::milliseconds> evaluateIndex(DirectedGraph<T>& DG, function<v
     for (int indexToRemove : args.__discardedQueryIndices){
         groundtruth.erase(groundtruth.begin() + indexToRemove - deleted++); // assumming __discardedQueryIndices are sorted in ascending order, and contain valid and corresponding indices with queries.
     }
-    
+    s_log << "--QUERIES--\n";
+    s_log<<"index,recall_score,duration,filtered\n";
     for(int i = 0; i < args.n_queries; i++){
         // Calculate the current recall and add it to the sum of all recall scores
-        query_recall = k_recall(queriesNeighbors[i], groundtruth[i]);
+        query_recall = k_recall(queriesNeighbors[i].first, groundtruth[i]);
         c_log << "Recall score for query: " << i+1 << "/" << args.n_queries << ":\t\t" << query_recall << "\n";
+        // query index, query recall, time to execute, filtered
+        s_log << i << "," << query_recall << "," << FormatMicroseconds(queriesNeighbors[i].second.first) << "," << queriesNeighbors[i].second.second << '\n';
         total_recall += query_recall;
     }
+    s_log << "--QUERIES_END--\n";
 
-    pair<float, chrono::milliseconds> ret;
+    pair<float, chrono::microseconds> ret;
     ret.first = total_recall / args.n_queries;
     ret.second = duration;
 
