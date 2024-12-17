@@ -176,8 +176,18 @@ struct Args{
             if (this->queries_path == "") this->queries_path = "data/siftsmall/siftsmall_query.fvecs";
             if (this->groundtruth_path == "") this->groundtruth_path = "data/siftsmall/siftsmall_groundtruth.ivecs";
 
-            if (this->greedySearchIndexStatsPath == "") this->greedySearchIndexStatsPath =  "./evaluations/VAMANA_greedySearchIndexStats.csv";
-            if (this->greedySearchQueryStatsPath == "") this->greedySearchQueryStatsPath =  "./evaluations/VAMANA_greedySearchQueryStats.csv";
+            if (this->greedySearchIndexStatsPath == "") {
+                if (this->usePQueue)
+                    this->greedySearchIndexStatsPath =  "./evaluations/PQ_VAMANA_greedySearchIndexStats.csv";
+                else
+                    this->greedySearchIndexStatsPath =  "./evaluations/SET_VAMANA_greedySearchIndexStats.csv";
+            }
+            if (this->greedySearchQueryStatsPath == "") {
+                if(this->usePQueue)
+                    this->greedySearchQueryStatsPath =  "./evaluations/PQ_VAMANA_greedySearchQueryStats.csv";
+                else
+                    this->greedySearchQueryStatsPath = "./evaluations/SET_VAMANA_greedySearchQueryStats.csv";
+            }
         }
         else if (this->index_type == FILTERED_VAMANA || this->index_type == STITCHED_VAMANA){
 
@@ -190,15 +200,36 @@ struct Args{
             if (this->data_path == "") this->data_path = "data/contest-data-release-1m.bin";
             if (this->queries_path == "") this->queries_path = "data/contest-queries-release-1m.bin";
             if (this->groundtruth_path == "") this->groundtruth_path = "data/contest-groundtruth-custom-1m.txt";
-
+            // Stitched
             if (this->index_type == STITCHED_VAMANA){
                 this->R = 64;  // R = Rstitched
-                if (this->greedySearchIndexStatsPath == "") this->greedySearchIndexStatsPath =  "./evaluations/STITCHED_greedySearchIndexStats.csv";
-                if (this->greedySearchQueryStatsPath == "") this->greedySearchQueryStatsPath =  "./evaluations/STITCHED_greedySearchQueryStats.csv";
+                if (this->greedySearchIndexStatsPath == "") {
+                if (this->usePQueue)
+                    this->greedySearchIndexStatsPath =  "./evaluations/PQ_STITCHED_greedySearchIndexStats.csv";
+                else
+                    this->greedySearchIndexStatsPath =  "./evaluations/SET_STITCHED_greedySearchIndexStats.csv";
+                }
+            if (this->greedySearchQueryStatsPath == "") {
+                if(this->usePQueue)
+                    this->greedySearchQueryStatsPath =  "./evaluations/PQ_STITCHED_greedySearchQueryStats.csv";
+                else
+                    this->greedySearchQueryStatsPath = "./evaluations/SET_STITCHED_greedySearchQueryStats.csv";
+                }
             }
+            // Filtered
             else{
-                if (this->greedySearchIndexStatsPath == "") this->greedySearchIndexStatsPath =  "./evaluations/FILTERED_greedySearchIndexStats.csv";
-                if (this->greedySearchQueryStatsPath == "") this->greedySearchQueryStatsPath =  "./evaluations/FILTERED_greedySearchQueryStats.csv";
+                if (this->greedySearchIndexStatsPath == "") {
+                if (this->usePQueue)
+                    this->greedySearchIndexStatsPath =  "./evaluations/PQ_FILTERED_greedySearchIndexStats.csv";
+                else
+                    this->greedySearchIndexStatsPath =  "./evaluations/SET_FILTERED_greedySearchIndexStats.csv";
+            }
+            if (this->greedySearchQueryStatsPath == "") {
+                if(this->usePQueue)
+                    this->greedySearchQueryStatsPath =  "./evaluations/PQ_FILTERED_greedySearchQueryStats.csv";
+                else
+                    this->greedySearchQueryStatsPath = "./evaluations/SET_FILTERED_greedySearchQueryStats.csv";
+            }
             }
         }
         else throw invalid_argument("You must specify the Index Type. Valid options: [--vamana, --filtered, --stitched]\n");

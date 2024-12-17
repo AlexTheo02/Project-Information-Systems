@@ -591,12 +591,15 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::_pqueue_greed
 
     pair<unordered_set<Id>, unordered_set<Id>> ret;
     
-    for (int i = 0; i < Lc.size() - k; i++)
-        Lc.pop();
+    int Lsize = Lc.size();
+    for (int i = 0; i < Lsize - k; i++){
+        if (!Lc.empty()){ Lc.pop(); }
+    }
 
-    for (int i = 0; i < Lc.size(); i++){
+    Lsize = Lc.size();
+    for (int i = 0; i < Lsize; i++){
         ret.first.insert(Lc.top());
-        Lc.pop();
+        if (!Lc.empty()){ Lc.pop(); }
     }
     ret.second = V;
 
