@@ -32,9 +32,6 @@ using namespace std;
 // For your specified datatype T, you should have the ostream << and istream >> operators overloaded. 
 static int greedySearchMode = 0;
 static int greedySearchCount = 0;
-static int C = 0;
-static int I = 0;
-static int LcSize = 0;
 
 // enum for index type
 enum IndexType {
