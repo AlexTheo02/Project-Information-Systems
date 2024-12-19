@@ -199,6 +199,46 @@ void test_setUnion(void){
     TEST_CHECK(setUnion(setUnion(A,B),C) == setUnion(A, setUnion(B,C)));
 }
 
+void test_PQSubtraction(void){    
+    
+    function<bool(int, int)> comparator = less<int>();
+    priority_queue<int, std::vector<int>, function<bool(int, int)>> pq(comparator, {1, 2});
+
+    pq.push(1);
+    pq.push(2);
+
+    unordered_set<int> A,B,C,T,TA,TB,N;
+    A = {1, 2};
+
+    // default case 1: when A ∩ B = ∅
+    B = {3,4};
+
+    // Test assertion (equivalent to TEST_CHECK)
+    TEST_CHECK(PQSubtraction(pq, B) == A);
+
+    // default case 2: A ∩ B ≠ ∅
+    B = {2,3};
+    TA = {1};
+    TB = {3};
+
+    TEST_CHECK(PQSubtraction(pq,B) == TA);
+
+    // default case 3: A ⊆ B
+    A = {1,2};
+    B = {1,2,3};
+    TA = {};
+    TB = {3};
+
+    TEST_CHECK(PQSubtraction(pq,B) == TA);
+
+    // subtraction with ∅
+    TEST_CHECK(PQSubtraction(pq,{}) == A);
+    TEST_CHECK(PQSubtraction({},A) == N);
+
+    // subtraction with self pq(A) \ A = ∅
+    TEST_CHECK(PQSubtraction(pq,A) == N);
+}
+
 void test_sampleFromSet(void){    
     
     unordered_set<int> s;

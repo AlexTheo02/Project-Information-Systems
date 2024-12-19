@@ -607,6 +607,72 @@ void test_init(void){
     
 }
 
+void test_startingNode(){
+
+    // Initialize the graph
+    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
+
+     vector<vector<float>> vectors = {
+        (vector<float>) {1,1,1,1,1},
+        (vector<float>) {2,2,2,2,2},
+        (vector<float>) {3,3,3,3,3},
+        (vector<float>) {4,4,4,4,4},
+        (vector<float>) {5,5,5,5,5},
+        (vector<float>) {6,6,6,6,6},
+        (vector<float>) {7,7,7,7,7},
+    };
+
+    // Add nodes to graph
+    for (vector<float>& v : vectors){
+        DG.createNode(v);
+    }
+
+    // Take a random node as a starting node
+    args.randomStart = 1;
+    args.n_threads = 1;
+    Id startNode =  DG.startingNode();
+
+    // The id of the node must be below the size of the number of nodes in the graph
+    TEST_CHECK(startNode < DG.get_n_nodes());
+
+    // Take the medoid as the starting node
+    args.randomStart = 0;
+    startNode =  DG.startingNode();
+
+    // We know that the medoid will have an id of 3, since we insert the vectors manually
+    TEST_CHECK(startNode == 3);
+
+    // Initialize the graph
+    DirectedGraph<vector<float>> DG2(euclideanDistance<vector<float>>, vectorEmpty<float>);
+
+    // Add nodes to graph with category 1
+    for (vector<float>& v : vectors){
+        DG2.createNode(v, 1);
+    }
+
+    // Take a random node with category 2 as a starting node (no node in the graph belongs in category 2, therefore a random node will be returned)
+    args.randomStart = 1;
+    args.threshold = 0.5;
+    startNode =  DG2.startingNode(2);
+
+    // The id of the node must be below the size of the number of nodes in the graph
+    TEST_CHECK(startNode < DG2.get_n_nodes());
+
+    // We want a random node belonging to category 1
+    startNode =  DG2.startingNode(1);
+
+    // The id of the node must be below the size of the number of nodes in the graph
+    TEST_CHECK(startNode < DG2.get_n_nodes());
+
+    // We want the medoid of category 1
+    args.randomStart = 0;
+    startNode =  DG2.startingNode(1);
+
+    // We know that the medoid will have an id of 3, since we insert the vectors manually
+    TEST_CHECK(startNode == 3);
+
+}
+
 
 TEST_LIST = {
     { "test_graphCreation", test_graphCreation },
@@ -621,5 +687,6 @@ TEST_LIST = {
     { "test_robustPrune", test_robustPrune},
     { "test_vamanaAlgorithm", test_vamanaAlgorithm},
     { "test_init", test_init},
+    { "test_startingNode", test_startingNode},
     { NULL, NULL }     // zeroed record marking the end of the list
 };

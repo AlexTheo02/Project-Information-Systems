@@ -280,10 +280,4 @@ class DirectedGraph{
         // If the file is .vecs format read_arg corresponds to the number of queries and, if the file is in .bin format, it corresponds to the dimension of the query vector
         vector<pair<unordered_set<Id>, pair<chrono::microseconds, bool>>> findQueriesNeighbors(function<vector<Query<T>>(void)> readQueries);
 
-
-        // optimizations
-
-        // adds args.extraRandomEdges extra random edges to the index. Call only after calling vamana.
-        void addExtraRandomEdges(); // - can be made parallel - as R graph - maybe modify Rgraph to initialize the graph initially
-
 };
