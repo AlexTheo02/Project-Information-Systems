@@ -410,18 +410,6 @@ double measureTime(const string name, Func func, Args&&... args){
 }
 
 // Timing functions 
-// https://www.geeksforgeeks.org/measure-execution-time-function-cpp/
-void printFormatMiliseconds(chrono::milliseconds duration){
-    int hours = duration.count() / 3600000;
-    int minutes = (duration.count() % 3600000) / 60000;
-    int seconds = (duration.count() % 60000) / 1000;
-
-    cout 
-    << setw(2) << setfill('0') << hours << ":"
-    << setw(2) << setfill('0') << minutes << ":"
-    << setw(2) << setfill('0') << seconds << endl;
-}
-
 string FormatMicroseconds(chrono::microseconds duration){
     int hours = duration.count() / 3600000000;
     int minutes = (duration.count() % 3600000000) / 60000000;
@@ -453,27 +441,27 @@ bool alwaysEmpty(const T& t) { return true; }
 template<typename T>
 bool vectorEmpty(const vector<T>& v){ return v.empty(); }
 
-ofstream GS_costs_init(){
-    string file_path = (greedySearchMode) ? args.greedySearchQueryStatsPath
-                                          : args.greedySearchIndexStatsPath;
-    ofstream outFile;
-    greedySearchCount ? outFile.open(file_path, ios::app) : outFile.open(file_path, ios::trunc); // Open for writing
-    if (!outFile.is_open()) {
-        cerr << "Error: could not open " << file_path << " for writing." << endl;
-        // return EXIT_FAILURE;
-    }
-    if (greedySearchCount == 0){
-        outFile << "greedySearchCount" << "," << "t" << "," << "cost" << endl;
-    }
-    return outFile;
-}
+// ofstream GS_costs_init(){
+//     string file_path = (greedySearchMode) ? args.greedySearchQueryStatsPath
+//                                           : args.greedySearchIndexStatsPath;
+//     ofstream outFile;
+//     greedySearchCount ? outFile.open(file_path, ios::app) : outFile.open(file_path, ios::trunc); // Open for writing
+//     if (!outFile.is_open()) {
+//         cerr << "Error: could not open " << file_path << " for writing." << endl;
+//         // return EXIT_FAILURE;
+//     }
+//     if (greedySearchCount == 0){
+//         outFile << "greedySearchCount" << "," << "t" << "," << "cost" << endl;
+//     }
+//     return outFile;
+// }
 
-void GS_costs_end(ofstream outFile){
-    outFile.close();
-}
+// void GS_costs_end(ofstream outFile){
+//     outFile.close();
+// }
 
-void GS_costs_write(ofstream& outFile, float cost){
-    outFile << greedySearchCount << ", " << cost << endl;
-}
+// void GS_costs_write(ofstream& outFile, float cost){
+//     outFile << greedySearchCount << ", " << cost << endl;
+// }
 
 

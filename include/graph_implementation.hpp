@@ -107,10 +107,12 @@ bool DirectedGraph<T>::clearNeighbors(const Id id){
 // clears all edges in the graph
 template <typename T>
 bool DirectedGraph<T>::clearEdges(void){
-    for (Node<T> node : this->nodes){
-        if (!this->clearNeighbors(node.id)){
-            c_log << "ERROR: Failed to clear neighbors for node" << '\n';
-            return false;
+    if (this->n_nodes){
+        for (Node<T> node : this->nodes){
+            if (!this->clearNeighbors(node.id)){
+                c_log << "ERROR: Failed to clear neighbors for node" << '\n';
+                return false;
+            }
         }
     }
 

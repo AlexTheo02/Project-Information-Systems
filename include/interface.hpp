@@ -294,8 +294,8 @@ pair<float, chrono::microseconds> evaluateIndex(DirectedGraph<T>& DG, function<v
     chrono::microseconds duration = (chrono::microseconds) 0;
     chrono::high_resolution_clock::time_point startTime, endTime;
 
-    greedySearchCount = 0;
-    greedySearchMode = 1;
+    // greedySearchCount = 0;
+    // greedySearchMode = 1;
 
     vector<vector<Id>> groundtruth;
     // If the groundtruth path is given, then read the specified file
