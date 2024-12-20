@@ -319,7 +319,6 @@ pair<pair<float, chrono::microseconds>, pair<float, chrono::microseconds>> evalu
     float total_recall = 0.f, query_recall;
 
     s_log << "--UNF_QUERIES--\n";
-    s_log<<"recall_score\n";
     // for(int u_query : unfilteredQueryIndices){
     for(int i = 0; i < unfilteredQueryIndices.size(); i++){
         int u_query = unfilteredQueryIndices[i];
@@ -348,7 +347,6 @@ pair<pair<float, chrono::microseconds>, pair<float, chrono::microseconds>> evalu
     total_recall = 0.f;
     
     s_log << "--F_QUERIES--\n";
-    s_log<<"recall_score\n";
     for(int i = 0; i < filteredQueryIndices.size(); i++){
         int f_query = filteredQueryIndices[i];
         // Calculate the current recall and add it to the sum of all recall scores
