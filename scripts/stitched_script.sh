@@ -1,19 +1,17 @@
-args_list=(
-    "--stitched --stat --dummy -n_threads 16 -distance 1 --random_start --no_rgraph --pqueue -extra_edges 50"
-    # stripping from optimal:
-    "--stitched --stat --dummy -n_threads 16 -distance 1 --random_start --no_rgraph --pqueue"                    # bad recall for unfiltered queries
-    "--stitched --stat --dummy -n_threads 16 -distance 1 --random_start --no_rgraph --pqueue --acc_unfiltered"   # very good recall for unfiltered queries, much longer query_time for unfiltered queries.
-    "--stitched --stat --dummy -n_threads 16 -distance 1 --random_start --no_rgraph -extra_edges 50"             # no pqueue => more time, less recall
-    "--stitched --stat --dummy -n_threads 16 -distance 1 --random_start --pqueue -extra_edges 50"                # initialize with Rgraph => more time (EFFECT ON RECALL?)
-    "--stitched --stat --dummy -n_threads 16 -distance 1 --no_rgraph --pqueue -extra_edges 50"                   # medoid start nodes => more time for tiny improvement to recall
-    "--stitched --stat --dummy -n_threads 16 -distance 0 --random_start --no_rgraph --pqueue -extra_edges 50"    # normal euclidean => MORE time
-    "--stitched --stat --dummy -n_threads 16 -distance 2 --random_start --no_rgraph --pqueue -extra_edges 50"    # parallel euclidean => MORE MORE time
-    "--stitched --stat --dummy -n_threads 1 -distance 1 --random_start --no_rgraph --pqueue -extra_edges 50"     # no threads => MORE time
+declare -A args_map=(
+    ["Optimal"]="--stitched --stat --dummy -n_threads 16 -distance 1 --random_start --no_rgraph --pqueue -extra_edges 50.txt"  # optimal
+    ["Naïve_Euclidean"]="--stitched --stat --dummy -n_threads 16 -distance 0 --random_start --no_rgraph --pqueue -extra_edges 50.txt"  # bad euclidean
+    ["No_Extra_Edges"]="--stitched --stat --dummy -n_threads 16 -distance 1 --random_start --no_rgraph --pqueue.txt"                  # No Extra Edges
+    ["Accumulate_Unfiltered"]="--stitched --stat --dummy -n_threads 16 -distance 1 --random_start --no_rgraph --pqueue --acc_unfiltered.txt" # Accumulate Unfiltered
+    ["GreedySearch_using_Set"]="--stitched --stat --dummy -n_threads 16 -distance 1 --random_start --no_rgraph -extra_edges 50.txt"           # No PQueue
+    ["Subgraph_Medoid_Start"]="--stitched --stat --dummy -n_threads 16 -distance 1 --no_rgraph --pqueue -extra_edges 50.txt"                 # Subgraph Medoid Start
+    ["Subgraphs_initialized_with_Rgraph"]="--stitched --stat --dummy -n_threads 16 -distance 1 --random_start --pqueue -extra_edges 50.txt"              # Subgraph Rgraph Initialization
 )
 
 main_exe="./bin/main"
 
-for args in "${args_list[@]}"; do
-    echo "$main_exe $args"
-    $main_exe $args > "evaluations/stitched/${args}.txt"
+for name in "${!args_map[@]}"; do
+    args="${args_map[$name]}"
+    echo "$name $main_exe $args"
+    $main_exe $args > "evaluations/stitched/${name}.txt"
 done
