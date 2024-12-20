@@ -1,11 +1,11 @@
 declare -A args_map=(
-    ["Optimal"]="--stitched --stat --dummy -n_threads 16 -distance 1 --random_start --no_rgraph --pqueue -extra_edges 50.txt"  # optimal
-    ["Naïve_Euclidean"]="--stitched --stat --dummy -n_threads 16 -distance 0 --random_start --no_rgraph --pqueue -extra_edges 50.txt"  # bad euclidean
-    ["No_Extra_Edges"]="--stitched --stat --dummy -n_threads 16 -distance 1 --random_start --no_rgraph --pqueue.txt"                  # No Extra Edges
-    ["Accumulate_Unfiltered"]="--stitched --stat --dummy -n_threads 16 -distance 1 --random_start --no_rgraph --pqueue --acc_unfiltered.txt" # Accumulate Unfiltered
-    ["GreedySearch_using_Set"]="--stitched --stat --dummy -n_threads 16 -distance 1 --random_start --no_rgraph -extra_edges 50.txt"           # No PQueue
-    ["Subgraph_Medoid_Start"]="--stitched --stat --dummy -n_threads 16 -distance 1 --no_rgraph --pqueue -extra_edges 50.txt"                 # Subgraph Medoid Start
-    ["Subgraphs_initialized_with_Rgraph"]="--stitched --stat --dummy -n_threads 16 -distance 1 --random_start --pqueue -extra_edges 50.txt"              # Subgraph Rgraph Initialization
+    ["Optimal"]="--stitched --stat --dummy -n_threads 16 -distance 1 --random_start --no_rgraph --pqueue -extra_edges 50"                # optimal
+    ["Naïve_Euclidean"]="--stitched --stat --dummy -n_threads 16 -distance 0 --random_start --no_rgraph --pqueue -extra_edges 50"        # bad euclidean
+    ["No_Extra_Edges"]="--stitched --stat --dummy -n_threads 16 -distance 1 --random_start --no_rgraph --pqueue"                         # No Extra Edges
+    ["Accumulate_Unfiltered"]="--stitched --stat --dummy -n_threads 16 -distance 1 --random_start --no_rgraph --pqueue --acc_unfiltered" # Accumulate Unfiltered
+    ["GreedySearch_using_Set"]="--stitched --stat --dummy -n_threads 16 -distance 1 --random_start --no_rgraph -extra_edges 50"          # No PQueue
+    ["Subgraph_Medoid_Start"]="--stitched --stat --dummy -n_threads 16 -distance 1 --no_rgraph --pqueue -extra_edges 50"                 # Subgraph Medoid Start
+    ["Subgraphs_initialized_with_Rgraph"]="--stitched --stat --dummy -n_threads 16 -distance 1 --random_start --pqueue -extra_edges 50"  # Subgraph Rgraph Initialization
 )
 
 main_exe="./bin/main"

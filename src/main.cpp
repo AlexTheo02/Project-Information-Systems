@@ -7,6 +7,10 @@ int main(int argc, char* argv[]) {
 
     args.parseArgs(argc,argv);
 
+    for (int i = 0; i < argc; i++)
+        s_log << argv[i] << ' ';
+    s_log << '\n';
+
     args.printArgs();
 
     // choose distance function depending on the argument

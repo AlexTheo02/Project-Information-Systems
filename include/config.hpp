@@ -111,8 +111,8 @@ struct Args{
             else if (currentArg == "-n_groundtruths")   { this->n_groundtruths = atoi(argv[++i]); }
             else if (currentArg == "-dim_data")         { this->dim_data = atoi(argv[++i]); }
             else if (currentArg == "-dim_query")        { this->dim_query = atoi(argv[++i]); }
-            else if (currentArg == "--unfiltered")      { this->unfiltered = true; }
-            else if (currentArg == "--filtered")        { this->filtered = true; }
+            else if (currentArg == "--only_unfiltered") { this->unfiltered = true; }
+            else if (currentArg == "--only_filtered")   { this->filtered = true; }
             else if (currentArg == "--data_unfiltered") { this->data_is_unfiltered = true; }
 
             else if (currentArg == "-store")            { this->graph_store_path = argv[++i]; }

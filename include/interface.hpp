@@ -320,14 +320,16 @@ pair<pair<float, chrono::microseconds>, pair<float, chrono::microseconds>> evalu
 
     s_log << "--UNF_QUERIES--\n";
     s_log<<"recall_score\n";
-    for(int u_query : unfilteredQueryIndices){
+    // for(int u_query : unfilteredQueryIndices){
+    for(int i = 0; i < unfilteredQueryIndices.size(); i++){
+        int u_query = unfilteredQueryIndices[i];
+        c_log << u_query << '\n';
         // Calculate the current recall and add it to the sum of all recall scores
-        query_recall = k_recall(queriesNeighbors[u_query], groundtruth[u_query]);
+        query_recall = k_recall(queriesNeighbors[i], groundtruth[u_query]);
         c_log << "Recall score for unfiltered query: " << u_query << "/" << unfilteredQueryIndices.size() << ":\t\t" << query_recall << "\n";
         // query index, query recall, time to execute, filtered
         s_log << query_recall << '\n';
         total_recall += query_recall;
-
     }
     s_log << "--UNF_QUERIES_END--\n";
 
@@ -347,9 +349,10 @@ pair<pair<float, chrono::microseconds>, pair<float, chrono::microseconds>> evalu
     
     s_log << "--F_QUERIES--\n";
     s_log<<"recall_score\n";
-    for(int f_query : filteredQueryIndices){
+    for(int i = 0; i < filteredQueryIndices.size(); i++){
+        int f_query = filteredQueryIndices[i];
         // Calculate the current recall and add it to the sum of all recall scores
-        query_recall = k_recall(queriesNeighbors[f_query], groundtruth[f_query]);
+        query_recall = k_recall(queriesNeighbors[i], groundtruth[f_query]);
         c_log << "Recall score for filtered query: " << f_query << "/" << filteredQueryIndices.size() << ":\t\t" << query_recall << "\n";
         // query index, query recall, time to execute, filtered
         s_log << query_recall << '\n';
