@@ -9,9 +9,6 @@ int main(int argc, char* argv[]) {
 
     args.printArgs();
 
-    int placeholder_arg = 0;
-
-
     // choose distance function depending on the argument
     if (args.euclideanType == 0){
         DGptr = new DirectedGraph<vector<float>>(euclideanDistance<vector<float>>, vectorEmpty<float>);

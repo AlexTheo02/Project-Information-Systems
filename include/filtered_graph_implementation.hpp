@@ -311,7 +311,9 @@ bool DirectedGraph<T>::filteredVamanaAlgorithm(int L, int R, float a, float t){
         rv =  this->_parallel_filteredVamana(L, R, a, t, sorted_categories);
     }
     
-    if (args.extraRandomEdges > 0) this->Rgraph(args.extraRandomEdges); // adds additional random edges
+    if (!rv) { return false; }
+
+    if (args.extraRandomEdges > 0) rv = this->Rgraph(args.extraRandomEdges); // adds additional random edges
     
     return rv;
 }
@@ -380,7 +382,7 @@ bool DirectedGraph<T>::_parallel_filteredVamana(int L, int  R, float a, float t,
     for (thread& th : threads)
         th.join();
 
-
+    // Verify that all threads completed successfully
     for (bool rv : rvs){
         if (rv == false){
             c_log << "Something went wrong in the Filtered Vamana Index Creation.\n";
@@ -467,9 +469,11 @@ bool DirectedGraph<T>::stitchedVamanaAlgorithm(int Lstitched, int Rstitched, int
     bool rv =  (args.n_threads == 1)
         ? this->_serial_stitchedVamana(Lstitched, Rstitched, Lsmall, Rsmall, a)
         : this->_parallel_stitchedVamana(Lstitched, Rstitched, Lsmall, Rsmall, a);
+    
+    if (!rv) { return false; }
 
     args.extraRandomEdges = extraRandomEdges;
-    if (args.extraRandomEdges > 0) this->Rgraph(args.extraRandomEdges); // adds additional random edges (only in the completed stitched graph, not subgraphs)
+    if (args.extraRandomEdges > 0) rv = this->Rgraph(args.extraRandomEdges); // adds additional random edges (only in the completed stitched graph, not subgraphs)
 
     return rv;
 }
@@ -627,6 +631,7 @@ bool DirectedGraph<T>::_parallel_stitchedVamana(int Lstitched, int Rstitched, in
     for (thread& th : threads)
         th.join();
 
+    // Verify that all threads completed successfully
     for (bool rv : rvs){
         if (rv == false){
             c_log << "Something went wrong in the Stitched Vamana Index Creation.\n";

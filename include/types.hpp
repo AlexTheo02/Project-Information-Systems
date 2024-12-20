@@ -177,9 +177,11 @@ class DirectedGraph{
 
         // Constructor: Initialize an empty graph
         DirectedGraph(function<float(const T&, const T&)> distance_function, function<bool(const T&)> is_Empty) {
-            this->init();
             this->d = distance_function;
             this->isEmpty = is_Empty;
+            this->n_nodes = 0;
+            this->n_edges = 0;
+            this->init();
             c_log << "Graph created!" << '\n';
         }
 
