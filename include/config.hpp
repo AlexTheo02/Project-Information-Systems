@@ -65,9 +65,9 @@ struct Args{
     int n_groundtruths = -1;
     int dim_data = -1;
     int dim_query = -1;
-    bool crop_filters = false;
-    bool crop_unfiltered = false;
-    vector<int> __discardedQueryIndices;    // this vector contains the indices of the discarded queries (the filtered queries of categories 2 and 3, or even filtered queries if --crop_filters was set)
+    bool unfiltered = false;
+    bool filtered = false;
+    bool data_is_unfiltered = false;
     string graph_store_path = "";
     string graph_load_path = "";
     string data_path = "";
@@ -111,8 +111,9 @@ struct Args{
             else if (currentArg == "-n_groundtruths")   { this->n_groundtruths = atoi(argv[++i]); }
             else if (currentArg == "-dim_data")         { this->dim_data = atoi(argv[++i]); }
             else if (currentArg == "-dim_query")        { this->dim_query = atoi(argv[++i]); }
-            else if (currentArg == "--crop_filters")    { this->crop_filters = true; }
-            else if (currentArg == "--crop_unfiltered") { this->crop_unfiltered = true; }
+            else if (currentArg == "--unfiltered")      { this->unfiltered = true; }
+            else if (currentArg == "--filtered")        { this->filtered = true; }
+            else if (currentArg == "--data_unfiltered") { this->data_is_unfiltered = true; }
 
             else if (currentArg == "-store")            { this->graph_store_path = argv[++i]; }
             else if (currentArg == "-load")             { this->graph_load_path = argv[++i]; }
@@ -173,6 +174,16 @@ struct Args{
             this->dim_data = 102;
             this->dim_query = 104;
         }
+
+        if(!this->unfiltered && !this->filtered){
+            this->unfiltered = true;
+            this->filtered = true;
+        }
+
+        if(this->data_is_unfiltered){
+            this->unfiltered = true;
+            this->filtered = false;
+        }    
 
         if (this->index_type == VAMANA){
 
@@ -262,8 +273,8 @@ struct Args{
         if(this->index_type == STITCHED_VAMANA) cout << "Rsmall: " << this->Rsmall << endl;
 
         if (this->extraRandomEdges > 0) cout << "Number of extra random edges: " << this->extraRandomEdges << endl;
-        if (this->crop_filters) cout << "Crop filters" << endl;
-        if (this->crop_unfiltered) cout << "Crop unfiltered" << endl;
+        if (this->unfiltered) cout << "Unfiltered" << endl;
+        if (this->filtered) cout << "Filtered" << endl;
         if (this->accumulateUnfiltered) cout << "Accumulate unfiltered" << endl;
         if (this->usePQueue) cout << "Using priority queue" << endl;
         if (!this->useRGraph) cout << "Not using rgraph initialization" << endl;
@@ -272,7 +283,8 @@ struct Args{
 };
 
 static Args args;
-
+static vector<int> filteredQueryIndices;    // this vector contains the indices of the discarded filtered queries (the filtered queries of categories 2 and 3, or even filtered queries if --filtered was set)
+static vector<int> unfilteredQueryIndices;    // this vector contains the indices of the discarded queries (the filtered queries of categories 2 and 3, or even filtered queries if --unfilered was set)
 
 // Custom Cout-like Object that respects the args.debug_mode flag on whether to print or not.
 // Cannot be used with endl. Please use << '\n'; instead of << endl;

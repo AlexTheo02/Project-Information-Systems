@@ -55,12 +55,20 @@ int main(int argc, char* argv[]) {
     timeinfo = localtime(&time_now);
 
     c_log << "Starting index evaluation on "<< asctime(timeinfo); // https://cplusplus.com/reference/ctime/localtime/, https://cplusplus.com/reference/ctime/time/
-    pair<float, chrono::microseconds> results = evaluateIndex<vector<float>>(ref(DG), (args.index_type == VAMANA && !endsWith(args.queries_path, ".bin")) ? read_queries_vecs<vector<float>> : read_queries_bin_contest<vector<float>>);
+    pair<pair<float, chrono::microseconds>, pair<float, chrono::microseconds>> results = evaluateIndex<vector<float>>(ref(DG), (args.index_type == VAMANA && !endsWith(args.queries_path, ".bin")) ? read_queries_vecs<vector<float>> : read_queries_bin_contest<vector<float>>);
 
     // print recall and duration
     c_log << "Evaluation Finished.\n";
-    cout << "Time to query the index: " << FormatMicroseconds(results.second) << endl;
-    cout << "Average recall score: " << results.first << endl;
 
+    if(args.unfiltered){
+        cout << "Time to query the index (unfiltered): " << FormatMicroseconds(results.first.second) << endl;
+        cout << "Average recall score for unfiltered queries: " << results.first.first << endl;
+    }
+    
+    if(args.filtered){
+        cout << "Time to query the index (filtered): " << FormatMicroseconds(results.second.second) << endl;
+        cout << "Average recall score for filtered queries: " << results.second.first << endl;
+    }
+    
     return 0;
 }

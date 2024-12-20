@@ -71,7 +71,7 @@ dirs:
 
 run_v:
 	make
-	$(EX_MAIN) --vamana 
+	$(EX_MAIN) --vamana --data_unfiltered
 
 run_f:
 	make

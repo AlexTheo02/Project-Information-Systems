@@ -14,75 +14,65 @@ using namespace std;
 // This file is an interface file that contains all the dependencies of the project. Simply include "interface.hpp" in your project and you're good to go!
 
 
-// specific read_query function for .vecs format
+// specific read_query function for .vecs format (only for unfiltered queries. Return format is used to match read_queries_bin_contest function)
 template <typename T>
-vector<Query<T>> read_queries_vecs(void){
+pair<vector<Query<T>>, vector<Query<T>>> read_queries_vecs(void){
 
     vector<T> queries_raw = read_vecs<float>(args.queries_path, args.n_queries);
-    vector<Query<T>> queries;
+    vector<Query<T>> unfiltered_queries;
 
     for (int i = 0; i < queries_raw.size(); i++){
         Query<T> q(i, -1, false, queries_raw[i], vectorEmpty<float>);
-        queries.push_back(q);
+        unfiltered_queries.push_back(q);
+        unfilteredQueryIndices.push_back(i);
     }
+
+    pair<vector<Query<T>>, vector<Query<T>>> queries;
+    queries.first = unfiltered_queries;
+
     return queries;
 };
 
 // specific read_query function for .bin format with specifications as described in the SIGMOD 2024 contest - [insert link]
 template <typename T>
-vector<Query<T>> read_queries_bin_contest(void){
+pair<vector<Query<T>>, vector<Query<T>>> read_queries_bin_contest(void){
     vector<T> queries_raw;
     ReadBin(args.queries_path, args.dim_query, ref(queries_raw));
 
-    vector<Query<T>> queries;
+    vector<Query<T>> unfiltered_queries;
+    vector<Query<T>> filtered_queries;
 
     for (int i = 0; i < queries_raw.size(); i++){
         T query_value(queries_raw[i].begin() + 4, queries_raw[i].end());
 
-        if (args.crop_filters){
-            // create unfiltered query from filtered query data
-
-            if (queries_raw[i][0] == 0){   // get only the unfiltered queries. Discard filtered queries.
+        if(args.unfiltered){
+            if (queries_raw[i][0] == 0){   // get only the unfiltered queries.
                 Query<T> q(i, -1, false, query_value, vectorEmpty<float>);
-                queries.push_back(q);
-            }
-            // keep the indices of the discarded queries to not consider them during groundtruth evaluation
-            else{
-                args.__discardedQueryIndices.push_back(i);  // discarding queries of type 1 (because of --crop_filters), 2 or 3 (timestamps)
+                unfiltered_queries.push_back(q);
+                unfilteredQueryIndices.push_back(i);
             }
         }
-        else if (args.crop_unfiltered){
-            // create unfiltered query from filtered query data
-
-            if (queries_raw[i][0] == 1){   // get only the unfiltered queries. Discard filtered queries.
+        if(args.filtered){
+            if (queries_raw[i][0] == 1){   // get only the filtered queries.
                 Query<T> q(i, 1, true, query_value, vectorEmpty<float>);
-                queries.push_back(q);
-            }
-            // keep the indices of the discarded queries to not consider them during groundtruth evaluation
-            else{
-                args.__discardedQueryIndices.push_back(i);  // discarding queries of type 1 (because of --crop_filters), 2 or 3 (timestamps)
-            }
-        }
-        else{
-
-            if (queries_raw[i][0] == 0 || queries_raw[i][0] == 1){
-                Query<T> q(i, queries_raw[i][1], queries_raw[i][0], query_value, vectorEmpty<float>);
-                queries.push_back(q);
-            }
-            else{
-                args.__discardedQueryIndices.push_back(i);  // discarding queries of type 2 or 3 (timestamps)
+                filtered_queries.push_back(q);
+                filteredQueryIndices.push_back(i);
             }
         }
     }
-    args.n_queries = queries.size();        // size update to account for discarded queries
-    args.n_groundtruths = queries.size();   // same as above
+    args.n_queries = unfiltered_queries.size() + filtered_queries.size();        // size update to account for discarded queries
+    args.n_groundtruths = unfiltered_queries.size() + filtered_queries.size();   // same as above
+
+    pair<vector<Query<T>>, vector<Query<T>>> queries;
+    queries.first = unfiltered_queries;
+    queries.second = filtered_queries;
 
     return queries;
 };
 
 // This function reads the args.queries_path file and returns a vector of well constructed queries depending on the file format.
 template <typename T>
-vector<Query<T>> read_queries(void){
+pair<vector<Query<T>>, vector<Query<T>>> read_queries(void){
     // Implement this function for your own data type.
     // This function is to be passed in the index evaluation function.
 };
@@ -113,7 +103,7 @@ chrono::microseconds createIndex(DirectedGraph<T>& DG){
 
             // Populate the Graph
             for (auto& v : data){
-                if (args.crop_filters){
+                if (args.unfiltered && !args.data_is_unfiltered){
                     v = T(v.begin() + 2, v.end());
                 }
                 DG.createNode(v);
@@ -238,17 +228,13 @@ unordered_set<Id> DirectedGraph<T>::findNeighbors(Query<T> q){
 
 // Thread function for parallel querying.
 template <typename T>
-void DirectedGraph<T>::_thread_findQueryNeighbors_fn(vector<Query<T>>& queries, mutex& mx_query_index, int& query_index, vector<pair<unordered_set<Id>, pair<chrono::microseconds, bool>>>& returnVec){
+void DirectedGraph<T>::_thread_findQueryNeighbors_fn(vector<Query<T>>& queries, mutex& mx_query_index, int& query_index, vector<unordered_set<Id>>& returnVec){
     mx_query_index.lock();
     while(query_index < queries.size()){
         int my_q_index = query_index++;     // store current and increment
         mx_query_index.unlock();
 
-        chrono::high_resolution_clock::time_point start_time = chrono::high_resolution_clock::now();
-        returnVec[my_q_index].first = findNeighbors(queries[my_q_index]);
-        chrono::high_resolution_clock::time_point end_time = chrono::high_resolution_clock::now();
-        returnVec[my_q_index].second.first = chrono::duration_cast<chrono::microseconds>(end_time - start_time);
-        returnVec[my_q_index].second.second = queries[my_q_index].filtered;
+        returnVec[my_q_index] = findNeighbors(queries[my_q_index]);
 
         mx_query_index.lock();
     }
@@ -258,13 +244,12 @@ void DirectedGraph<T>::_thread_findQueryNeighbors_fn(vector<Query<T>>& queries, 
 // Returns the neighbors of all queries found in the given queries_path file.
 // If the file is .vecs format read_arg corresponds to the number of queries and, if the file is in .bin format, it corresponds to the dimension of the query vector
 template <typename T>
-vector<pair<unordered_set<Id>, pair<chrono::microseconds, bool>>> DirectedGraph<T>::findQueriesNeighbors(function<vector<Query<T>>(void)> readQueries){
+vector<unordered_set<Id>> DirectedGraph<T>::findQueriesNeighbors(vector<Query<T>> queries){
 
     c_log << "In Queries Neighbors" << '\n';
-    // Read queries
-    vector<Query<T>> queries = readQueries();
+    
 
-    vector<pair<unordered_set<Id>, pair<chrono::microseconds, bool>>> returnVec(args.n_queries);
+    vector<unordered_set<Id>> returnVec(args.n_queries);
     vector<thread> threads;
     mutex mx_query_index;
     int query_index = 0;
@@ -289,7 +274,7 @@ vector<pair<unordered_set<Id>, pair<chrono::microseconds, bool>>> DirectedGraph<
 
 // Evaluate given index based on its types and return a pair containing average recall score and duration
 template <typename T>
-pair<float, chrono::microseconds> evaluateIndex(DirectedGraph<T>& DG, function<vector<Query<T>>(void)> readQueries){
+pair<pair<float, chrono::microseconds>, pair<float, chrono::microseconds>> evaluateIndex(DirectedGraph<T>& DG, function<pair<vector<Query<T>>,vector<Query<T>>>(void)> readQueries){
 
     chrono::microseconds duration = (chrono::microseconds) 0;
     chrono::high_resolution_clock::time_point startTime, endTime;
@@ -316,37 +301,65 @@ pair<float, chrono::microseconds> evaluateIndex(DirectedGraph<T>& DG, function<v
         }
     }
 
+    // Read queries
+    pair<vector<Query<T>>, vector<Query<T>>> queries = readQueries();
+
     // Start the timer
     startTime = chrono::high_resolution_clock::now();
-    vector<pair<unordered_set<Id>, pair<chrono::microseconds, bool>>> queriesNeighbors = DG.findQueriesNeighbors(readQueries);
+    vector<unordered_set<Id>> queriesNeighbors = DG.findQueriesNeighbors(queries.first);
     // End the timer
     endTime = chrono::high_resolution_clock::now();
 
     // Calculate duration
     duration = chrono::duration_cast<chrono::microseconds>(endTime - startTime);
 
+    // Return var that contains the a pair of recall scores and duration of each query category(unfiltered and filtered)
+    pair<pair<float, chrono::microseconds>, pair<float, chrono::microseconds>> ret;
+
     float total_recall = 0.f, query_recall;
 
-    // discard appropriate query answers from groundtruths
-    int deleted = 0;
-    for (int indexToRemove : args.__discardedQueryIndices){
-        groundtruth.erase(groundtruth.begin() + indexToRemove - deleted++); // assumming __discardedQueryIndices are sorted in ascending order, and contain valid and corresponding indices with queries.
-    }
-    s_log << "--QUERIES--\n";
-    s_log<<"index,recall_score,duration,filtered\n";
-    for(int i = 0; i < args.n_queries; i++){
+    s_log << "--UNF_QUERIES--\n";
+    s_log<<"recall_score\n";
+    for(int u_query : unfilteredQueryIndices){
         // Calculate the current recall and add it to the sum of all recall scores
-        query_recall = k_recall(queriesNeighbors[i].first, groundtruth[i]);
-        c_log << "Recall score for query: " << i+1 << "/" << args.n_queries << ":\t\t" << query_recall << "\n";
+        query_recall = k_recall(queriesNeighbors[u_query], groundtruth[u_query]);
+        c_log << "Recall score for unfiltered query: " << u_query << "/" << unfilteredQueryIndices.size() << ":\t\t" << query_recall << "\n";
         // query index, query recall, time to execute, filtered
-        s_log << i << "," << query_recall << "," << FormatMicroseconds(queriesNeighbors[i].second.first) << "," << queriesNeighbors[i].second.second << '\n';
+        s_log << query_recall << '\n';
+        total_recall += query_recall;
+
+    }
+    s_log << "--UNF_QUERIES_END--\n";
+
+    ret.first.first = total_recall / unfilteredQueryIndices.size();
+    ret.first.second = duration;
+
+    // Start the timer
+    startTime = chrono::high_resolution_clock::now();
+    queriesNeighbors = DG.findQueriesNeighbors(queries.second);
+    // End the timer
+    endTime = chrono::high_resolution_clock::now();
+
+    // Calculate duration
+    duration = chrono::duration_cast<chrono::microseconds>(endTime - startTime);
+
+    total_recall = 0.f;
+    
+    s_log << "--F_QUERIES--\n";
+    s_log<<"recall_score\n";
+    for(int f_query : filteredQueryIndices){
+        // Calculate the current recall and add it to the sum of all recall scores
+        query_recall = k_recall(queriesNeighbors[f_query], groundtruth[f_query]);
+        c_log << "Recall score for filtered query: " << f_query << "/" << filteredQueryIndices.size() << ":\t\t" << query_recall << "\n";
+        // query index, query recall, time to execute, filtered
+        s_log << query_recall << '\n';
         total_recall += query_recall;
     }
-    s_log << "--QUERIES_END--\n";
+    s_log << "--F_QUERIES_END--\n";
+    
 
-    pair<float, chrono::microseconds> ret;
-    ret.first = total_recall / args.n_queries;
-    ret.second = duration;
+    ret.second.first = total_recall / filteredQueryIndices.size();
+    ret.second.second = duration;
 
     return ret;
 }
