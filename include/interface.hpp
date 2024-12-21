@@ -54,7 +54,7 @@ pair<vector<Query<T>>, vector<Query<T>>> read_queries_bin_contest(void){
         }
         if(args.filtered){
             if (queries_raw[i][0] == 1){   // get only the filtered queries.
-                Query<T> q(i, 1, true, query_value, vectorEmpty<float>);
+                Query<T> q(i, queries_raw[i][1], true, query_value, vectorEmpty<float>);
                 filtered_queries.push_back(q);
                 filteredQueryIndices.push_back(i);
             }
