@@ -3,7 +3,5 @@ build
 bin
 /tests/build
 /tests/bin
-**.txt
-**.csv
+**_latest.txt
 data/
-evaluations/
