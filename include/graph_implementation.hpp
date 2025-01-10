@@ -26,7 +26,10 @@ Id DirectedGraph<T>::createNode(const T& value, int category){
 
 // Adds a directed edge (from->to). Updates outNeighbors(from) and inNeighbors(to)
 template <typename T>
-bool DirectedGraph<T>::addEdge(const Id from, const Id to){
+bool DirectedGraph<T>::addEdge(const Id from, const Id to, optional<bool> noLock){
+
+    // extract the noLock value and initialize accordingly
+    bool no_lock = (noLock == nullopt) ? false : noLock.value();
     
     // At least one of the nodes is not present in nodeSet
     if (from >= this->n_nodes || to >= this->n_nodes){
@@ -40,6 +43,10 @@ bool DirectedGraph<T>::addEdge(const Id from, const Id to){
         return false;
     }
 
+    if (args.n_threads > 1 && !no_lock  && !this->_lock_edges.owns_lock()){
+        this->_lock_edges.lock();
+    }
+
     int previous_size = this->Nout[from].size(); 
     if (previous_size == 0) this->Nout[from].reserve(args.R + 1);   // reserve space to avoid rehashing and unnecessary race conditions
     this->Nout[from].insert(to);
@@ -47,15 +54,28 @@ bool DirectedGraph<T>::addEdge(const Id from, const Id to){
 
     if(next_size == previous_size){
         c_log << "Cannot add edge. Edge already exists" << '\n';
+        if (args.n_threads > 1 && !no_lock  && this->_lock_edges.owns_lock())
+            this->_lock_edges.unlock();
         return false;
     }
-    this->n_edges++;
+    else this->n_edges++;
+
+    if (args.n_threads > 1 && !no_lock  && this->_lock_edges.owns_lock())
+        this->_lock_edges.unlock();
+    
     return true;
 }
 
 // remove edge
 template <typename T>
-bool DirectedGraph<T>::removeEdge(const Id from, const Id to){
+bool DirectedGraph<T>::removeEdge(const Id from, const Id to, optional<bool> noLock){
+
+    // extract the noLock value and initialize accordingly
+    bool no_lock = (noLock == nullopt) ? false : noLock.value();
+
+    if (args.n_threads > 1 && !no_lock && !this->_lock_edges.owns_lock()){
+        this->_lock_edges.lock();
+    }
 
     // Check if keys exist before accessing them (and removing them)
     if (mapKeyExists(from, this->Nout)) {
@@ -66,10 +86,17 @@ bool DirectedGraph<T>::removeEdge(const Id from, const Id to){
                 this->Nout.erase(from);
             }
             // Decrement the number of edges in graph
-            this->n_edges--;
+            else this->n_edges--;
+
+            if (args.n_threads > 1 && !no_lock && this->_lock_edges.owns_lock())
+                this->_lock_edges.unlock();
+
             return true;
         }
     }
+    if (args.n_threads > 1 && !no_lock && this->_lock_edges.owns_lock())
+        this->_lock_edges.unlock();
+
     c_log << "WARNING: Trying to remove non-existing edge.\n" << '\n';
     return false;
 }
@@ -83,14 +110,19 @@ bool DirectedGraph<T>::clearNeighbors(const Id id){
         return false;
     }
 
+    if (args.n_threads > 1)
+        this->_lock_edges.lock();
+
     // Node has outgoing neighbors
     if (mapKeyExists(id, this->Nout)){
         // For each outgoing neighbor, remove the edge
         unordered_set<Id> noutCopy(this->Nout[id].begin(), this->Nout[id].end());
 
         for (const Id n : noutCopy){      
-            if (!this->removeEdge(id,n)){
+            if (!this->removeEdge(id,n,true)){
                 c_log << "ERROR: Failed to remove edge, something went wrong" << '\n';
+                if (args.n_threads > 1)
+                    this->_lock_edges.unlock();
                 return false;
             }          
         }      
@@ -98,10 +130,46 @@ bool DirectedGraph<T>::clearNeighbors(const Id id){
         if (mapKeyExists(id, this->Nout)){
             
             c_log << "ERROR: Something went wrong when clearing neighbors" << '\n';
+            if (args.n_threads > 1)
+                this->_lock_edges.unlock();
             return false;
         }
     }
+    if (args.n_threads > 1)
+        this->_lock_edges.unlock();
     return true;
+}
+
+// Adds all nodes in the batch vector to as outgoing neighbors from specific node
+template <typename T>
+bool DirectedGraph<T>::addBatchNeigbors(const Id from, vector<Id> batch){
+
+    // argument checks
+    if (batch.empty()){
+        c_log << "WARNING: batch is empty. No new edges\n";
+        return true;
+    }
+
+    if (from >= this->n_nodes){
+        c_log << "ERROR: Node does not exist in the graph" << '\n';
+        return false;
+    }
+
+    cout << "Add Batch Neighbors attempting lock" << endl;
+    if (args.n_threads > 1)
+        this->_lock_edges.lock();
+    cout << "Add Batch Neighbors lock OK" << endl;
+
+    bool rv = true;
+    for (const Id& to : batch){
+        if (!this->addEdge(from, to, true))
+            rv = false;
+    }
+
+    if (args.n_threads > 1)
+        this->_lock_edges.unlock();
+
+    return rv;
 }
 
 // clears all edges in the graph
@@ -347,11 +415,15 @@ bool DirectedGraph<T>::Rgraph(int R){
 
     if (R > this->n_nodes - 1){ throw invalid_argument("R cannot exceed N-1 (N = the total number of nodes in the Graph).\n"); }
 
-    if (this->n_edges + this->n_nodes*R > this->n_nodes * (this->n_nodes - 1)) { throw invalid_argument("Total number of edges would exceed the fully connected capacity.\n"); }
+    // avoid overflows
+    unsigned long long fully_connected_capacity = this->n_nodes * (this->n_nodes - 1);
+    unsigned long long expected_total_edges = this->n_edges + this->n_nodes*R;
+
+    if (expected_total_edges > fully_connected_capacity) { throw invalid_argument("Total number of edges would exceed the fully connected capacity.\n"); }
 
     if (R <= log(this->n_nodes)){ c_log << "WARNING: R <= logn and therefore the graph will not be well connected.\n"; }
     
-    if (R == 0){ c_log << "WARNING: R is set to 0 and therefore all nodes in the graph are cleared.\n"; }
+    if (R == 0){ c_log << "WARNING: R is set to 0. No edges will be added.\n"; }
 
     if (args.n_threads == 1){ return _serial_Rgraph(R); }
     else{ return _parallel_Rgraph(R); }
@@ -360,7 +432,7 @@ bool DirectedGraph<T>::Rgraph(int R){
 template<typename T>
 bool DirectedGraph<T>::_serial_Rgraph(int R){
 
-    for (Node<T>& n : this->nodes){            // for each node
+    for (Node<T>& n : this->nodes){     // for each node
         for (int i = 0; i < R; i++){    // repeat R times: sample from set and add until valid
             Node<T> nr;
             bool should_continue;
@@ -468,13 +540,50 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(
 
     if (this->isEmpty(xq)){ throw invalid_argument("No query was provided.\n"); }
 
-    if (k <= 0){ throw invalid_argument("K must be greater than 0.\n"); }
+    if (k < 0){ throw invalid_argument("K must be greater than or equal to 0.\n"); }
 
     if (L < k){ throw invalid_argument("L must be greater or equal to K.\n"); }
 
-    return (args.usePQueue)
+    if (args.n_threads > 1){
+
+        cout << "want to lock GS\n";
+        if(!this->_lock.owns_lock())
+            this->_lock.lock();
+        cout << "locked GS. Should GS wait?\n";
+        while(this->_active_W == true){
+            cout << "GS should wait!\n";
+            this->_cv_reader.wait(this->_lock);
+            cout << "GS wait is over. Re-check. . .\n";
+        }
+        this->_active_GS++;
+        cout << "Active Reader with number: " << this->_active_GS << ". Unlocking GS " << endl;
+        if(this->_lock.owns_lock())
+            this->_lock.unlock();
+        cout << "GS unlocked\n";
+    }
+
+    pair<unordered_set<Id>, unordered_set<Id>> rv = (args.usePQueue)
         ? this->_pqueue_greedySearch(s, xq, k, L)
         : this->_set_greedySearch(s, xq, k, L);
+    
+    if (args.n_threads > 1){
+
+        cout << "want to lock GS for exit section\n";
+        if(!this->_lock.owns_lock())
+            this->_lock.lock();
+        cout << "locked GS. Reader Exiting. Remaining Readers: " << this->_active_GS - 1 << endl;
+        if (--this->_active_GS == 0){
+            cout << "GS notifying writers\n";
+            this->_cv_writer.notify_one();
+            cout << "GS success notifying writer\n";
+        }
+        cout << "GS unlocking and exiting\n";
+        if(this->_lock.owns_lock())
+            this->_lock.unlock();
+        cout << "GS unlocked. EXITING!\n";
+    }
+
+    return rv;
 }
 
 template <typename T>
@@ -613,20 +722,41 @@ void DirectedGraph<T>::robustPrune(Id p, unordered_set<Id> V, float a, int R){
     if (R <= 0) {throw invalid_argument("Parameter R must be > 0.\n"); }
 
 
+    if (args.n_threads > 1){
+        if(!this->_lock.owns_lock())
+            this->_lock.lock();
+        while(this->_active_GS != 0 || this->_active_W == true){
+            this->_cv_writer.wait(this->_lock);
+        }
+        this->_active_W = true;
+    }
+
     if (mapKeyExists(p, this->Nout))
         V.insert(this->Nout[p].begin(), this->Nout[p].end());
+
+    this->clearNeighbors(p);          // calls remove edge
+
+    if (args.n_threads > 1){
+        this->_active_W = false;
+        this->_cv_writer.notify_one();
+        this->_cv_reader.notify_all();
+        if(this->_lock.owns_lock())
+            this->_lock.unlock();
+    }
+
     V.erase(p);
 
-    this->clearNeighbors(p);    // calls remove edge
-
     Id p_opt;
+    // assume neighbors have been cleared. They will be cleared afterwards for better synchronization between threads.
+    // No effect in the final outcome.
+    vector<Id> batch;
     
     while (!V.empty()){
         p_opt = this->_myArgMin(V, this->nodes[p].value);
         
-        this->addEdge(p, p_opt);
+        batch.push_back(p_opt); // store p_opts to a vector Id then addbatch 
 
-        if (this->Nout[p].size() == R)
+        if (batch.size() == R)
             break;
         
         // *it = n = p', p_opt = p*
@@ -636,6 +766,38 @@ void DirectedGraph<T>::robustPrune(Id p, unordered_set<Id> V, float a, int R){
             }
             else { it++; }  // incrementing here because V.erase() returns the next iterator on successful deletion
         }
+    }
+    
+    // synchronize with greedy search
+    if (args.n_threads > 1){
+
+        cout << "W want lock\n";
+        if(!this->_lock.owns_lock())
+            this->_lock.lock();
+        cout << "W got lock. Should wait?\n";
+        while(this->_active_GS != 0 || this->_active_W == true){
+            cout << "W should wait\n";
+            this->_cv_writer.wait(this->_lock);
+            cout << "W wait over. Re-check\n";
+        }
+        cout << "W Active writer\n";
+        this->_active_W = true;
+    }
+    
+    cout << "W critical section. ENSURING STATUS = " << this->_active_W << endl;
+    this->addBatchNeigbors(p, batch);
+    cout << "W critical section finished successfully. Entering EXIT SECTION\n";
+
+    if (args.n_threads > 1){
+
+        // this->_mx_cv.lock();
+        // ALREADY HOLDING LOCK.
+        cout << "W finished critical section EXCLUSIVELY. setting active W = False and notifying others. Unlocking.\n";
+        this->_active_W = false;
+        this->_cv_writer.notify_one();
+        this->_cv_reader.notify_all();
+        if(this->_lock.owns_lock())
+            this->_lock.unlock();
     }
 }
 
@@ -673,11 +835,28 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){
 
     vector<Id> perm_id = permutation(nodes_ids);
 
-    for (const Id& si_id : perm_id){
-        Node<T>& si = this->nodes[si_id];
-        pair<unordered_set<Id>, unordered_set<Id>> rv = greedySearch(this->startingNode(), si.value, 1, L); 
+    // bool rv = this->_serial_Vamana(L, R, a, perm_id);
 
-        unordered_set<Id> Lc = rv.first;
+    bool rv = (args.n_threads > 1)
+        ? this->_parallel_Vamana(L, R, a, perm_id)
+        : this->_serial_Vamana(L, R, a, perm_id);
+
+    if (args.extraRandomEdges > 0){
+        this->Rgraph(args.extraRandomEdges); // adds additional random edges
+    }
+
+    c_log << "Vamana Index Created!\n";
+    return rv;
+}
+
+template <typename T>
+bool DirectedGraph<T>::_serial_Vamana(int L, int R, float a, vector<Id>& permutation){
+
+    for (const Id& si_id : permutation){
+        Node<T>& si = this->nodes[si_id];
+        pair<unordered_set<Id>, unordered_set<Id>> rv = greedySearch(this->startingNode(), si.value, 0, L); // k = 0 instead of 1, same as the filtered vamana
+
+        // unordered_set<Id> Lc = rv.first; // not required.
         unordered_set<Id> V = rv.second;
 
         this->robustPrune(si.id, V, a, R);
@@ -693,12 +872,81 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){
         }
     }
 
-    if (args.extraRandomEdges > 0){
-        this->Rgraph(args.extraRandomEdges); // adds additional random edges
+    return true;
+}
+
+template <typename T>
+void DirectedGraph<T>::_thread_Vamana_fn(int& L, int& R, float& a, vector<Id>& permutation, int& current_index, mutex& mx_index, char& rv){
+
+    mx_index.lock();
+    while(current_index < permutation.size()){
+
+        cout << "NEW INDEX AQCUIRED: " << current_index << "/" << permutation.size() << "\n";
+
+        int my_index = current_index++;
+        mx_index.unlock();
+
+        Id si_id = permutation[my_index];
+        Node<T>& si = this->nodes[si_id];
+        pair<unordered_set<Id>, unordered_set<Id>> rv_gs = greedySearch(this->startingNode(), si.value, 0, L); // k = 0 instead of 1, same as the filtered vamana
+
+        // unordered_set<Id> Lc = rv_gs.first; // not required.
+        unordered_set<Id> V = rv_gs.second;
+
+        this->robustPrune(si.id, V, a, R);
+        
+        if (mapKeyExists(si.id, this->Nout)){
+        
+            for (const Id j : this->Nout[si.id]){  // for every neighbor j of si
+
+                this->addEdge(j, si.id);   // does it in either case (simpler code, robust prune clears all neighbors after copying to candidate set V anyway)
+                if (this->Nout[j].size() > R)
+                    robustPrune(j, this->Nout[j], a, R);
+            }
+        }
+
+        mx_index.lock();
+    }
+    mx_index.unlock();
+}
+
+template <typename T>
+bool DirectedGraph<T>::_parallel_Vamana(int L, int R, float a, vector<Id>& permutation){
+
+    int current_index = 0;
+    mutex mx_index;
+
+    vector<char> rvs(args.n_threads, true);
+    vector<thread> threads;
+
+    
+    for (int i = 0; i < args.n_threads; i++){
+
+        threads.push_back(thread(
+            &DirectedGraph::_thread_Vamana_fn,
+            this,
+            ref(L),
+            ref(R),
+            ref(a),
+            ref(permutation),
+            ref(current_index),
+            ref(mx_index),
+            ref(rvs[i])));
+    }
+
+    for (thread& th : threads)
+        th.join();
+
+    for (bool rv : rvs){
+        if (rv == false){
+            c_log << "Something went wrong in the Vamana Index Creation.\n";
+            return false;
+        }
     }
 
     return true;
 }
+
 
 
 // Stores the current state of a graph into the specified file.
@@ -774,6 +1022,9 @@ void DirectedGraph<T>::init(){
     this->filteredMedoids.clear();
     this->categories.clear();
     this->Nout.clear();
+
+    this->_active_W = 0;
+    this->_active_GS = 0;
 
     c_log << "Graph Successfully initialized to default values apart from function arguments.\n";
 }

@@ -23,11 +23,15 @@ int main(int argc, char* argv[]) {
     else if (args.euclideanType == 2){
         DGptr = new DirectedGraph<vector<float>>(parallel_euclideanDistance<vector<float>>, vectorEmpty<float>);
     }
-    else { throw invalid_argument("distance must be in {0,1,2}. | 0 - euclidean, 1 - simd_euclidean, 2 - parallel euclidean"); }
+    else if (args.euclideanType == 3){
+        cout << "In main.cpp, instantiate the DirectedGraph template with your desired datatype after implementing your requirements.\n";
+        c_log << "In main.cpp, instantiate the DirectedGraph template with your desired datatype after implementing your requirements.\n";
+        // DGptr = new DirectedGraph<YOUR_TYPE_HERE>(customDistance<YOUR_TYPE_HERE>, customEmpty<YOUR_TYPE_HERE>);
+    }
+    else { throw invalid_argument("distance must be in {0,1,2,3}. | 0 - euclidean, 1 - simd_euclidean, 2 - parallel euclidean, 3 - custom"); }
     
     // dereferencing the pointer (functions were built expecting a reference and not a pointer. Changing them would be too much unnecessary work)
-    DirectedGraph<vector<float>> DG = *DGptr;
-
+    DirectedGraph<vector<float>>& DG = *DGptr;
     
     // Create the indexed graph if instructed from command line arguments, based on indexing type
     if (!args.no_create){
@@ -71,5 +75,6 @@ int main(int argc, char* argv[]) {
         cout << "Average recall score for filtered queries: " << results.second.first << endl;
     }
     
+    delete DGptr;
     return 0;
 }

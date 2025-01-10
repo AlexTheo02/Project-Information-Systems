@@ -177,7 +177,7 @@ chrono::microseconds createIndex(DirectedGraph<T>& DG){
             
             // Start the timer and create the index using vamanaAlgorithm
             startTime = chrono::high_resolution_clock::now();
-            DG.stitchedVamanaAlgorithm(args.L, args.R, args.Lsmall, args.Rsmall, args.a);
+            DG.stitchedVamanaAlgorithm(args.L, args.R, args.Rsmall, args.a);
             endTime = chrono::high_resolution_clock::now();
 
             // Calculate duration

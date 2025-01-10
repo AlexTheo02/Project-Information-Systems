@@ -1,0 +1,394 @@
+Number of threads: 26
+Indexing Type: VAMANA
+k: 100
+L: 100
+R: 14
+a: 1
+Number of extra random edges: 15
+Unfiltered
+Using priority queue
+Not using rgraph initialization
+NEW INDEX AQCUIRED: 0/10000
+NEW INDEX AQCUIRED: 1/10000
+NEW INDEX AQCUIRED: 2/10000
+NEW INDEX AQCUIRED: 3/10000
+NEW INDEX AQCUIRED: 4/10000
+NEW INDEX AQCUIRED: 5/10000
+NEW INDEX AQCUIRED: 6/10000
+NEW INDEX AQCUIRED: 7/10000
+NEW INDEX AQCUIRED: 8/10000
+NEW INDEX AQCUIRED: 9/10000
+NEW INDEX AQCUIRED: 10/10000
+NEW INDEX AQCUIRED: 11/10000
+NEW INDEX AQCUIRED: 12/10000
+NEW INDEX AQCUIRED: 13/10000
+NEW INDEX AQCUIRED: 14/10000
+NEW INDEX AQCUIRED: 15/10000
+NEW INDEX AQCUIRED: 16/10000
+NEW INDEX AQCUIRED: 17/10000
+NEW INDEX AQCUIRED: 18/10000
+NEW INDEX AQCUIRED: 19/10000
+NEW INDEX AQCUIRED: 20/10000
+NEW INDEX AQCUIRED: 21/10000
+NEW INDEX AQCUIRED: 22/10000
+NEW INDEX AQCUIRED: 23/10000
+NEW INDEX AQCUIRED: 24/10000
+NEW INDEX AQCUIRED: 25/10000
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 1. Unlocking GS 
+GS unlocked
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 0
+GS notifying writers
+GS success notifying writer
+GS unlocking and exiting
+GS unlocked. EXITING!
+W want lock
+W got lock. Should wait?
+W Active writer
+W critical section. ENSURING STATUS = 1
+Add Batch Neighbors attempting lock
+Add Batch Neighbors lock OK
+W critical section finished successfully. Entering EXIT SECTION
+W finished critical section EXCLUSIVELY. setting active W = False and notifying others. Unlocking.
+NEW INDEX AQCUIRED: 26/10000
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 1. Unlocking GS 
+GS unlocked
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 0
+GS notifying writers
+GS success notifying writer
+GS unlocking and exiting
+GS unlocked. EXITING!
+W want lock
+W got lock. Should wait?
+W Active writer
+W critical section. ENSURING STATUS = 1
+Add Batch Neighbors attempting lock
+Add Batch Neighbors lock OK
+W critical section finished successfully. Entering EXIT SECTION
+W finished critical section EXCLUSIVELY. setting active W = False and notifying others. Unlocking.
+NEW INDEX AQCUIRED: 27/10000
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 1. Unlocking GS 
+GS unlocked
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 0
+GS notifying writers
+GS success notifying writer
+GS unlocking and exiting
+GS unlocked. EXITING!
+W want lock
+W got lock. Should wait?
+W Active writer
+W critical section. ENSURING STATUS = 1
+Add Batch Neighbors attempting lock
+Add Batch Neighbors lock OK
+W critical section finished successfully. Entering EXIT SECTION
+W finished critical section EXCLUSIVELY. setting active W = False and notifying others. Unlocking.
+NEW INDEX AQCUIRED: 28/10000
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 1. Unlocking GS 
+GS unlocked
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 0
+GS notifying writers
+GS success notifying writer
+GS unlocking and exiting
+GS unlocked. EXITING!
+W want lock
+W got lock. Should wait?
+W Active writer
+W critical section. ENSURING STATUS = 1
+Add Batch Neighbors attempting lock
+Add Batch Neighbors lock OK
+W critical section finished successfully. Entering EXIT SECTION
+W finished critical section EXCLUSIVELY. setting active W = False and notifying others. Unlocking.
+NEW INDEX AQCUIRED: 29/10000
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 1. Unlocking GS 
+GS unlocked
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 0
+GS notifying writers
+GS success notifying writer
+GS unlocking and exiting
+GS unlocked. EXITING!
+W want lock
+W got lock. Should wait?
+W Active writer
+W critical section. ENSURING STATUS = 1
+Add Batch Neighbors attempting lock
+Add Batch Neighbors lock OK
+W critical section finished successfully. Entering EXIT SECTION
+W finished critical section EXCLUSIVELY. setting active W = False and notifying others. Unlocking.
+NEW INDEX AQCUIRED: 30/10000
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 1. Unlocking GS 
+GS unlocked
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 0
+GS notifying writers
+GS success notifying writer
+GS unlocking and exiting
+GS unlocked. EXITING!
+W want lock
+W got lock. Should wait?
+W Active writer
+W critical section. ENSURING STATUS = 1
+Add Batch Neighbors attempting lock
+Add Batch Neighbors lock OK
+W critical section finished successfully. Entering EXIT SECTION
+W finished critical section EXCLUSIVELY. setting active W = False and notifying others. Unlocking.
+NEW INDEX AQCUIRED: 31/10000
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 1. Unlocking GS 
+GS unlocked
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 0
+GS notifying writers
+GS success notifying writer
+GS unlocking and exiting
+GS unlocked. EXITING!
+W want lock
+W got lock. Should wait?
+W Active writer
+W critical section. ENSURING STATUS = 1
+Add Batch Neighbors attempting lock
+Add Batch Neighbors lock OK
+W critical section finished successfully. Entering EXIT SECTION
+W finished critical section EXCLUSIVELY. setting active W = False and notifying others. Unlocking.
+NEW INDEX AQCUIRED: 32/10000
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 1. Unlocking GS 
+GS unlocked
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 0
+GS notifying writers
+GS success notifying writer
+GS unlocking and exiting
+GS unlocked. EXITING!
+W want lock
+W got lock. Should wait?
+W Active writer
+W critical section. ENSURING STATUS = 1
+Add Batch Neighbors attempting lock
+Add Batch Neighbors lock OK
+W critical section finished successfully. Entering EXIT SECTION
+W finished critical section EXCLUSIVELY. setting active W = False and notifying others. Unlocking.
+NEW INDEX AQCUIRED: 33/10000
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 1. Unlocking GS 
+GS unlocked
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 0
+GS notifying writers
+GS success notifying writer
+GS unlocking and exiting
+GS unlocked. EXITING!
+W want lock
+W got lock. Should wait?
+W Active writer
+W critical section. ENSURING STATUS = 1
+Add Batch Neighbors attempting lock
+Add Batch Neighbors lock OK
+W critical section finished successfully. Entering EXIT SECTION
+W finished critical section EXCLUSIVELY. setting active W = False and notifying others. Unlocking.
+NEW INDEX AQCUIRED: 34/10000
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 1. Unlocking GS 
+GS unlocked
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 0
+GS notifying writers
+GS success notifying writer
+GS unlocking and exiting
+GS unlocked. EXITING!
+W want lock
+W got lock. Should wait?
+W Active writer
+W critical section. ENSURING STATUS = 1
+Add Batch Neighbors attempting lock
+Add Batch Neighbors lock OK
+W critical section finished successfully. Entering EXIT SECTION
+W finished critical section EXCLUSIVELY. setting active W = False and notifying others. Unlocking.
+NEW INDEX AQCUIRED: 35/10000
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 1. Unlocking GS 
+GS unlocked
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 0
+GS notifying writers
+GS success notifying writer
+GS unlocking and exiting
+GS unlocked. EXITING!
+W want lock
+W got lock. Should wait?
+W Active writer
+W critical section. ENSURING STATUS = 1
+Add Batch Neighbors attempting lock
+Add Batch Neighbors lock OK
+W critical section finished successfully. Entering EXIT SECTION
+W finished critical section EXCLUSIVELY. setting active W = False and notifying others. Unlocking.
+NEW INDEX AQCUIRED: 36/10000
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 1. Unlocking GS 
+GS unlocked
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 2. Unlocking GS 
+GS unlocked
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 1
+GS unlocking and exiting
+GS unlocked. EXITING!
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 0
+GS notifying writers
+GS success notifying writer
+GS unlocking and exiting
+GS unlocked. EXITING!
+W want lock
+W got lock. Should wait?
+W Active writer
+W critical section. ENSURING STATUS = 1
+Add Batch Neighbors attempting lock
+Add Batch Neighbors lock OK
+W critical section finished successfully. Entering EXIT SECTION
+W finished critical section EXCLUSIVELY. setting active W = False and notifying others. Unlocking.
+NEW INDEX AQCUIRED: 37/10000
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 1. Unlocking GS 
+GS unlocked
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 0
+GS notifying writers
+GS success notifying writer
+GS unlocking and exiting
+GS unlocked. EXITING!
+W want lock
+W got lock. Should wait?
+W Active writer
+W critical section. ENSURING STATUS = 1
+Add Batch Neighbors attempting lock
+Add Batch Neighbors lock OK
+W critical section finished successfully. Entering EXIT SECTION
+W finished critical section EXCLUSIVELY. setting active W = False and notifying others. Unlocking.
+NEW INDEX AQCUIRED: 38/10000
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 1. Unlocking GS 
+GS unlocked
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 2. Unlocking GS 
+GS unlocked
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 1
+GS unlocking and exiting
+GS unlocked. EXITING!
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 0
+GS notifying writers
+GS success notifying writer
+GS unlocking and exiting
+GS unlocked. EXITING!
+W want lock
+W got lock. Should wait?
+W Active writer
+W critical section. ENSURING STATUS = 1
+Add Batch Neighbors attempting lock
+Add Batch Neighbors lock OK
+W critical section finished successfully. Entering EXIT SECTION
+W finished critical section EXCLUSIVELY. setting active W = False and notifying others. Unlocking.
+NEW INDEX AQCUIRED: 39/10000
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 1. Unlocking GS 
+GS unlocked
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 0
+GS notifying writers
+GS success notifying writer
+GS unlocking and exiting
+GS unlocked. EXITING!
+W want lock
+W got lock. Should wait?
+W Active writer
+W critical section. ENSURING STATUS = 1
+Add Batch Neighbors attempting lock
+Add Batch Neighbors lock OK
+W critical section finished successfully. Entering EXIT SECTION
+W finished critical section EXCLUSIVELY. setting active W = False and notifying others. Unlocking.
+NEW INDEX AQCUIRED: 40/10000
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 1. Unlocking GS 
+GS unlocked
+W want lock
+W got lock. Should wait?
+W should wait
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 2. Unlocking GS 
+GS unlocked
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 1
+GS unlocking and exiting
+GS unlocked. EXITING!
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 0
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 2. Unlocking GS 
+GS unlocked
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 3. Unlocking GS 
+GS unlocked
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 2
+GS unlocking and exiting
+GS unlocked. EXITING!
+GS unlocking and exiting
+GS unlocked. EXITING!
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 0
+GS notifying writers
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 1. Unlocking GS 
+GS unlocked
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 0
+GS notifying writers
+want to lock GS
+locked GS. Should GS wait?
+Active Reader with number: 1. Unlocking GS 
+GS unlocked
+want to lock GS for exit section
+locked GS. Reader Exiting. Remaining Readers: 0
+GS notifying writers
+GS success notifying writer
+GS unlocking and exiting
+GS unlocked. EXITING!
+W want lock
+W got lock. Should wait?
+W Active writer
+W critical section. ENSURING STATUS = 1
+Add Batch Neighbors attempting lock
+Add Batch Neighbors lock OK

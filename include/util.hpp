@@ -22,6 +22,8 @@
 #include <unordered_map>
 #include <stdexcept>
 #include <thread>
+#include <mutex>
+#include <condition_variable>
 #include <immintrin.h>  // compiler intrinsics for SIMD optimization
 #include "assert.h"
 
@@ -31,6 +33,24 @@ using namespace std;
 
 // This file contains several independent utility function templates.
 // Other .hpp files use these functions internally, but they can be used independently.
+
+// YOUR DISTANCE FUNCTION HERE:
+template <typename T>
+float customDistance(const T& t1, const T& t2){
+    // your implementation here.
+    // Feel free to remove the template. 
+    // Don't forget to add instantiate the DirectedGraph template with the corresponding data type (in main.cpp)
+    return 0.0f;
+}
+
+// YOUR EMPTY FUNCTION HERE:
+template <typename T>
+bool customEmpty(const T& t){
+    // your implementation here.
+    // Feel free to remove the template. 
+    // Don't forget to add instantiate the DirectedGraph template with the corresponding data type (in main.cpp)
+    return true;
+}
 
 template<typename T>
 void _parallel_euclideanDistance_thread_fn(const T& t1, const T& t2, int& start_index, int& end_index, float& partialSum){
@@ -114,7 +134,7 @@ float simd_euclideanDistance(const vector<float>& t1, const vector<float>& t2){
     __m256 sum = _mm256_setzero_ps();   // initialize a 256-bit register to zero value
 
     if (dim == 128){
-        for (int i = 0; i < 128; i += 8){  // Change to backward loop
+        for (int i = 0; i < 128; i += 8){
             // std::vector stores data sequentially, but it is not guaranteed that the memory is aligned in 32-bit segments. Therefore we can leverage pointer memory access, but in an unaligned fashion (loadu)
             __m256 vec1 = _mm256_loadu_ps(&t1[i]);   // load (unaligned) packed single precision (= float) value into a 256-bit register
             __m256 vec2 = _mm256_loadu_ps(&t2[i]);   // load (unaligned) packed single precision (= float) value into a 256-bit register

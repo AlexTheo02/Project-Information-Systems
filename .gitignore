@@ -5,3 +5,4 @@ bin
 /tests/bin
 **_latest.txt
 data/
+evaluations/
