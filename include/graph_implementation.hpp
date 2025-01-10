@@ -1,7 +1,7 @@
 #pragma once
 
 #include "types.hpp"
-
+#define tid std::this_thread::get_id()
 // This file implements member functions of the DirectedGraph class template declared in the types.hpp header file.
 
 // Creates a node, adds it in the graph and returns it
@@ -29,7 +29,7 @@ template <typename T>
 bool DirectedGraph<T>::addEdge(const Id from, const Id to, optional<bool> noLock){
 
     // extract the noLock value and initialize accordingly
-    bool no_lock = (noLock == nullopt) ? false : noLock.value();
+    bool no_lock = (noLock == nullopt) ? true : noLock.value();
     
     // At least one of the nodes is not present in nodeSet
     if (from >= this->n_nodes || to >= this->n_nodes){
@@ -44,6 +44,7 @@ bool DirectedGraph<T>::addEdge(const Id from, const Id to, optional<bool> noLock
     }
 
     if (args.n_threads > 1 && !no_lock  && !this->_lock_edges.owns_lock()){
+        cout << "ACQUIRING LOCK\n";
         this->_lock_edges.lock();
     }
 
@@ -54,14 +55,18 @@ bool DirectedGraph<T>::addEdge(const Id from, const Id to, optional<bool> noLock
 
     if(next_size == previous_size){
         c_log << "Cannot add edge. Edge already exists" << '\n';
-        if (args.n_threads > 1 && !no_lock  && this->_lock_edges.owns_lock())
+        if (args.n_threads > 1 && !no_lock  && this->_lock_edges.owns_lock()){
+            cout << "UNLOCKINGGG\n";
             this->_lock_edges.unlock();
+        }
         return false;
     }
     else this->n_edges++;
 
-    if (args.n_threads > 1 && !no_lock  && this->_lock_edges.owns_lock())
+    if (args.n_threads > 1 && !no_lock  && this->_lock_edges.owns_lock()){
+        cout << "UNLOCKINGGG\n";
         this->_lock_edges.unlock();
+    }
     
     return true;
 }
@@ -71,9 +76,10 @@ template <typename T>
 bool DirectedGraph<T>::removeEdge(const Id from, const Id to, optional<bool> noLock){
 
     // extract the noLock value and initialize accordingly
-    bool no_lock = (noLock == nullopt) ? false : noLock.value();
+    bool no_lock = (noLock == nullopt) ? true : noLock.value();
 
-    if (args.n_threads > 1 && !no_lock && !this->_lock_edges.owns_lock()){
+    if (args.n_threads > 1 && !no_lock  && !this->_lock_edges.owns_lock()){
+        cout << "ACQUIRING LOCK\n";
         this->_lock_edges.lock();
     }
 
@@ -88,14 +94,18 @@ bool DirectedGraph<T>::removeEdge(const Id from, const Id to, optional<bool> noL
             // Decrement the number of edges in graph
             else this->n_edges--;
 
-            if (args.n_threads > 1 && !no_lock && this->_lock_edges.owns_lock())
+            if (args.n_threads > 1 && !no_lock  && this->_lock_edges.owns_lock()){
+                cout << "UNLOCKINGGG\n";
                 this->_lock_edges.unlock();
+            }
 
             return true;
         }
     }
-    if (args.n_threads > 1 && !no_lock && this->_lock_edges.owns_lock())
+    if (args.n_threads > 1 && !no_lock  && this->_lock_edges.owns_lock()){
+        cout << "UNLOCKINGGG\n";
         this->_lock_edges.unlock();
+    }
 
     c_log << "WARNING: Trying to remove non-existing edge.\n" << '\n';
     return false;
@@ -546,20 +556,21 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(
 
     if (args.n_threads > 1){
 
-        cout << "want to lock GS\n";
+        cout << tid << " want to lock GS\n";
         if(!this->_lock.owns_lock())
             this->_lock.lock();
-        cout << "locked GS. Should GS wait?\n";
+        cout << tid << " locked GS. Should GS wait?\n";
         while(this->_active_W == true){
-            cout << "GS should wait!\n";
+            cout << tid << " GS should wait!\n";
             this->_cv_reader.wait(this->_lock);
-            cout << "GS wait is over. Re-check. . .\n";
+            cout << tid << "GS wait is over. Re-check. . .\n";
         }
         this->_active_GS++;
-        cout << "Active Reader with number: " << this->_active_GS << ". Unlocking GS " << endl;
-        if(this->_lock.owns_lock())
+        cout << tid << " Active Reader with number: " << this->_active_GS << ". Unlocking GS " << endl;
+        if(this->_lock.owns_lock()){
             this->_lock.unlock();
-        cout << "GS unlocked\n";
+            cout << tid << " GS unlocked\n";
+        }
     }
 
     pair<unordered_set<Id>, unordered_set<Id>> rv = (args.usePQueue)
@@ -568,19 +579,22 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(
     
     if (args.n_threads > 1){
 
-        cout << "want to lock GS for exit section\n";
+        cout << tid << " want to lock GS for exit section\n";
         if(!this->_lock.owns_lock())
             this->_lock.lock();
-        cout << "locked GS. Reader Exiting. Remaining Readers: " << this->_active_GS - 1 << endl;
+        cout << tid << " locked GS. Reader Exiting. Remaining Readers: " << this->_active_GS - 1 << endl;
         if (--this->_active_GS == 0){
-            cout << "GS notifying writers\n";
-            this->_cv_writer.notify_one();
-            cout << "GS success notifying writer\n";
-        }
-        cout << "GS unlocking and exiting\n";
-        if(this->_lock.owns_lock())
+            cout << tid << " GS notifying writers\n";
             this->_lock.unlock();
-        cout << "GS unlocked. EXITING!\n";
+            this->_cv_writer.notify_one();
+            cout << tid << " GS success notifying writer\n";
+        }
+        cout << tid << " GS unlocking and exiting\n";
+        if(this->_lock.owns_lock()){
+            this->_lock.unlock();
+            cout << tid << " GS Unlocked for exit section!\n";
+        }
+        cout << tid << " GS EXITING" << endl;
     }
 
     return rv;
@@ -723,6 +737,7 @@ void DirectedGraph<T>::robustPrune(Id p, unordered_set<Id> V, float a, int R){
 
 
     if (args.n_threads > 1){
+        cout << tid << " W want lock first section\n";
         if(!this->_lock.owns_lock())
             this->_lock.lock();
         while(this->_active_GS != 0 || this->_active_W == true){
@@ -738,12 +753,17 @@ void DirectedGraph<T>::robustPrune(Id p, unordered_set<Id> V, float a, int R){
 
     if (args.n_threads > 1){
         this->_active_W = false;
+        if(this->_lock.owns_lock()){
+            cout << tid << " W unlocking for exit first" << endl;
+            this->_lock.unlock();
+        }
         this->_cv_writer.notify_one();
         this->_cv_reader.notify_all();
-        if(this->_lock.owns_lock())
-            this->_lock.unlock();
     }
-
+    if(this->_lock.owns_lock()){
+        cout << "fuck you" << endl;
+        exit(1);
+    }
     V.erase(p);
 
     Id p_opt;
@@ -771,33 +791,38 @@ void DirectedGraph<T>::robustPrune(Id p, unordered_set<Id> V, float a, int R){
     // synchronize with greedy search
     if (args.n_threads > 1){
 
-        cout << "W want lock\n";
+        cout << tid << " W want lock\n";
         if(!this->_lock.owns_lock())
             this->_lock.lock();
-        cout << "W got lock. Should wait?\n";
+        cout << tid << " W got lock. Should wait?\n";
         while(this->_active_GS != 0 || this->_active_W == true){
-            cout << "W should wait\n";
+           cout << tid << " W should wait\n";
             this->_cv_writer.wait(this->_lock);
-            cout << "W wait over. Re-check\n";
+            cout << tid << " W wait over. Re-check" << endl;
         }
-        cout << "W Active writer\n";
+        cout << tid << " W Active writer\n";
         this->_active_W = true;
     }
     
-    cout << "W critical section. ENSURING STATUS = " << this->_active_W << endl;
+    cout << tid << " W critical section 2. ENSURING STATUS = " << this->_active_W << endl;
     this->addBatchNeigbors(p, batch);
-    cout << "W critical section finished successfully. Entering EXIT SECTION\n";
+    cout << tid << " W critical section finished successfully 2 . Entering EXIT SECTION\n";
 
     if (args.n_threads > 1){
 
         // this->_mx_cv.lock();
         // ALREADY HOLDING LOCK.
-        cout << "W finished critical section EXCLUSIVELY. setting active W = False and notifying others. Unlocking.\n";
+        if(this->_lock.owns_lock()){
+            cout << tid << " W holds lock" << endl;
+        }
+        cout << tid << " W finished critical section 2 EXCLUSIVELY. setting active W = False and notifying others. Unlocking.\n";
         this->_active_W = false;
         this->_cv_writer.notify_one();
         this->_cv_reader.notify_all();
-        if(this->_lock.owns_lock())
+        if(this->_lock.owns_lock()){
+            cout << tid << " W unlockingggggg exit 2\n";
             this->_lock.unlock();
+        }
     }
 }
 
