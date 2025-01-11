@@ -875,8 +875,6 @@ void DirectedGraph<T>::_thread_Vamana_fn(int& L, int& R, float& a, vector<Id>& p
 
         this->robustPrune(si.id, V, a, R);
         
-        // Another critical section?
-        // Lock for check
         {
             // RAII scope
             unique_lock<mutex> _lock(this->_mx_edges);

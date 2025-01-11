@@ -77,10 +77,33 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::filteredGreed
 
     if (L < k){ throw invalid_argument("L must be greater or equal to K.\n"); }
 
+    if (args.n_threads > 1){
+
+
+        unique_lock<mutex> _lock(this->_mx_cv);
+        assert(_lock.owns_lock());
+        while(this->_active_W == true){
+            this->_cv_reader.wait(_lock);
+        }
+        assert(_lock.owns_lock());
+        this->_active_GS++;
+        assert(_lock.owns_lock());
+        this->_cv_reader.notify_all();
+
+    } // end of RAII scope => invalidation of _lock, and therefore releasing lock on mutex (automatically)
+
     return (args.usePQueue)
         ? this->_pqueue_filteredGreedySearch(s, q, k, L)
         : this->_set_filteredGreedySearch(s, q, k, L);
 
+    if (args.n_threads > 1){
+        unique_lock<mutex> _lock(this->_mx_cv);
+        assert(_lock.owns_lock());
+        if (--this->_active_GS == 0){
+            this->_cv_writer.notify_one();
+        }
+        assert(_lock.owns_lock());
+    }
     
 }
 
@@ -235,17 +258,46 @@ void DirectedGraph<T>::filteredRobustPrune(Id p, unordered_set<Id> V, float a, i
 
     if (this->nodes[p].empty()) { throw invalid_argument("No node was provided.\n"); }
 
-    if (mapKeyExists(p, this->Nout))
-        V.insert(this->Nout[p].begin(), this->Nout[p].end());
-    
-    V.erase(p);
-    this->clearNeighbors(p);
+    {   // RAII scope
+        unique_lock<mutex> _lock(this->_mx_cv, defer_lock);
+
+        // Entry Section
+        if (args.n_threads > 1){
+            _lock.lock();
+            assert(_lock.owns_lock());
+            while(this->_active_GS != 0 || this->_active_W == true){
+                this->_cv_writer.wait(_lock);
+            }
+            assert(_lock.owns_lock());
+            this->_active_W = true; // also critical operation but for synchronization. Is under lock.
+        }
+
+        // Critical Section
+        if (mapKeyExists(p, this->Nout))
+            V.insert(this->Nout[p].begin(), this->Nout[p].end());
+
+        this->clearNeighbors(p);          // calls remove edge
+        // End of Critical Section
+
+        // Exit Section
+        if (args.n_threads > 1){
+            assert(_lock.owns_lock());
+            this->_active_W = false; // also critical operation but for synchronization. Is under lock.
+            this->_cv_writer.notify_one();
+            this->_cv_reader.notify_all();
+        }
+
+    } // end of RAII scope => invalidation of _lock and freeing of mutex
+
+    vector<Id> batch;
 
     while (!V.empty()){
         Id pmin = this->_myArgMin(V, this->nodes[p].value);
-        this->addEdge(p, pmin);
 
-        if (this->Nout[p].size() == R)  break;
+        batch.push_back(pmin); // store pmin to a vector Id then addbatch 
+
+        if (batch.size() == R)
+            break;
 
         // pmin = p*, pv = p', p = p (as seen in paper)
         // *it = pv
@@ -259,6 +311,33 @@ void DirectedGraph<T>::filteredRobustPrune(Id p, unordered_set<Id> V, float a, i
             else { it++; }
         }
     }
+
+    { // RAII scope
+        unique_lock<mutex> _lock(this->_mx_cv, defer_lock);
+
+        // Entry Section
+        if (args.n_threads > 1){
+            _lock.lock();
+            assert(_lock.owns_lock());
+            while(this->_active_GS != 0 || this->_active_W == true){
+                this->_cv_writer.wait(_lock);
+            }
+            assert(_lock.owns_lock());
+            this->_active_W = true;
+        }
+
+        // Critical Section
+        this->addBatchNeigbors(p, batch);
+        // End of Critical Section
+
+        // Exit Section 
+        if (args.n_threads > 1){
+            assert(_lock.owns_lock());
+            this->_active_W = false;
+            this->_cv_writer.notify_one();
+            this->_cv_reader.notify_all();
+        }   
+    }// end of RAII scope => invalidation of _lock and freeing of mutex
 }
 
 template <typename T>
@@ -280,35 +359,18 @@ bool DirectedGraph<T>::filteredVamanaAlgorithm(int L, int R, float a, float t){
     // initialize G as an empty graph => clear all edges
     if(this->clearEdges() == false)
         return false;
+    
+    vector<Id> nodes_ids(this->n_nodes);
+    iota(nodes_ids.begin(), nodes_ids.end(), 0);
+
+    vector<Id> perm_id = permutation(nodes_ids);
 
     if (args.n_threads == 1){
-
-        vector<Id> nodes_ids(this->n_nodes);
-        iota(nodes_ids.begin(), nodes_ids.end(), 0);
-
-        vector<Id> perm_id = permutation(nodes_ids);
-
         rv =  this->_serial_filteredVamana(L, R, a, t, ref(perm_id));
     }
     else{
         
-        // Heuristic for better thread job scheduling: sort based on diminishing workload (Longest Processing Time First) (REFERENCE HERE) TODO
-        // Copy elements into a vector of pairs to sort
-        vector<pair<int, vector<Id>>> sorted_categories;
-
-        // Convert the categories into a vector containing a pair of an int(category id) and a vector containing all the ids of that category's nodes
-        for (pair<int, unordered_set<Id>> cpair : this->categories) {
-            sorted_categories.emplace_back(cpair.first, vector<Id>(cpair.second.begin(), cpair.second.end()));
-        }
-
-        // Sort the vector based on the size of the vector in the second element
-        sort(sorted_categories.begin(), sorted_categories.end(),
-                [](const pair<int, vector<Id>>& cpair1, const pair<int, vector<Id>>& cpair2) {
-                    return cpair1.second.size() > cpair2.second.size();
-                });
-        
-        
-        rv =  this->_parallel_filteredVamana(L, R, a, t, sorted_categories);
+        rv =  this->_parallel_filteredVamana(L, R, a, t, ref(perm_id));
     }
     
     if (!rv) { return false; }
@@ -352,7 +414,7 @@ bool DirectedGraph<T>::_serial_filteredVamana(int L, int  R, float a, float t, v
 }
 
 template <typename T>
-bool DirectedGraph<T>::_parallel_filteredVamana(int L, int  R, float a, float t, vector<pair<int, vector<Id>>>& sorted_categories){
+bool DirectedGraph<T>::_parallel_filteredVamana(int L, int  R, float a, float t, vector<Id>& perm){
 
     int current_index = 0;
     mutex mx_index;
@@ -378,7 +440,7 @@ bool DirectedGraph<T>::_parallel_filteredVamana(int L, int  R, float a, float t,
             ref(current_index),
             ref(mx_index),
             ref(rvs[i]),
-            ref(sorted_categories)));
+            ref(perm)));
     }
 
     for (thread& th : threads)
@@ -397,50 +459,56 @@ bool DirectedGraph<T>::_parallel_filteredVamana(int L, int  R, float a, float t,
 }
 
 template <typename T>
-void DirectedGraph<T>::_thread_filteredVamana_fn(int& L, int& R, float& a, float& t, int& current_index, mutex& mx, char& rv, vector<pair<int, vector<Id>>>& sorted_categories){
+void DirectedGraph<T>::_thread_filteredVamana_fn(int& L, int& R, float& a, float& t, int& current_index, mutex& mx, char& rv, vector<Id>& perm){
     
     mx.lock();
-    while(current_index < sorted_categories.size()){
+    while(current_index < perm.size()){
         int my_index = current_index++;
         mx.unlock();
 
-        vector<Id> perm = permutation(sorted_categories[my_index].second);
+        Node<T> si = this->nodes[my_index];
+        // Id starting_node_i = this->startingNode(); // st[si.category];   // because each node belongs to at most one category.
+        // unordered_map<int, Id> st = this->findMedoids(t);  // paper says starting points should be the medoids found in [algorithm 2]
         
-        for (Id& si_id : perm){
 
-            Node<T> si = this->nodes[si_id];
-            // Id starting_node_i = this->startingNode(); // st[si.category];   // because each node belongs to at most one category.
-            // unordered_map<int, Id> st = this->findMedoids(t);  // paper says starting points should be the medoids found in [algorithm 2]
-            
+        // create query with si value to pass to filteredGreedySearch
+        Query<T> q(si.id, si.category, true, si.value, this->isEmpty);
 
-            // create query with si value to pass to filteredGreedySearch
-            Query<T> q(si.id, si.category, true, si.value, this->isEmpty);
+        unordered_set<Id> Vi = this->filteredGreedySearch(this->startingNode(q.category), q, 0, L).second;
 
-            unordered_set<Id> Vi = this->filteredGreedySearch(this->startingNode(q.category), q, 0, L).second;
+        // mx.lock();
+        filteredRobustPrune(si.id, Vi, a, R);
+        // mx.unlock();
 
-            mx.lock();
-            filteredRobustPrune(si.id, Vi, a, R);
-            mx.unlock();
-
+        {
+            // RAII scope
+            unique_lock<mutex> _lock(this->_mx_edges);
             if (mapKeyExists(si.id, this->Nout)){
                 
-                mx.lock();
-                unordered_map<Id, unordered_set<Id>> NoutCopy(this->Nout.begin(), this->Nout.end());
-                mx.unlock();
+                // mx.lock();
+                unordered_set<Id> noutCopy_si(this->Nout[si.id].begin(), this->Nout[si.id].end());
+                // mx.unlock();
 
-                for (const Id j : NoutCopy[si.id]){  // for every neighbor j of si
+                for (const Id j : noutCopy_si){  // for every neighbor j of si
 
-                    mx.lock();
+                    // mx.lock();
 
-                    this->addEdge(j, si.id);   // does it in either case (simpler code, robust prune clears all neighbors after copying to candidate set V anyway)
-                    int noutSize = this->Nout[j].size();
-                    if (noutSize > R)
+                    unordered_set<Id> result(this->Nout[j].begin(), this->Nout[j].end());
+                    // this->addEdge(j, si.id, true);   // does it in either case (simpler code, robust prune clears all neighbors after copying to candidate set V anyway)
+                    result = unorderedSetUnion(result, unordered_set<Id>(si.id));
+                    _lock.unlock();
+                    if (result.size() > R)
                         filteredRobustPrune(j, this->Nout[j], a, R);
+                    else{
+                        this->addEdge(j, si.id);
+                    }
 
-                    mx.unlock();
+                    _lock.lock();
+                    // mx.unlock();
                 }
             }
         }
+        
         mx.lock();
     }
     mx.unlock();
