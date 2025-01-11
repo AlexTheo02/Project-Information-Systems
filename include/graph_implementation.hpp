@@ -1,7 +1,7 @@
 #pragma once
 
 #include "types.hpp"
-#define tid std::this_thread::get_id()
+#define tid std::this_thread::get_id() << " "
 // This file implements member functions of the DirectedGraph class template declared in the types.hpp header file.
 
 // Creates a node, adds it in the graph and returns it
@@ -556,21 +556,28 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(
 
     if (args.n_threads > 1){
 
-        cout << tid << " want to lock GS\n";
-        if(!this->_lock.owns_lock())
+        cout << tid << "GS wants lock (entry)" << endl;
+        if(!this->_lock.owns_lock()){
             this->_lock.lock();
-        cout << tid << " locked GS. Should GS wait?\n";
-        while(this->_active_W == true){
-            cout << tid << " GS should wait!\n";
-            this->_cv_reader.wait(this->_lock);
-            cout << tid << "GS wait is over. Re-check. . .\n";
         }
+        assert(this->_lock.owns_lock());
+        cout << tid << "GS aqcuired lock (entry). Check Condition: Any Active W?" << endl;
+        while(this->_active_W == true){
+            cout << tid << "GS should wait (entry)" << endl;
+            this->_cv_reader.wait(this->_lock);
+            cout << tid << "GS wait is over. Re-check. . ." << endl;
+        }
+        assert(this->_lock.owns_lock());
+        cout << tid << "GS aqcuired lock after waiting (entry). Incrementing active GS (Critical Section)" << endl;
         this->_active_GS++;
-        cout << tid << " Active Reader with number: " << this->_active_GS << ". Unlocking GS " << endl;
+        cout << tid << "GS Active Reader with number: " << this->_active_GS << endl;
+        assert(this->_lock.owns_lock());
+        cout << tid << "GS owns the lock. Attempting to Unlock after Incrementing (1st Critical Section)" << endl;
         if(this->_lock.owns_lock()){
             this->_lock.unlock();
-            cout << tid << " GS unlocked\n";
         }
+        assert(!this->_lock.owns_lock());
+        cout << tid << "GS unlocked after incrementing. SUCCESS EXIT 1" << endl;
     }
 
     pair<unordered_set<Id>, unordered_set<Id>> rv = (args.usePQueue)
@@ -579,22 +586,23 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(
     
     if (args.n_threads > 1){
 
-        cout << tid << " want to lock GS for exit section\n";
+        cout << tid << "GS wants lock (exit section)" << endl;
         if(!this->_lock.owns_lock())
             this->_lock.lock();
-        cout << tid << " locked GS. Reader Exiting. Remaining Readers: " << this->_active_GS - 1 << endl;
+        assert(this->_lock.owns_lock());
+        cout << tid << "GS aqcuired lock (exit). Remaining Readers: " << this->_active_GS - 1 << endl;
         if (--this->_active_GS == 0){
-            cout << tid << " GS notifying writers\n";
-            this->_lock.unlock();
+            cout << tid << "GS 0 remaining => should notify writers" << endl;
             this->_cv_writer.notify_one();
-            cout << tid << " GS success notifying writer\n";
+            cout << tid << "GS notified one writer after remaining = 0" << endl;
         }
-        cout << tid << " GS unlocking and exiting\n";
+        assert(this->_lock.owns_lock());
+        cout << tid << "GS still owns the lock (exit). Attempting to unlock" << endl;
         if(this->_lock.owns_lock()){
             this->_lock.unlock();
-            cout << tid << " GS Unlocked for exit section!\n";
         }
-        cout << tid << " GS EXITING" << endl;
+        assert(!this->_lock.owns_lock());
+        cout << tid << "GS Unlocked Successfully for final exit!" << endl;
     }
 
     return rv;
@@ -737,13 +745,20 @@ void DirectedGraph<T>::robustPrune(Id p, unordered_set<Id> V, float a, int R){
 
 
     if (args.n_threads > 1){
-        cout << tid << " W want lock first section\n";
+        cout << tid << "W1 wants lock" << endl;
         if(!this->_lock.owns_lock())
             this->_lock.lock();
+        assert(this->_lock.owns_lock());
+        cout << tid << "W1 successfully got lock. Checking condition: Any GS or W active?" << endl;
         while(this->_active_GS != 0 || this->_active_W == true){
+            cout << tid << "W1 should wait." << endl;
             this->_cv_writer.wait(this->_lock);
+            cout << tid << "W1 wait is over. Re-check condition" << endl;
         }
+        assert(this->_lock.owns_lock());
+        cout << tid << "W1 aqcuired lock after waiting. Setting Active W = true" << endl;
         this->_active_W = true;
+        cout << "W1 Critical Section Begin" << endl;
     }
 
     if (mapKeyExists(p, this->Nout))
@@ -752,16 +767,22 @@ void DirectedGraph<T>::robustPrune(Id p, unordered_set<Id> V, float a, int R){
     this->clearNeighbors(p);          // calls remove edge
 
     if (args.n_threads > 1){
+        cout << "W1 Critical Section End" << endl;
+        assert(this->_lock.owns_lock());
+        cout << "W1 Correctly holds lock after critical section. Setting Active W = false" << endl;
         this->_active_W = false;
-        if(this->_lock.owns_lock()){
-            cout << tid << " W unlocking for exit first" << endl;
-            this->_lock.unlock();
-        }
+        cout << "W1 Set active W = False. Notifying one W and all GS" << endl;
         this->_cv_writer.notify_one();
         this->_cv_reader.notify_all();
+        cout << "W1 Attempting to release the lock" << endl;
+        if(this->_lock.owns_lock()){
+            this->_lock.unlock();
+        }
+        assert(!this->_lock.owns_lock());
+        cout << tid << "W1 unlocking successful. EXIT 1 OK" << endl;
     }
     if(this->_lock.owns_lock()){
-        cout << "fuck you" << endl;
+        cout << "WRONG...." << endl;
         exit(1);
     }
     V.erase(p);
@@ -791,38 +812,47 @@ void DirectedGraph<T>::robustPrune(Id p, unordered_set<Id> V, float a, int R){
     // synchronize with greedy search
     if (args.n_threads > 1){
 
-        cout << tid << " W want lock\n";
+        cout << tid << "W2 wants lock" << endl;
         if(!this->_lock.owns_lock())
             this->_lock.lock();
-        cout << tid << " W got lock. Should wait?\n";
+        assert(this->_lock.owns_lock());
+        cout << tid << "W2 successfully got lock. Checking condition: <...>" << endl;
         while(this->_active_GS != 0 || this->_active_W == true){
-           cout << tid << " W should wait\n";
+            cout << tid << "W2 should wait." << endl;
             this->_cv_writer.wait(this->_lock);
-            cout << tid << " W wait over. Re-check" << endl;
+            cout << tid << "W2 wait over. Re-check condition" << endl;
         }
-        cout << tid << " W Active writer\n";
+        assert(this->_lock.owns_lock());
+        cout << tid << "W2 Acquired lock after waiting. Setting Active W = True" << endl;
         this->_active_W = true;
+        cout << tid << "W2 Critical Section Begin" << endl;
     }
     
-    cout << tid << " W critical section 2. ENSURING STATUS = " << this->_active_W << endl;
+    cout << tid << "W2 critical section 2. ENSURING STATUS = " << this->_active_W << endl;
     this->addBatchNeigbors(p, batch);
-    cout << tid << " W critical section finished successfully 2 . Entering EXIT SECTION\n";
+    cout << tid << "W2 critical section finished successfully 2 . Entering EXIT SECTION" << endl;
 
     if (args.n_threads > 1){
-
+        cout << tid << "W2 critical section end" << endl;
+        assert(this->_lock.owns_lock());
+        cout << tid << "W2 correctly holds lock after critical section 2. Setting Active W = False";
         // this->_mx_cv.lock();
         // ALREADY HOLDING LOCK.
-        if(this->_lock.owns_lock()){
-            cout << tid << " W holds lock" << endl;
-        }
-        cout << tid << " W finished critical section 2 EXCLUSIVELY. setting active W = False and notifying others. Unlocking.\n";
         this->_active_W = false;
+        cout << tid << "W2 set Active W = False. Notifying one W and all GS" << endl;
         this->_cv_writer.notify_one();
         this->_cv_reader.notify_all();
+        cout << tid << "W2 attempting to release the lock" << endl;
         if(this->_lock.owns_lock()){
-            cout << tid << " W unlockingggggg exit 2\n";
             this->_lock.unlock();
         }
+        assert(!this->_lock.owns_lock());
+        cout << tid << "W2 unlocking successful. EXIT 2 OK" << endl;
+    }
+
+    if(this->_lock.owns_lock()){
+        cout << "WRONG 2...." << endl;
+        exit(1);
     }
 }
 
