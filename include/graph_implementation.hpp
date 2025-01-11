@@ -60,6 +60,11 @@ bool DirectedGraph<T>::addEdge(const Id from, const Id to, optional<bool> noLock
         return false;
     }
     else this->n_edges++;
+
+    if (args.n_threads > 1 && !no_lock){
+        cout << "imaste okay" << endl;
+        
+    }
  
     return true;
 }
@@ -86,7 +91,7 @@ bool DirectedGraph<T>::removeEdge(const Id from, const Id to, optional<bool> noL
                 this->Nout.erase(from);
             }
             // Decrement the number of edges in graph
-            else this->n_edges--;
+            this->n_edges--;
 
             return true;
         }
@@ -916,14 +921,32 @@ void DirectedGraph<T>::_thread_Vamana_fn(int& L, int& R, float& a, vector<Id>& p
         this->robustPrune(si.id, V, a, R);
         
         // Another critical section?
-        if (mapKeyExists(si.id, this->Nout)){
-        
-            for (const Id j : this->Nout[si.id]){  // for every neighbor j of si
+        // Lock for check
+        {
+            // RAII scope
+            unique_lock<mutex> _lock(this->_mx_edges);
+            if (mapKeyExists(si.id, this->Nout)){
 
-                this->addEdge(j, si.id);   // does it in either case (simpler code, robust prune clears all neighbors after copying to candidate set V anyway)
-                if (this->Nout[j].size() > R)
-                    robustPrune(j, this->Nout[j], a, R);
+                unordered_set<Id> noutCopy_si(this->Nout[si.id].begin(), this->Nout[si.id].end());
+                // We have the lock, get a copy of nout[si.id]
+                for (const Id j : noutCopy_si){  // for every neighbor j of si
+
+                    unordered_set<Id> result(this->Nout[j].begin(), this->Nout[j].end());
+                    // this->addEdge(j, si.id, true);   // does it in either case (simpler code, robust prune clears all neighbors after copying to candidate set V anyway)
+                    result = unorderedSetUnion(result, unordered_set<Id>(si.id));
+                    _lock.unlock();
+                    if (result.size() > R){
+                        robustPrune(j, result, a, R);
+                    }
+                    else{
+                        this->addEdge(j, si.id);
+                    }
+
+                    _lock.lock();
+                    
+                }
             }
+
         }
         // ^
 

@@ -225,6 +225,19 @@ set<T> setUnion(const set<T>& set1, const set<T>& set2){
     return result;
 }
 
+template <typename T>
+unordered_set<T> unorderedSetUnion(const unordered_set<T>& set1, const unordered_set<T>& set2) {
+    // Create a new unordered_set to hold the result
+    unordered_set<T> result(set1.begin(), set1.end()); // Start with all elements from set1
+
+    // Insert all elements from set2
+    for (const auto& elem : set2) {
+        result.insert(elem);
+    }
+
+    return result;
+}
+
 // Returns an element from the set, chosen uniformly at random
 template <typename Container>
 typename Container::value_type sampleFromContainer(const Container& s){

@@ -272,12 +272,15 @@ void test_Rgraph(void){
 
     TEST_CHECK(c == 1000);
 
-    DirectedGraph<vector<float>> DG2 = DG;
+    int n_edges = DG.get_n_edges();
+    int n_nodes = DG.get_n_nodes();
+    unordered_map<Id, unordered_set<Id>> nout = DG.get_Nout();
+   
     // R == 0 <=> keep the graph the same
     TEST_CHECK(DG.Rgraph(0));
-    TEST_CHECK(DG2.get_n_edges() == DG.get_n_edges());
-    TEST_CHECK(DG2.get_n_nodes() == DG.get_n_nodes());
-    TEST_CHECK(DG2.get_Nout() == DG.get_Nout());
+    TEST_CHECK(n_edges == DG.get_n_edges());
+    TEST_CHECK(n_nodes == DG.get_n_nodes());
+    TEST_CHECK(nout == DG.get_Nout());
 
 
     TEST_CHECK(DG.clearEdges());
@@ -491,11 +494,11 @@ void test_greedySearch(void){
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "No query was provided.\n")); }
 
-    // if k <= 0
+    // if k < 0
     try{
-        pair<unordered_set<Id>, unordered_set<Id>> ret = DG.greedySearch(s, vectors[0], 0, 5);
+        pair<unordered_set<Id>, unordered_set<Id>> ret = DG.greedySearch(s, vectors[0], -1, 5);
         TEST_CHECK(false);  // Control should not reach here 
-    }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "K must be greater than 0.\n")); }
+    }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "K must be greater than or equal to 0.\n")); }
 
     // if L < k
     try{
