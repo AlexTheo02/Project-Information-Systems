@@ -127,10 +127,10 @@ class DirectedGraph{
         function<bool(const T&)> isEmpty;                   // typename T valid check
 
         mutex _mx_edges;                                    // Mutex for edges modification
-        unique_lock<mutex> _lock_edges;                     // Unique Lock for _mx_edges mutex
+        // unique_lock<mutex> _lock_edges;                     // Unique Lock for _mx_edges mutex
 
         mutex _mx_cv;                                       // Mutex for Condition Variables
-        unique_lock<mutex> _lock;                           // Unique Lock because std::condition_variable takes unique lock as argument.
+        // unique_lock<mutex> _lock;                           // Unique Lock because std::condition_variable takes unique lock as argument.
         condition_variable _cv_reader;                      // Condition Variable for Readers-Writers synchronization between Greedy Search (R) and Edges Modifications (add/remove)
         condition_variable _cv_writer;                      // Condition Variable for Readers-Writers synchronization between Greedy Search (R) and Edges Modifications (add/remove)
         int _active_GS;                                     // How many Readers are active
@@ -197,8 +197,8 @@ class DirectedGraph{
             this->n_nodes = 0;
             this->n_edges = 0;
 
-            this->_lock = unique_lock<mutex>(this->_mx_cv, defer_lock);
-            this->_lock_edges = unique_lock<mutex>(this->_mx_edges, defer_lock);
+            // this->_lock = unique_lock<mutex>(this->_mx_cv, defer_lock);
+            // this->_lock_edges = unique_lock<mutex>(this->_mx_edges, defer_lock);
 
             this->init();
             c_log << "Graph created!" << '\n';

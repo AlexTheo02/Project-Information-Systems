@@ -29,7 +29,8 @@ template <typename T>
 bool DirectedGraph<T>::addEdge(const Id from, const Id to, optional<bool> noLock){
 
     // extract the noLock value and initialize accordingly
-    bool no_lock = (noLock == nullopt) ? true : noLock.value();
+    bool no_lock = (noLock == nullopt) ? false : noLock.value();
+    unique_lock<mutex> _lock(this->_mx_edges, defer_lock);  // defer_lock => initialize unlocked.
     
     // At least one of the nodes is not present in nodeSet
     if (from >= this->n_nodes || to >= this->n_nodes){
@@ -43,9 +44,9 @@ bool DirectedGraph<T>::addEdge(const Id from, const Id to, optional<bool> noLock
         return false;
     }
 
-    if (args.n_threads > 1 && !no_lock  && !this->_lock_edges.owns_lock()){
-        cout << "ACQUIRING LOCK\n";
-        this->_lock_edges.lock();
+    if (args.n_threads > 1 && !no_lock){
+        cout << "ADD EDGE ACQUIRING LOCK" << endl;
+        _lock.lock();
     }
 
     int previous_size = this->Nout[from].size(); 
@@ -55,19 +56,11 @@ bool DirectedGraph<T>::addEdge(const Id from, const Id to, optional<bool> noLock
 
     if(next_size == previous_size){
         c_log << "Cannot add edge. Edge already exists" << '\n';
-        if (args.n_threads > 1 && !no_lock  && this->_lock_edges.owns_lock()){
-            cout << "UNLOCKINGGG\n";
-            this->_lock_edges.unlock();
-        }
+
         return false;
     }
     else this->n_edges++;
-
-    if (args.n_threads > 1 && !no_lock  && this->_lock_edges.owns_lock()){
-        cout << "UNLOCKINGGG\n";
-        this->_lock_edges.unlock();
-    }
-    
+ 
     return true;
 }
 
@@ -76,11 +69,12 @@ template <typename T>
 bool DirectedGraph<T>::removeEdge(const Id from, const Id to, optional<bool> noLock){
 
     // extract the noLock value and initialize accordingly
-    bool no_lock = (noLock == nullopt) ? true : noLock.value();
+    bool no_lock = (noLock == nullopt) ? false : noLock.value();
+    unique_lock<mutex> _lock(this->_mx_edges, defer_lock);  // defer_lock => initialize unlocked.
 
-    if (args.n_threads > 1 && !no_lock  && !this->_lock_edges.owns_lock()){
-        cout << "ACQUIRING LOCK\n";
-        this->_lock_edges.lock();
+    if (args.n_threads > 1 && no_lock != true){
+        cout << " REMOVE EDGE ACQUIRING LOCK" << endl;
+        _lock.lock();
     }
 
     // Check if keys exist before accessing them (and removing them)
@@ -94,17 +88,8 @@ bool DirectedGraph<T>::removeEdge(const Id from, const Id to, optional<bool> noL
             // Decrement the number of edges in graph
             else this->n_edges--;
 
-            if (args.n_threads > 1 && !no_lock  && this->_lock_edges.owns_lock()){
-                cout << "UNLOCKINGGG\n";
-                this->_lock_edges.unlock();
-            }
-
             return true;
         }
-    }
-    if (args.n_threads > 1 && !no_lock  && this->_lock_edges.owns_lock()){
-        cout << "UNLOCKINGGG\n";
-        this->_lock_edges.unlock();
     }
 
     c_log << "WARNING: Trying to remove non-existing edge.\n" << '\n';
@@ -120,8 +105,9 @@ bool DirectedGraph<T>::clearNeighbors(const Id id){
         return false;
     }
 
+    unique_lock<mutex> _lock(this->_mx_edges, defer_lock);
     if (args.n_threads > 1)
-        this->_lock_edges.lock();
+        _lock.lock();
 
     // Node has outgoing neighbors
     if (mapKeyExists(id, this->Nout)){
@@ -129,10 +115,8 @@ bool DirectedGraph<T>::clearNeighbors(const Id id){
         unordered_set<Id> noutCopy(this->Nout[id].begin(), this->Nout[id].end());
 
         for (const Id n : noutCopy){      
-            if (!this->removeEdge(id,n,true)){
+            if (!this->removeEdge(id,n,true)){  // always call removeEdge with noLock = true. If parallel we have the lock, else (serial) lock is not needed
                 c_log << "ERROR: Failed to remove edge, something went wrong" << '\n';
-                if (args.n_threads > 1)
-                    this->_lock_edges.unlock();
                 return false;
             }          
         }      
@@ -140,13 +124,9 @@ bool DirectedGraph<T>::clearNeighbors(const Id id){
         if (mapKeyExists(id, this->Nout)){
             
             c_log << "ERROR: Something went wrong when clearing neighbors" << '\n';
-            if (args.n_threads > 1)
-                this->_lock_edges.unlock();
             return false;
         }
     }
-    if (args.n_threads > 1)
-        this->_lock_edges.unlock();
     return true;
 }
 
@@ -166,8 +146,9 @@ bool DirectedGraph<T>::addBatchNeigbors(const Id from, vector<Id> batch){
     }
 
     cout << "Add Batch Neighbors attempting lock" << endl;
+    unique_lock<mutex> _lock(this->_mx_edges, defer_lock);
     if (args.n_threads > 1)
-        this->_lock_edges.lock();
+        _lock.lock();
     cout << "Add Batch Neighbors lock OK" << endl;
 
     bool rv = true;
@@ -175,9 +156,6 @@ bool DirectedGraph<T>::addBatchNeigbors(const Id from, vector<Id> batch){
         if (!this->addEdge(from, to, true))
             rv = false;
     }
-
-    if (args.n_threads > 1)
-        this->_lock_edges.unlock();
 
     return rv;
 }
@@ -557,53 +535,41 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(
     if (args.n_threads > 1){
 
         cout << tid << "GS wants lock (entry)" << endl;
-        if(!this->_lock.owns_lock()){
-            this->_lock.lock();
-        }
-        assert(this->_lock.owns_lock());
+        unique_lock<mutex> _lock(this->_mx_cv);
+        assert(_lock.owns_lock());
         cout << tid << "GS aqcuired lock (entry). Check Condition: Any Active W?" << endl;
         while(this->_active_W == true){
             cout << tid << "GS should wait (entry)" << endl;
-            this->_cv_reader.wait(this->_lock);
+            this->_cv_reader.wait(_lock);
             cout << tid << "GS wait is over. Re-check. . ." << endl;
         }
-        assert(this->_lock.owns_lock());
+        assert(_lock.owns_lock());
         cout << tid << "GS aqcuired lock after waiting (entry). Incrementing active GS (Critical Section)" << endl;
         this->_active_GS++;
         cout << tid << "GS Active Reader with number: " << this->_active_GS << endl;
-        assert(this->_lock.owns_lock());
-        cout << tid << "GS owns the lock. Attempting to Unlock after Incrementing (1st Critical Section)" << endl;
-        if(this->_lock.owns_lock()){
-            this->_lock.unlock();
-        }
-        assert(!this->_lock.owns_lock());
-        cout << tid << "GS unlocked after incrementing. SUCCESS EXIT 1" << endl;
-    }
+        assert(_lock.owns_lock());
+        this->_cv_reader.notify_all();
+
+    } // end of RAII scope => invalidation of _lock, and therefore releasing lock on mutex (automatically)
+    cout << tid << "GS unlocked after incrementing. SUCCESS EXIT 1" << endl;
 
     pair<unordered_set<Id>, unordered_set<Id>> rv = (args.usePQueue)
         ? this->_pqueue_greedySearch(s, xq, k, L)
         : this->_set_greedySearch(s, xq, k, L);
     
     if (args.n_threads > 1){
-
         cout << tid << "GS wants lock (exit section)" << endl;
-        if(!this->_lock.owns_lock())
-            this->_lock.lock();
-        assert(this->_lock.owns_lock());
+        unique_lock<mutex> _lock(this->_mx_cv);
+        assert(_lock.owns_lock());
         cout << tid << "GS aqcuired lock (exit). Remaining Readers: " << this->_active_GS - 1 << endl;
         if (--this->_active_GS == 0){
             cout << tid << "GS 0 remaining => should notify writers" << endl;
             this->_cv_writer.notify_one();
             cout << tid << "GS notified one writer after remaining = 0" << endl;
         }
-        assert(this->_lock.owns_lock());
-        cout << tid << "GS still owns the lock (exit). Attempting to unlock" << endl;
-        if(this->_lock.owns_lock()){
-            this->_lock.unlock();
-        }
-        assert(!this->_lock.owns_lock());
-        cout << tid << "GS Unlocked Successfully for final exit!" << endl;
+        assert(_lock.owns_lock());
     }
+    cout << tid << "GS Unlocked Successfully for final exit!" << endl;
 
     return rv;
 }
@@ -743,48 +709,48 @@ void DirectedGraph<T>::robustPrune(Id p, unordered_set<Id> V, float a, int R){
 
     if (R <= 0) {throw invalid_argument("Parameter R must be > 0.\n"); }
 
+    {   // RAII scope
+        unique_lock<mutex> _lock(this->_mx_cv, defer_lock);
 
-    if (args.n_threads > 1){
-        cout << tid << "W1 wants lock" << endl;
-        if(!this->_lock.owns_lock())
-            this->_lock.lock();
-        assert(this->_lock.owns_lock());
-        cout << tid << "W1 successfully got lock. Checking condition: Any GS or W active?" << endl;
-        while(this->_active_GS != 0 || this->_active_W == true){
-            cout << tid << "W1 should wait." << endl;
-            this->_cv_writer.wait(this->_lock);
-            cout << tid << "W1 wait is over. Re-check condition" << endl;
+        // Entry Section
+        if (args.n_threads > 1){
+            cout << tid << "W1 wants lock" << endl;
+            _lock.lock();
+            assert(_lock.owns_lock());
+            cout << tid << "W1 successfully got lock. Checking condition: Any GS or W active?" << endl;
+            while(this->_active_GS != 0 || this->_active_W == true){
+                cout << tid << "W1 should wait." << endl;
+                this->_cv_writer.wait(_lock);
+                cout << tid << "W1 wait is over. Re-check condition" << endl;
+            }
+            assert(_lock.owns_lock());
+            cout << tid << "W1 aqcuired lock after waiting. Setting Active W = true" << endl;
+            this->_active_W = true; // also critical operation but for synchronization. Is under lock.
+            cout << "W1 Critical Section Begin" << endl;
         }
-        assert(this->_lock.owns_lock());
-        cout << tid << "W1 aqcuired lock after waiting. Setting Active W = true" << endl;
-        this->_active_W = true;
-        cout << "W1 Critical Section Begin" << endl;
-    }
 
-    if (mapKeyExists(p, this->Nout))
-        V.insert(this->Nout[p].begin(), this->Nout[p].end());
+        // Critical Section
+        if (mapKeyExists(p, this->Nout))
+            V.insert(this->Nout[p].begin(), this->Nout[p].end());
 
-    this->clearNeighbors(p);          // calls remove edge
+        this->clearNeighbors(p);          // calls remove edge
+        // End of Critical Section
 
-    if (args.n_threads > 1){
-        cout << "W1 Critical Section End" << endl;
-        assert(this->_lock.owns_lock());
-        cout << "W1 Correctly holds lock after critical section. Setting Active W = false" << endl;
-        this->_active_W = false;
-        cout << "W1 Set active W = False. Notifying one W and all GS" << endl;
-        this->_cv_writer.notify_one();
-        this->_cv_reader.notify_all();
-        cout << "W1 Attempting to release the lock" << endl;
-        if(this->_lock.owns_lock()){
-            this->_lock.unlock();
+        // Exit Section
+        if (args.n_threads > 1){
+            cout << "W1 Critical Section End" << endl;
+            assert(_lock.owns_lock());
+            cout << "W1 Correctly holds lock after critical section. Setting Active W = false" << endl;
+            this->_active_W = false; // also critical operation but for synchronization. Is under lock.
+            cout << "W1 Set active W = False. Notifying one W and all GS" << endl;
+            this->_cv_writer.notify_one();
+            this->_cv_reader.notify_all();
         }
-        assert(!this->_lock.owns_lock());
+
+    } // end of RAII scope => invalidation of _lock and freeing of mutex
+    if (args.n_threads > 1)
         cout << tid << "W1 unlocking successful. EXIT 1 OK" << endl;
-    }
-    if(this->_lock.owns_lock()){
-        cout << "WRONG...." << endl;
-        exit(1);
-    }
+
     V.erase(p);
 
     Id p_opt;
@@ -810,50 +776,49 @@ void DirectedGraph<T>::robustPrune(Id p, unordered_set<Id> V, float a, int R){
     }
     
     // synchronize with greedy search
-    if (args.n_threads > 1){
 
-        cout << tid << "W2 wants lock" << endl;
-        if(!this->_lock.owns_lock())
-            this->_lock.lock();
-        assert(this->_lock.owns_lock());
-        cout << tid << "W2 successfully got lock. Checking condition: <...>" << endl;
-        while(this->_active_GS != 0 || this->_active_W == true){
-            cout << tid << "W2 should wait." << endl;
-            this->_cv_writer.wait(this->_lock);
-            cout << tid << "W2 wait over. Re-check condition" << endl;
-        }
-        assert(this->_lock.owns_lock());
-        cout << tid << "W2 Acquired lock after waiting. Setting Active W = True" << endl;
-        this->_active_W = true;
-        cout << tid << "W2 Critical Section Begin" << endl;
-    }
-    
-    cout << tid << "W2 critical section 2. ENSURING STATUS = " << this->_active_W << endl;
-    this->addBatchNeigbors(p, batch);
-    cout << tid << "W2 critical section finished successfully 2 . Entering EXIT SECTION" << endl;
+    { // RAII scope
+        unique_lock<mutex> _lock(this->_mx_cv, defer_lock);
 
-    if (args.n_threads > 1){
-        cout << tid << "W2 critical section end" << endl;
-        assert(this->_lock.owns_lock());
-        cout << tid << "W2 correctly holds lock after critical section 2. Setting Active W = False";
-        // this->_mx_cv.lock();
-        // ALREADY HOLDING LOCK.
-        this->_active_W = false;
-        cout << tid << "W2 set Active W = False. Notifying one W and all GS" << endl;
-        this->_cv_writer.notify_one();
-        this->_cv_reader.notify_all();
-        cout << tid << "W2 attempting to release the lock" << endl;
-        if(this->_lock.owns_lock()){
-            this->_lock.unlock();
+        // Entry Section
+        if (args.n_threads > 1){
+            cout << tid << "W2 wants lock" << endl;
+            _lock.lock();
+            assert(_lock.owns_lock());
+            cout << tid << "W2 successfully got lock. Checking condition: <...>" << endl;
+            while(this->_active_GS != 0 || this->_active_W == true){
+                cout << tid << "W2 should wait." << endl;
+                this->_cv_writer.wait(_lock);
+                cout << tid << "W2 wait over. Re-check condition" << endl;
+            }
+            assert(_lock.owns_lock());
+            cout << tid << "W2 Acquired lock after waiting. Setting Active W = True" << endl;
+            this->_active_W = true;
+            cout << tid << "W2 Critical Section Begin" << endl;
         }
-        assert(!this->_lock.owns_lock());
+
+        // Critical Section
+        cout << tid << "W2 critical section 2. ENSURING STATUS = " << this->_active_W << endl;
+        this->addBatchNeigbors(p, batch);
+        cout << tid << "W2 critical section finished successfully 2 . Entering EXIT SECTION" << endl;
+        // End of Critical Section
+
+        // Exit Section 
+        if (args.n_threads > 1){
+            cout << tid << "W2 critical section end" << endl;
+            assert(_lock.owns_lock());
+            cout << tid << "W2 correctly holds lock after critical section 2. Setting Active W = False";
+            this->_active_W = false;
+            cout << tid << "W2 set Active W = False. Notifying one W and all GS" << endl;
+            this->_cv_writer.notify_one();
+            this->_cv_reader.notify_all();
+            cout << tid << "W2 attempting to release the lock" << endl;
+        }   
+    }// end of RAII scope => invalidation of _lock and freeing of mutex
+
+    if (args.n_threads > 1)
         cout << tid << "W2 unlocking successful. EXIT 2 OK" << endl;
-    }
 
-    if(this->_lock.owns_lock()){
-        cout << "WRONG 2...." << endl;
-        exit(1);
-    }
 }
 
 // ------------------------------------------------------------------------------------------------ VAMANA GRAPH
@@ -950,6 +915,7 @@ void DirectedGraph<T>::_thread_Vamana_fn(int& L, int& R, float& a, vector<Id>& p
 
         this->robustPrune(si.id, V, a, R);
         
+        // Another critical section?
         if (mapKeyExists(si.id, this->Nout)){
         
             for (const Id j : this->Nout[si.id]){  // for every neighbor j of si
@@ -959,6 +925,7 @@ void DirectedGraph<T>::_thread_Vamana_fn(int& L, int& R, float& a, vector<Id>& p
                     robustPrune(j, this->Nout[j], a, R);
             }
         }
+        // ^
 
         mx_index.lock();
     }
