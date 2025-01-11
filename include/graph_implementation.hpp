@@ -45,7 +45,6 @@ bool DirectedGraph<T>::addEdge(const Id from, const Id to, optional<bool> noLock
     }
 
     if (args.n_threads > 1 && !no_lock){
-        cout << "ADD EDGE ACQUIRING LOCK" << endl;
         _lock.lock();
     }
 
@@ -61,10 +60,7 @@ bool DirectedGraph<T>::addEdge(const Id from, const Id to, optional<bool> noLock
     }
     else this->n_edges++;
 
-    if (args.n_threads > 1 && !no_lock){
-        cout << "imaste okay" << endl;
-        
-    }
+
  
     return true;
 }
@@ -78,7 +74,6 @@ bool DirectedGraph<T>::removeEdge(const Id from, const Id to, optional<bool> noL
     unique_lock<mutex> _lock(this->_mx_edges, defer_lock);  // defer_lock => initialize unlocked.
 
     if (args.n_threads > 1 && no_lock != true){
-        cout << " REMOVE EDGE ACQUIRING LOCK" << endl;
         _lock.lock();
     }
 
@@ -150,11 +145,9 @@ bool DirectedGraph<T>::addBatchNeigbors(const Id from, vector<Id> batch){
         return false;
     }
 
-    cout << "Add Batch Neighbors attempting lock" << endl;
     unique_lock<mutex> _lock(this->_mx_edges, defer_lock);
     if (args.n_threads > 1)
         _lock.lock();
-    cout << "Add Batch Neighbors lock OK" << endl;
 
     bool rv = true;
     for (const Id& to : batch){
@@ -539,42 +532,31 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(
 
     if (args.n_threads > 1){
 
-        cout << tid << "GS wants lock (entry)" << endl;
+
         unique_lock<mutex> _lock(this->_mx_cv);
         assert(_lock.owns_lock());
-        cout << tid << "GS aqcuired lock (entry). Check Condition: Any Active W?" << endl;
         while(this->_active_W == true){
-            cout << tid << "GS should wait (entry)" << endl;
             this->_cv_reader.wait(_lock);
-            cout << tid << "GS wait is over. Re-check. . ." << endl;
         }
         assert(_lock.owns_lock());
-        cout << tid << "GS aqcuired lock after waiting (entry). Incrementing active GS (Critical Section)" << endl;
         this->_active_GS++;
-        cout << tid << "GS Active Reader with number: " << this->_active_GS << endl;
         assert(_lock.owns_lock());
         this->_cv_reader.notify_all();
 
     } // end of RAII scope => invalidation of _lock, and therefore releasing lock on mutex (automatically)
-    cout << tid << "GS unlocked after incrementing. SUCCESS EXIT 1" << endl;
 
     pair<unordered_set<Id>, unordered_set<Id>> rv = (args.usePQueue)
         ? this->_pqueue_greedySearch(s, xq, k, L)
         : this->_set_greedySearch(s, xq, k, L);
     
     if (args.n_threads > 1){
-        cout << tid << "GS wants lock (exit section)" << endl;
         unique_lock<mutex> _lock(this->_mx_cv);
         assert(_lock.owns_lock());
-        cout << tid << "GS aqcuired lock (exit). Remaining Readers: " << this->_active_GS - 1 << endl;
         if (--this->_active_GS == 0){
-            cout << tid << "GS 0 remaining => should notify writers" << endl;
             this->_cv_writer.notify_one();
-            cout << tid << "GS notified one writer after remaining = 0" << endl;
         }
         assert(_lock.owns_lock());
     }
-    cout << tid << "GS Unlocked Successfully for final exit!" << endl;
 
     return rv;
 }
@@ -719,19 +701,13 @@ void DirectedGraph<T>::robustPrune(Id p, unordered_set<Id> V, float a, int R){
 
         // Entry Section
         if (args.n_threads > 1){
-            cout << tid << "W1 wants lock" << endl;
             _lock.lock();
             assert(_lock.owns_lock());
-            cout << tid << "W1 successfully got lock. Checking condition: Any GS or W active?" << endl;
             while(this->_active_GS != 0 || this->_active_W == true){
-                cout << tid << "W1 should wait." << endl;
                 this->_cv_writer.wait(_lock);
-                cout << tid << "W1 wait is over. Re-check condition" << endl;
             }
             assert(_lock.owns_lock());
-            cout << tid << "W1 aqcuired lock after waiting. Setting Active W = true" << endl;
             this->_active_W = true; // also critical operation but for synchronization. Is under lock.
-            cout << "W1 Critical Section Begin" << endl;
         }
 
         // Critical Section
@@ -743,18 +719,13 @@ void DirectedGraph<T>::robustPrune(Id p, unordered_set<Id> V, float a, int R){
 
         // Exit Section
         if (args.n_threads > 1){
-            cout << "W1 Critical Section End" << endl;
             assert(_lock.owns_lock());
-            cout << "W1 Correctly holds lock after critical section. Setting Active W = false" << endl;
             this->_active_W = false; // also critical operation but for synchronization. Is under lock.
-            cout << "W1 Set active W = False. Notifying one W and all GS" << endl;
             this->_cv_writer.notify_one();
             this->_cv_reader.notify_all();
         }
 
     } // end of RAII scope => invalidation of _lock and freeing of mutex
-    if (args.n_threads > 1)
-        cout << tid << "W1 unlocking successful. EXIT 1 OK" << endl;
 
     V.erase(p);
 
@@ -787,42 +758,28 @@ void DirectedGraph<T>::robustPrune(Id p, unordered_set<Id> V, float a, int R){
 
         // Entry Section
         if (args.n_threads > 1){
-            cout << tid << "W2 wants lock" << endl;
             _lock.lock();
             assert(_lock.owns_lock());
-            cout << tid << "W2 successfully got lock. Checking condition: <...>" << endl;
             while(this->_active_GS != 0 || this->_active_W == true){
-                cout << tid << "W2 should wait." << endl;
                 this->_cv_writer.wait(_lock);
-                cout << tid << "W2 wait over. Re-check condition" << endl;
             }
             assert(_lock.owns_lock());
-            cout << tid << "W2 Acquired lock after waiting. Setting Active W = True" << endl;
             this->_active_W = true;
-            cout << tid << "W2 Critical Section Begin" << endl;
         }
 
         // Critical Section
-        cout << tid << "W2 critical section 2. ENSURING STATUS = " << this->_active_W << endl;
         this->addBatchNeigbors(p, batch);
-        cout << tid << "W2 critical section finished successfully 2 . Entering EXIT SECTION" << endl;
         // End of Critical Section
 
         // Exit Section 
         if (args.n_threads > 1){
-            cout << tid << "W2 critical section end" << endl;
             assert(_lock.owns_lock());
-            cout << tid << "W2 correctly holds lock after critical section 2. Setting Active W = False";
             this->_active_W = false;
-            cout << tid << "W2 set Active W = False. Notifying one W and all GS" << endl;
             this->_cv_writer.notify_one();
             this->_cv_reader.notify_all();
-            cout << tid << "W2 attempting to release the lock" << endl;
         }   
     }// end of RAII scope => invalidation of _lock and freeing of mutex
 
-    if (args.n_threads > 1)
-        cout << tid << "W2 unlocking successful. EXIT 2 OK" << endl;
 
 }
 
@@ -905,8 +862,6 @@ void DirectedGraph<T>::_thread_Vamana_fn(int& L, int& R, float& a, vector<Id>& p
 
     mx_index.lock();
     while(current_index < permutation.size()){
-
-        cout << "NEW INDEX AQCUIRED: " << current_index << "/" << permutation.size() << "\n";
 
         int my_index = current_index++;
         mx_index.unlock();
