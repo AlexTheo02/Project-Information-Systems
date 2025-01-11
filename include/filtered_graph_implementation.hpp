@@ -81,30 +81,35 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::filteredGreed
 
 
         unique_lock<mutex> _lock(this->_mx_cv);
+        // cout << "In Greedy Search. Lock Acquired 1" << endl;
         assert(_lock.owns_lock());
         while(this->_active_W == true){
+            // cout << "In Greedy Search. Active Writer. Should Wait" << endl;
             this->_cv_reader.wait(_lock);
         }
         assert(_lock.owns_lock());
         this->_active_GS++;
         assert(_lock.owns_lock());
         this->_cv_reader.notify_all();
+        // cout << "In Greedy Search. Notified and Exiting 1" << endl;
 
     } // end of RAII scope => invalidation of _lock, and therefore releasing lock on mutex (automatically)
 
-    return (args.usePQueue)
+    pair<unordered_set<Id>, unordered_set<Id>> rv = (args.usePQueue)
         ? this->_pqueue_filteredGreedySearch(s, q, k, L)
         : this->_set_filteredGreedySearch(s, q, k, L);
 
     if (args.n_threads > 1){
         unique_lock<mutex> _lock(this->_mx_cv);
+        // cout << "In Greedy Search 2 Acquired Lock" << endl;
         assert(_lock.owns_lock());
         if (--this->_active_GS == 0){
             this->_cv_writer.notify_one();
         }
         assert(_lock.owns_lock());
+        // cout << "In Greedy Search. Notified and Exiting 2" << endl;
     }
-    
+    return rv;
 }
 
 // Set Filtered Greedy Search
@@ -261,17 +266,22 @@ void DirectedGraph<T>::filteredRobustPrune(Id p, unordered_set<Id> V, float a, i
     {   // RAII scope
         unique_lock<mutex> _lock(this->_mx_cv, defer_lock);
 
+        // cout << "In RB 1." << endl;
+
         // Entry Section
         if (args.n_threads > 1){
             _lock.lock();
+            // cout << "In RB 1. Acquired Lock" << endl;
             assert(_lock.owns_lock());
             while(this->_active_GS != 0 || this->_active_W == true){
+                // cout << "In RB 1. Active Reader or Writer. Should Wait" << endl;
                 this->_cv_writer.wait(_lock);
             }
+            // cout << "In RB 1. Done Waiting" << endl;
             assert(_lock.owns_lock());
             this->_active_W = true; // also critical operation but for synchronization. Is under lock.
         }
-
+        
         // Critical Section
         if (mapKeyExists(p, this->Nout))
             V.insert(this->Nout[p].begin(), this->Nout[p].end());
@@ -281,13 +291,17 @@ void DirectedGraph<T>::filteredRobustPrune(Id p, unordered_set<Id> V, float a, i
 
         // Exit Section
         if (args.n_threads > 1){
+            // cout << "In RB 1. CS done" << endl;
             assert(_lock.owns_lock());
             this->_active_W = false; // also critical operation but for synchronization. Is under lock.
             this->_cv_writer.notify_one();
             this->_cv_reader.notify_all();
+            // cout << "In RB 1. Notified and Exiting" << endl;
         }
 
     } // end of RAII scope => invalidation of _lock and freeing of mutex
+
+    V.erase(p);
 
     vector<Id> batch;
 
@@ -315,13 +329,17 @@ void DirectedGraph<T>::filteredRobustPrune(Id p, unordered_set<Id> V, float a, i
     { // RAII scope
         unique_lock<mutex> _lock(this->_mx_cv, defer_lock);
 
+        // cout << "In RB 2." << endl;
         // Entry Section
         if (args.n_threads > 1){
             _lock.lock();
+            // cout << "In RB 2. Acquired Lock" << endl;
             assert(_lock.owns_lock());
             while(this->_active_GS != 0 || this->_active_W == true){
+                // cout << "In RB 2. Active Reader or Writer. Should Wait" << endl;
                 this->_cv_writer.wait(_lock);
             }
+            // cout << "In RB 2. Done Waiting" << endl;
             assert(_lock.owns_lock());
             this->_active_W = true;
         }
@@ -332,10 +350,12 @@ void DirectedGraph<T>::filteredRobustPrune(Id p, unordered_set<Id> V, float a, i
 
         // Exit Section 
         if (args.n_threads > 1){
+            // cout << "In RB 2. CS done" << endl;
             assert(_lock.owns_lock());
             this->_active_W = false;
             this->_cv_writer.notify_one();
             this->_cv_reader.notify_all();
+            // cout << "In RB 2. Notified and Exiting" << endl;
         }   
     }// end of RAII scope => invalidation of _lock and freeing of mutex
 }
@@ -466,7 +486,8 @@ void DirectedGraph<T>::_thread_filteredVamana_fn(int& L, int& R, float& a, float
         int my_index = current_index++;
         mx.unlock();
 
-        Node<T> si = this->nodes[my_index];
+        Id si_id = perm[my_index];
+        Node<T>& si = this->nodes[si_id];
         // Id starting_node_i = this->startingNode(); // st[si.category];   // because each node belongs to at most one category.
         // unordered_map<int, Id> st = this->findMedoids(t);  // paper says starting points should be the medoids found in [algorithm 2]
         
@@ -474,7 +495,9 @@ void DirectedGraph<T>::_thread_filteredVamana_fn(int& L, int& R, float& a, float
         // create query with si value to pass to filteredGreedySearch
         Query<T> q(si.id, si.category, true, si.value, this->isEmpty);
 
+        // cout << "Before Greedy Search" << endl;
         unordered_set<Id> Vi = this->filteredGreedySearch(this->startingNode(q.category), q, 0, L).second;
+        // cout << "After Greedy Search" << endl;
 
         // mx.lock();
         filteredRobustPrune(si.id, Vi, a, R);
