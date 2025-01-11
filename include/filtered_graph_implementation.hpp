@@ -385,13 +385,15 @@ bool DirectedGraph<T>::filteredVamanaAlgorithm(int L, int R, float a, float t){
 
     vector<Id> perm_id = permutation(nodes_ids);
 
-    if (args.n_threads == 1){
-        rv =  this->_serial_filteredVamana(L, R, a, t, ref(perm_id));
-    }
-    else{
+    rv =  this->_serial_filteredVamana(L, R, a, t, ref(perm_id));
+
+    // if (args.n_threads == 1){
+    //     rv =  this->_serial_filteredVamana(L, R, a, t, ref(perm_id));
+    // }
+    // else{
         
-        rv =  this->_parallel_filteredVamana(L, R, a, t, ref(perm_id));
-    }
+    //     rv =  this->_parallel_filteredVamana(L, R, a, t, ref(perm_id));
+    // }
     
     if (!rv) { return false; }
 
@@ -556,9 +558,11 @@ bool DirectedGraph<T>::stitchedVamanaAlgorithm(int L, int Rstitched, int Rsmall,
     int extraRandomEdges = args.extraRandomEdges;
     if (args.extraRandomEdges > 0) args.extraRandomEdges = 0;   // Vamana for specific category should not add additional random edges
 
-    bool rv =  (args.n_threads == 1)
-        ? this->_serial_stitchedVamana(L, Rstitched, Rsmall, a)
-        : this->_parallel_stitchedVamana(L, Rstitched, Rsmall, a);
+    bool rv = this->_serial_stitchedVamana(L, Rstitched, Rsmall, a);
+
+    // bool rv =  (args.n_threads == 1)
+    //     ? this->_serial_stitchedVamana(L, Rstitched, Rsmall, a)
+        // : this->_parallel_stitchedVamana(L, Rstitched, Rsmall, a);
     
     if (!rv) { return false; }
 
