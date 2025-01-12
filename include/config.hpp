@@ -54,7 +54,7 @@ struct Args{
     int L = -1;
     int R = -1;
     float a = -1;
-    int n_threads = -1;             // parallel functions [LIST OF FUNCTIONS THAT CAN BE PARALLELIZED TODO] <------------------------------- TODO 
+    int n_threads = -1;             // for parallel functions
     float threshold = -1;
     bool debug_mode = false;        // c_log follows this flag (see c_log documentation for more)
     bool stat_mode = false;              // stat follows this flag (see stat documentation for more)
@@ -321,9 +321,6 @@ class StatLog{
 };
 // instantiation of static object
 static StatLog s_log;    // each source file that includes config.hpp will have its own instance of stat
-
-
-
 
 
 // If you plan to use DirectedGraph::load and DirectedGraph::store functions:

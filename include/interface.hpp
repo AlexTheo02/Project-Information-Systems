@@ -33,7 +33,7 @@ pair<vector<Query<T>>, vector<Query<T>>> read_queries_vecs(void){
     return queries;
 };
 
-// specific read_query function for .bin format with specifications as described in the SIGMOD 2024 contest - [insert link]
+// specific read_query function for .bin format with specifications as described in the SIGMOD 2024 contest
 template <typename T>
 pair<vector<Query<T>>, vector<Query<T>>> read_queries_bin_contest(void){
     vector<T> queries_raw;

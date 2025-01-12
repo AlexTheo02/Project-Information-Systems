@@ -301,7 +301,7 @@ bool DirectedGraph<T>::filteredVamanaAlgorithm(int L, int R, float a, float t){
     }
     else{
         
-        // Heuristic for better thread job scheduling: sort based on diminishing workload (Longest Processing Time First) (REFERENCE HERE) TODO
+        // Heuristic for better thread job scheduling: sort based on diminishing workload (Longest Processing Time First)
         // Copy elements into a vector of pairs to sort
         vector<pair<int, vector<Id>>> sorted_categories;
 
@@ -334,9 +334,6 @@ bool DirectedGraph<T>::_serial_filteredVamana(int L, int  R, float a, float t, v
     for (Id& si_id : perm){
 
         Node<T> si = this->nodes[si_id];
-        // Id starting_node_i = this->startingNode(); // st[si.category];   // because each node belongs to at most one category.
-        // unordered_map<int, Id> st = this->findMedoids(t);  // paper says starting points should be the medoids found in [algorithm 2]
-        
 
         // create query with si value to pass to filteredGreedySearch
         Query<T> q(si.id, si.category, true, si.value, this->isEmpty);
@@ -417,35 +414,23 @@ void DirectedGraph<T>::_thread_filteredVamana_fn(int& L, int& R, float& a, float
         for (Id& si_id : perm){
 
             Node<T> si = this->nodes[si_id];
-            // Id starting_node_i = this->startingNode(); // st[si.category];   // because each node belongs to at most one category.
-            // unordered_map<int, Id> st = this->findMedoids(t);  // paper says starting points should be the medoids found in [algorithm 2]
             
-
             // create query with si value to pass to filteredGreedySearch
             Query<T> q(si.id, si.category, true, si.value, this->isEmpty);
 
             unordered_set<Id> Vi = this->filteredGreedySearch(this->startingNode(q.category), q, 0, L).second;
 
-            // mx.lock();
             filteredRobustPrune(si.id, Vi, a, R);
-            // mx.unlock();
 
             if (mapKeyExists(si.id, this->Nout)){
-                
-                // mx.lock();
-                // unordered_map<Id, unordered_set<Id>> NoutCopy(this->Nout.begin(), this->Nout.end());
-                // mx.unlock();
 
                 for (const Id j : this->Nout[si.id]){  // for every neighbor j of si
-
-                    // mx.lock();
 
                     this->addEdge(j, si.id);   // does it in either case (simpler code, robust prune clears all neighbors after copying to candidate set V anyway)
                     int noutSize = this->Nout[j].size();
                     if (noutSize > R)
                         filteredRobustPrune(j, this->Nout[j], a, R);
 
-                    // mx.unlock();
                 }
             }
         }
@@ -618,9 +603,7 @@ bool DirectedGraph<T>::_parallel_stitchedVamana(int L, int Rstitched, int Rsmall
     vector<char> rvs;   // return values of threads - actually bool type
 
     // vector containing all unique categories, sorted by their workload in descending order
-
-
-    // Heuristic for better thread job scheduling: sort based on diminishing workload (Longest Processing Time First) (REFERENCE HERE) TODO
+    // Heuristic for better thread job scheduling: sort based on diminishing workload (Longest Processing Time First)
     // Copy elements into a vector of pairs to sort
     vector<pair<int, vector<Id>>> sorted_categories;
 
@@ -634,7 +617,6 @@ bool DirectedGraph<T>::_parallel_stitchedVamana(int L, int Rstitched, int Rsmall
             [](const pair<int, vector<Id>>& cpair1, const pair<int, vector<Id>>& cpair2) {
                 return cpair1.second.size() > cpair2.second.size();
             });
-
 
     vector<int> category_names;
 

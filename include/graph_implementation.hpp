@@ -60,8 +60,6 @@ bool DirectedGraph<T>::addEdge(const Id from, const Id to, optional<bool> noLock
     }
     else this->n_edges++;
 
-
- 
     return true;
 }
 
@@ -321,9 +319,7 @@ const Id DirectedGraph<T>::_parallel_medoid(vector<Node<T>>& nodes){
     for (thread& th : threads){ th.join(); }    // collecting all threads
     
     // threads are joined.
-
     // All dsums have been calculated in parallel and we have the local minimum of each range/thread.
-
     // find the minimum distance among the vector of minimums returned by the threads
     float dmin = *min_element(local_dmin.begin(), local_dmin.end());
     // find the index of the minimum element
@@ -823,8 +819,6 @@ bool DirectedGraph<T>::vamanaAlgorithm(int L, int R, float a){
 
     vector<Id> perm_id = permutation(nodes_ids);
 
-    // bool rv = this->_serial_Vamana(L, R, a, perm_id);
-
     bool rv = (args.n_threads > 1)
         ? this->_parallel_Vamana(L, R, a, perm_id)
         : this->_serial_Vamana(L, R, a, perm_id);
@@ -881,7 +875,6 @@ void DirectedGraph<T>::_thread_Vamana_fn(int& L, int& R, float& a, vector<Id>& p
 
         this->robustPrune(si.id, V, a, R);
         
-        // Another critical section?
         // Lock for check
         {
             // RAII scope
@@ -909,7 +902,6 @@ void DirectedGraph<T>::_thread_Vamana_fn(int& L, int& R, float& a, vector<Id>& p
             }
 
         }
-        // ^
 
         mx_index.lock();
     }
