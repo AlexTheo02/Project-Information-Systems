@@ -534,13 +534,10 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(
 
 
         unique_lock<mutex> _lock(this->_mx_cv);
-        assert(_lock.owns_lock());
         while(this->_active_W == true){
             this->_cv_reader.wait(_lock);
         }
-        assert(_lock.owns_lock());
         this->_active_GS++;
-        assert(_lock.owns_lock());
         this->_cv_reader.notify_all();
 
     } // end of RAII scope => invalidation of _lock, and therefore releasing lock on mutex (automatically)
@@ -551,11 +548,9 @@ const pair<unordered_set<Id>, unordered_set<Id>> DirectedGraph<T>::greedySearch(
     
     if (args.n_threads > 1){
         unique_lock<mutex> _lock(this->_mx_cv);
-        assert(_lock.owns_lock());
         if (--this->_active_GS == 0){
             this->_cv_writer.notify_one();
         }
-        assert(_lock.owns_lock());
     }
 
     return rv;
@@ -702,11 +697,9 @@ void DirectedGraph<T>::robustPrune(Id p, unordered_set<Id> V, float a, int R){
         // Entry Section
         if (args.n_threads > 1){
             _lock.lock();
-            assert(_lock.owns_lock());
             while(this->_active_GS != 0 || this->_active_W == true){
                 this->_cv_writer.wait(_lock);
             }
-            assert(_lock.owns_lock());
             this->_active_W = true; // also critical operation but for synchronization. Is under lock.
         }
 
@@ -719,7 +712,6 @@ void DirectedGraph<T>::robustPrune(Id p, unordered_set<Id> V, float a, int R){
 
         // Exit Section
         if (args.n_threads > 1){
-            assert(_lock.owns_lock());
             this->_active_W = false; // also critical operation but for synchronization. Is under lock.
             this->_cv_writer.notify_one();
             this->_cv_reader.notify_all();
@@ -759,11 +751,9 @@ void DirectedGraph<T>::robustPrune(Id p, unordered_set<Id> V, float a, int R){
         // Entry Section
         if (args.n_threads > 1){
             _lock.lock();
-            assert(_lock.owns_lock());
             while(this->_active_GS != 0 || this->_active_W == true){
                 this->_cv_writer.wait(_lock);
             }
-            assert(_lock.owns_lock());
             this->_active_W = true;
         }
 
@@ -773,7 +763,6 @@ void DirectedGraph<T>::robustPrune(Id p, unordered_set<Id> V, float a, int R){
 
         // Exit Section 
         if (args.n_threads > 1){
-            assert(_lock.owns_lock());
             this->_active_W = false;
             this->_cv_writer.notify_one();
             this->_cv_reader.notify_all();

@@ -338,8 +338,7 @@ bool DirectedGraph<T>::_serial_filteredVamana(int L, int  R, float a, float t, v
 
         if (mapKeyExists(si.id, this->Nout)){
             
-            unordered_map<Id, unordered_set<Id>> NoutCopy(this->Nout.begin(), this->Nout.end());
-            for (const Id j : NoutCopy[si.id]){  // for every neighbor j of si
+            for (const Id j : this->Nout[si.id]){  // for every neighbor j of si
 
                 this->addEdge(j, si.id);   // does it in either case (simpler code, robust prune clears all neighbors after copying to candidate set V anyway)
                 int noutSize = this->Nout[j].size();
@@ -418,26 +417,26 @@ void DirectedGraph<T>::_thread_filteredVamana_fn(int& L, int& R, float& a, float
 
             unordered_set<Id> Vi = this->filteredGreedySearch(this->startingNode(q.category), q, 0, L).second;
 
-            mx.lock();
+            // mx.lock();
             filteredRobustPrune(si.id, Vi, a, R);
-            mx.unlock();
+            // mx.unlock();
 
             if (mapKeyExists(si.id, this->Nout)){
                 
-                mx.lock();
-                unordered_map<Id, unordered_set<Id>> NoutCopy(this->Nout.begin(), this->Nout.end());
-                mx.unlock();
+                // mx.lock();
+                // unordered_map<Id, unordered_set<Id>> NoutCopy(this->Nout.begin(), this->Nout.end());
+                // mx.unlock();
 
-                for (const Id j : NoutCopy[si.id]){  // for every neighbor j of si
+                for (const Id j : this->Nout[si.id]){  // for every neighbor j of si
 
-                    mx.lock();
+                    // mx.lock();
 
                     this->addEdge(j, si.id);   // does it in either case (simpler code, robust prune clears all neighbors after copying to candidate set V anyway)
                     int noutSize = this->Nout[j].size();
                     if (noutSize > R)
                         filteredRobustPrune(j, this->Nout[j], a, R);
 
-                    mx.unlock();
+                    // mx.unlock();
                 }
             }
         }
@@ -585,7 +584,7 @@ void DirectedGraph<T>::_thread_stitchedVamana_fn(int& L, int& Rstitched, int& Rs
         DGf.init();
 
         mx_category_index.lock();
-        cout << "Finished: " << my_category << " with " << (int) this->categories[my_category].size() << " points. " << this->n_edges << endl;
+        c_log << "Finished: " << my_category << " with " << (int) this->categories[my_category].size() << " points. " << this->n_edges << "\n";
     }
     mx_category_index.unlock();
 }
@@ -628,7 +627,10 @@ bool DirectedGraph<T>::_parallel_stitchedVamana(int L, int Rstitched, int Rsmall
 
     mutex mx_category_index, mx_merge;
 
-    for (int i = 0; i < args.n_threads; i++){
+    int stored_args_n_threads = args.n_threads;
+    args.n_threads = 1;                             // calls vamana from each thread. Vamana should be SERIAL. (vamana can be parallel so we have to force serial)
+
+    for (int i = 0; i < stored_args_n_threads; i++){
         rvs.push_back(true);
         threads.push_back(thread(
             &DirectedGraph::_thread_stitchedVamana_fn,
@@ -646,6 +648,8 @@ bool DirectedGraph<T>::_parallel_stitchedVamana(int L, int Rstitched, int Rsmall
 
     for (thread& th : threads)
         th.join();
+
+    args.n_threads = stored_args_n_threads; // reset
 
     // Verify that all threads completed successfully
     for (bool rv : rvs){

@@ -1,5 +1,5 @@
-./bin/main --vamana --stat --dummy --only_unfiltered -n_threads 16 -distance 1 --pqueue -extra_edges 15 
-Number of threads: 16
+./bin/main --vamana --stat --dummy --only_unfiltered -n_threads 26 -distance 1 --pqueue -extra_edges 15 
+Number of threads: 26
 Indexing Type: VAMANA
 k: 100
 L: 100
@@ -8,8 +8,8 @@ a: 1
 Number of extra random edges: 15
 Unfiltered
 Using priority queue
-Time to create the index: 00:00:13.691'630
-Number of edges: 256213
+Time to create the index: 00:00:06.212'113
+Number of edges: 257739
 --UNF_QUERIES--
 1
 1
@@ -55,7 +55,6 @@ Number of edges: 256213
 1
 1
 1
-0.979167
 1
 1
 1
@@ -668,8 +667,8 @@ Number of edges: 256213
 1
 1
 1
-0.866667
 1
+0.891304
 1
 1
 1
@@ -2301,6 +2300,7 @@ Number of edges: 256213
 1
 1
 1
+0.979592
 1
 1
 1
@@ -2530,5 +2530,5 @@ Number of edges: 256213
 --UNF_QUERIES_END--
 --F_QUERIES--
 --F_QUERIES_END--
-Time to query the index (unfiltered): 00:00:00.415'669
-Average recall score for unfiltered queries: 0.999939
+Time to query the index (unfiltered): 00:00:00.425'605
+Average recall score for unfiltered queries: 0.999949

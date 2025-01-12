@@ -1,5 +1,5 @@
-./bin/main --vamana --stat --dummy --only_unfiltered -n_threads 16 -distance 1 --no_rgraph --pqueue -extra_edges 15 
-Number of threads: 16
+./bin/main --vamana --stat --dummy --only_unfiltered -n_threads 26 -distance 1 --no_rgraph --pqueue -extra_edges 15 
+Number of threads: 26
 Indexing Type: VAMANA
 k: 100
 L: 100
@@ -9,8 +9,8 @@ Number of extra random edges: 15
 Unfiltered
 Using priority queue
 Not using rgraph initialization
-Time to create the index: 00:00:12.536'020
-Number of edges: 254930
+Time to create the index: 00:00:05.545'863
+Number of edges: 254414
 --UNF_QUERIES--
 1
 1
@@ -1448,6 +1448,7 @@ Number of edges: 254930
 1
 1
 1
+0.931818
 1
 1
 1
@@ -2416,7 +2417,6 @@ Number of edges: 254930
 1
 1
 1
-0.978723
 1
 1
 1
@@ -2531,5 +2531,5 @@ Number of edges: 254930
 --UNF_QUERIES_END--
 --F_QUERIES--
 --F_QUERIES_END--
-Time to query the index (unfiltered): 00:00:00.405'291
-Average recall score for unfiltered queries: 0.999992
+Time to query the index (unfiltered): 00:00:00.419'966
+Average recall score for unfiltered queries: 0.999973
