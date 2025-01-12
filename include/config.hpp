@@ -54,11 +54,10 @@ struct Args{
     int L = -1;
     int R = -1;
     float a = -1;
-    int n_threads = -1;             // parallel functions [LIST OF FUNCTIONS THAT CAN BE PARALLELIZED TODO] <------------------------------- TODO 
+    int n_threads = -1;             // for parallel functions
     float threshold = -1;
     bool debug_mode = false;        // c_log follows this flag (see c_log documentation for more)
     bool stat_mode = false;              // stat follows this flag (see stat documentation for more)
-    int Lsmall = -1;
     int Rsmall = -1;
     int n_data = -1;
     int n_queries = -1;
@@ -78,7 +77,7 @@ struct Args{
     bool dummy = false;
 
     // arguments regarding optimization
-    int euclideanType = 1;      // 0 - normal euclidean, 1 - simd euclidean, 2 - parallel euclidean
+    int euclideanType = 1;      // 0 - normal euclidean, 1 - simd euclidean, 2 - parallel euclidean, 3 - custom distance function
     bool randomStart = false;   // false = medoid, true = random sample
     bool usePQueue = false;     // false = Lc is set O(1) insertion, & use closestN O(N), true = Lc is a Pqueue, closest N is optimized but insertion is O(logL)
     bool useRGraph = true;      // true = Use Rgraph in Vamana, false = skip Random Initialization.
@@ -104,7 +103,6 @@ struct Args{
             else if (currentArg == "-t")                { this->threshold = atof(argv[++i]); }
             else if (currentArg == "--debug")           { this->debug_mode = true; }
             else if (currentArg == "--stat")            { this->stat_mode = true; }
-            else if (currentArg == "-Ls")               { this->Lsmall = atoi(argv[++i]); }
             else if (currentArg == "-Rs")               { this->Rsmall = atoi(argv[++i]); }
             else if (currentArg == "-n_data")           { this->n_data = atoi(argv[++i]); }
             else if (currentArg == "-n_queries")        { this->n_queries = atoi(argv[++i]); }
@@ -116,7 +114,7 @@ struct Args{
             else if (currentArg == "--data_unfiltered") { this->data_is_unfiltered = true; }
 
             else if (currentArg == "-store")            { this->graph_store_path = argv[++i]; }
-            else if (currentArg == "-load")             { this->graph_load_path = argv[++i]; }
+            else if (currentArg == "-load")             { this->graph_load_path = argv[++i]; this->no_create = true; }
 
             else if (currentArg == "-data")             { this->data_path = argv[++i]; } 
             else if (currentArg == "-queries")          { this->queries_path = argv[++i]; }
@@ -154,9 +152,8 @@ struct Args{
         if (this->R == -1)          this->R = 14;
         if (this->a == -1)          this->a = 1.0f;
         if (this->n_threads == -1)  this->n_threads = 1;
-        if (this->threshold == -1)  this->threshold = 0.5f;
-        if (this->Lsmall == -1)     this->Lsmall = 100;
-        if (this->Rsmall == -1)     this->Rsmall = 32;
+        if (this->threshold == -1)  this->threshold = (this->index_type == VAMANA) ? 0.1 : 0.5f;
+        if (this->Rsmall == -1)     this->Rsmall = 14;
 
         if (this->graph_load_path == "" && this->no_create) {
             throw invalid_argument("Please specify a load path when using --no_create using -load your/path/here");
@@ -221,7 +218,7 @@ struct Args{
             if (this->groundtruth_path == "") this->groundtruth_path = "data/contest-groundtruth-custom-1m.txt";
             // Stitched
             if (this->index_type == STITCHED_VAMANA){
-                this->R = 64;  // R = Rstitched
+                this->R = 14;  // R = Rstitched
                 if (this->greedySearchIndexStatsPath == "") {
                 if (this->usePQueue)
                     this->greedySearchIndexStatsPath =  "./evaluations/PQ_STITCHED_greedySearchIndexStats.csv";
@@ -269,7 +266,6 @@ struct Args{
 
         if(this->index_type == FILTERED_VAMANA) cout << "threshold: " << this->threshold << endl;
 
-        if(this->index_type == STITCHED_VAMANA) cout << "Lsmall: " << this->Lsmall << endl;
         if(this->index_type == STITCHED_VAMANA) cout << "Rsmall: " << this->Rsmall << endl;
 
         if (this->extraRandomEdges > 0) cout << "Number of extra random edges: " << this->extraRandomEdges << endl;
@@ -327,12 +323,9 @@ class StatLog{
 static StatLog s_log;    // each source file that includes config.hpp will have its own instance of stat
 
 
-
-
-
 // If you plan to use DirectedGraph::load and DirectedGraph::store functions:
 
-// You should implement << and >> for I/O operations for the specific data type
+// You should implement ostream<< and istream>> for I/O operations for the specific data type
 // 
 //      Helpful Links (Tutorials):
 //      https://stackoverflow.com/questions/476272/how-can-i-properly-overload-the-operator-for-an-ostream
@@ -510,27 +503,3 @@ istream& operator>>(istream& stream, unordered_map<Key, Value>& m){
 
     return stream;
 }
-
-
-// If implementation makes use of containers that use hashes, this should be uncommented. (unordered_set, unordered_map etc)
-
-// User Requirement: implement the std::hash<T> for the specific T to be used.
-// In this scenario, Content Type of graph T is a vector<T2>, where T2 can be any hashable type (or a type with a specialized std::hash function)
-// T2 is the inner type (that inside of the vector: int, float, ..., any other type that std::hash<T> has been specialized or exists for)
-// namespace std {
-//     // https://en.cppreference.com/w/cpp/container/map - unordered map hash defaults to std::hash<TYPE> => specialize for given type TYPE.
-//     // https://stackoverflow.com/questions/10405030/c-unordered-map-fail-when-used-with-a-vector-as-key - Hash Function for vectors.
-//     template <typename T2>
-//         class hash<vector<T2>>{
-//         public:
-//             size_t operator()(const vector<T2>& t) const{
-
-//                 size_t ret = t.size();
-//                 for (const auto& v : t) {
-//                     ret ^=  hash<T2>()(v) + 0x9e3779b9 + (ret << 6) + (ret >> 2);
-//                 }
-//                 return ret;
-//             }
-//     };
-// };
-// 

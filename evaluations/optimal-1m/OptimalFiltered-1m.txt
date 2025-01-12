@@ -1,0 +1,12 @@
+./bin/main --filtered -data data/contest-data-release-1m.bin -queries data/contest-queries-release-1m.bin -groundtruth data/contest-groundtruth-custom-1m.txt -store storedIndices/new_and_optimal/OptimalFiltered_latest.txt -dim_data 102 -dim_query 104 -n_data 1000000 -n_queries 10000 -n_groundtruths 10000 --stat -n_threads 26 -distance 1 --pqueue -extra_edges 50 
+Number of threads: 26
+Indexing Type: FILTERED_VAMANA
+k: 100
+L: 100
+R: 14
+a: 1
+threshold: 0.5
+Number of extra random edges: 50
+Unfiltered
+Filtered
+Using priority queue

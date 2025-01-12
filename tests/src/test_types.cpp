@@ -168,6 +168,58 @@ void test_clear(void){
     TEST_ASSERT(DG.clearEdges());
 }
 
+void test_addBatchNeighbors(void){
+
+    // Create the graph
+    DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
+
+    // Add nodes
+    vector<float> v1 = {1.f, 1.f, 1.f, 1.f, 1.f, 1.f};
+    vector<float> v2 = {2.f, 2.f, 2.f, 2.f, 2.f, 2.f};
+    vector<float> v3 = {3.f, 3.f, 3.f, 3.f, 3.f, 3.f};
+    vector<float> v4 = {4.f, 4.f, 4.f, 4.f, 4.f, 4.f};
+    vector<float> v5 = {5.f, 5.f, 5.f, 5.f, 5.f, 5.f};
+
+    Id id1 = DG.createNode(v1);
+    Id id2 = DG.createNode(v2);
+    Id id3 = DG.createNode(v3);
+    Id id4 = DG.createNode(v4);
+    Id id5 = DG.createNode(v5);
+
+    // ------------------------------------------------------------------------------------------- Empty vector check
+    // Define the vector for storing the node ids
+    vector<Id> toAdd;
+
+    // Call the function
+    DG.addBatchNeigbors(id1, toAdd);
+
+    // Check if it was inserted
+    TEST_CHECK(DG.get_n_edges() == 0);
+
+    // ------------------------------------------------------------------------------------------- Size of vector = 1
+    // Insert one node  id
+    toAdd.push_back(id2);
+
+    // Call the function
+    DG.addBatchNeigbors(id1, toAdd);
+
+    // Check if it was inserted
+    TEST_CHECK(DG.get_n_edges() == 1);
+
+    // ------------------------------------------------------------------------------------------- Size of vector > 1
+    vector<Id> toAdd2;
+
+    // Insert the ids
+    toAdd2.push_back(id3);
+    toAdd2.push_back(id4);
+    toAdd2.push_back(id5);
+
+    DG.addBatchNeigbors(id1, toAdd2);
+
+    TEST_CHECK(DG.get_n_edges() == 4);
+
+}
+
 void test_medoid(void){  
 
     // Create the graph
@@ -182,6 +234,8 @@ void test_medoid(void){
 
     // ------------------------------------------------------------------------------------------- Empty graph check
     TEST_EXCEPTION(DG.medoid(), invalid_argument);  // Should throw an exception for empty graph
+
+    args.threshold = 1;
 
     // ------------------------------------------------------------------------------------------- Graph with one or two nodes check
     DirectedGraph<vector<float>> smallGraph(euclideanDistance<vector<float>>, vectorEmpty<float>);
@@ -272,12 +326,15 @@ void test_Rgraph(void){
 
     TEST_CHECK(c == 1000);
 
-    DirectedGraph<vector<float>> DG2 = DG;
+    int n_edges = DG.get_n_edges();
+    int n_nodes = DG.get_n_nodes();
+    unordered_map<Id, unordered_set<Id>> nout = DG.get_Nout();
+   
     // R == 0 <=> keep the graph the same
     TEST_CHECK(DG.Rgraph(0));
-    TEST_CHECK(DG2.get_n_edges() == DG.get_n_edges());
-    TEST_CHECK(DG2.get_n_nodes() == DG.get_n_nodes());
-    TEST_CHECK(DG2.get_Nout() == DG.get_Nout());
+    TEST_CHECK(n_edges == DG.get_n_edges());
+    TEST_CHECK(n_nodes == DG.get_n_nodes());
+    TEST_CHECK(nout == DG.get_Nout());
 
 
     TEST_CHECK(DG.clearEdges());
@@ -491,11 +548,11 @@ void test_greedySearch(void){
         TEST_CHECK(false);  // Control should not reach here 
     }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "No query was provided.\n")); }
 
-    // if k <= 0
+    // if k < 0
     try{
-        pair<unordered_set<Id>, unordered_set<Id>> ret = DG.greedySearch(s, vectors[0], 0, 5);
+        pair<unordered_set<Id>, unordered_set<Id>> ret = DG.greedySearch(s, vectors[0], -1, 5);
         TEST_CHECK(false);  // Control should not reach here 
-    }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "K must be greater than 0.\n")); }
+    }catch(invalid_argument& ia){ TEST_CHECK((string(ia.what()) == "K must be greater than or equal to 0.\n")); }
 
     // if L < k
     try{
@@ -609,6 +666,8 @@ void test_init(void){
 
 void test_startingNode(){
 
+    args.threshold = 1;
+
     // Initialize the graph
     DirectedGraph<vector<float>> DG(euclideanDistance<vector<float>>, vectorEmpty<float>);
 
@@ -679,6 +738,7 @@ TEST_LIST = {
     { "test_createNode", test_createNode },
     { "test_Edges", test_Edges },
     { "test_clear", test_clear },
+    { "test_addBatchNeighbors", test_addBatchNeighbors},
     { "test_medoid", test_medoid},
     { "test_myArgMin", test_myArgMin },
     { "test_closestN", test_closestN },

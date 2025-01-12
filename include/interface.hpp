@@ -33,7 +33,7 @@ pair<vector<Query<T>>, vector<Query<T>>> read_queries_vecs(void){
     return queries;
 };
 
-// specific read_query function for .bin format with specifications as described in the SIGMOD 2024 contest - [insert link]
+// specific read_query function for .bin format with specifications as described in the SIGMOD 2024 contest
 template <typename T>
 pair<vector<Query<T>>, vector<Query<T>>> read_queries_bin_contest(void){
     vector<T> queries_raw;
@@ -177,7 +177,7 @@ chrono::microseconds createIndex(DirectedGraph<T>& DG){
             
             // Start the timer and create the index using vamanaAlgorithm
             startTime = chrono::high_resolution_clock::now();
-            DG.stitchedVamanaAlgorithm(args.L, args.R, args.Lsmall, args.Rsmall, args.a);
+            DG.stitchedVamanaAlgorithm(args.L, args.R, args.Rsmall, args.a);
             endTime = chrono::high_resolution_clock::now();
 
             // Calculate duration

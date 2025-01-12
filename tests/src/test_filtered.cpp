@@ -96,31 +96,26 @@ void test_stitchedVamanaAlgorithm(){
         
         // Lstitched < 1
         try{
-            TEST_CHECK(DG.stitchedVamanaAlgorithm(0,1,1,1,1));
+            TEST_CHECK(DG.stitchedVamanaAlgorithm(0,1,1,1));
             TEST_CHECK(false);  // Control should not reach here
         }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Parameter L must be >= 1.\n"); }
 
         // Rstitched <= 0
         try{
-            TEST_CHECK(DG.stitchedVamanaAlgorithm(1,0,1,1,1));
+            TEST_CHECK(DG.stitchedVamanaAlgorithm(1,0,1,1));
             TEST_CHECK(false);  // Control should not reach here
         }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Rstitched must be a positive, non-zero integer.\n"); }
 
-        // Lsmall < 1
-        try{
-            TEST_CHECK(DG.stitchedVamanaAlgorithm(1,1,0,1,1));
-            TEST_CHECK(false);  // Control should not reach here
-        }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Parameter Lsmall must be >= 1.\n"); }
 
         // Rsmall <= 0
         try{
-            TEST_CHECK(DG.stitchedVamanaAlgorithm(1,1,1,0,1));
+            TEST_CHECK(DG.stitchedVamanaAlgorithm(1,1,0,1));
             TEST_CHECK(false);  // Control should not reach here
         }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Rsmall must be a positive, non-zero integer.\n"); }
 
         // a < 1
         try{
-            TEST_CHECK(DG.stitchedVamanaAlgorithm(1,1,1,1,0));
+            TEST_CHECK(DG.stitchedVamanaAlgorithm(1,1,1,0));
             TEST_CHECK(false);  // Control should not reach here
         }catch(invalid_argument& ia){ TEST_CHECK(string(ia.what()) == "Parameter a must be >= 1.\n"); }
     }

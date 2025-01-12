@@ -13,7 +13,6 @@
 #include <list>
 #include <unordered_map>
 #include <unordered_set>
-#include <mutex>
 #include <optional>
 #include <sys/stat.h>
 #include <string>
@@ -127,6 +126,14 @@ class DirectedGraph{
         function<float(const T&, const T&)> d;              // Graph's distance function
         function<bool(const T&)> isEmpty;                   // typename T valid check
 
+        mutex _mx_edges;                                    // Mutex for edges modification
+
+        mutex _mx_cv;                                       // Mutex for Condition Variables
+        condition_variable _cv_reader;                      // Condition Variable for Readers-Writers synchronization between Greedy Search (R) and Edges Modifications (add/remove)
+        condition_variable _cv_writer;                      // Condition Variable for Readers-Writers synchronization between Greedy Search (R) and Edges Modifications (add/remove)
+        int _active_GS;                                     // How many Readers are active
+        bool _active_W;                                     // If a writer is active
+
         // Implements medoid function using serial programming.
         const Id _serial_medoid(vector<Node<T>>& nodes);
 
@@ -145,6 +152,12 @@ class DirectedGraph{
 
         void _thread_Rgraph_fn(int& R, int& node_index, mutex& mx_index, char& rv);
 
+        bool _serial_Vamana(int L, int R, float a, vector<Id>& permutation);
+
+        bool _parallel_Vamana(int L, int R, float a, vector<Id>& permutation);
+
+        void _thread_Vamana_fn(int& L, int& R, float& a, vector<Id>& permutation, int& current_index, mutex& mx_index, char& rv);
+
         bool _serial_filteredVamana(int L, int  R, float a, float t, vector<Id>& perm);
 
         bool _parallel_filteredVamana(int L, int  R, float a, float t, vector<pair<int, vector<Id>>>& sorted_categories);
@@ -152,13 +165,13 @@ class DirectedGraph{
         void _thread_filteredVamana_fn(int& L, int& R, float& a, float& t, int& current_index, mutex& mx, char& rv, vector<pair<int, vector<Id>>>& sorted_categories);
 
         // Implements stitchedVamana algorithm using serial programming
-        bool _serial_stitchedVamana(int Lstitched, int Rstitched, int Lsmall, int Rsmall, float a); 
+        bool _serial_stitchedVamana(int L, int Rstitched, int Rsmall, float a); 
 
         // Implements stitchedVamana algorithm for index creation using parallel programming with threads. Concurrency is set by the argument args.n_threads.
-        bool _parallel_stitchedVamana(int Lstitched, int Rstitched, int Lsmall, int Rsmall, float a);
+        bool _parallel_stitchedVamana(int L, int Rstitched, int Rsmall, float a);
 
         // Thread function for parallel stitchedVamana index creation
-        void _thread_stitchedVamana_fn(int& Lstitched, int& Rstitched, int& Lsmall, int& Rsmall, float& a, int& category_index, mutex& mx_category_index, mutex& mx_merge, vector<int>& category_names, char& rv);
+        void _thread_stitchedVamana_fn(int& L, int& Rstitched, int& Rsmall, float& a, int& category_index, mutex& mx_category_index, mutex& mx_merge, vector<int>& category_names, char& rv);
 
         // Set Greedy Search
         const pair<unordered_set<Id>, unordered_set<Id>> _set_greedySearch(Id s, T xq, int k, int L);
@@ -181,6 +194,7 @@ class DirectedGraph{
             this->isEmpty = is_Empty;
             this->n_nodes = 0;
             this->n_edges = 0;
+
             this->init();
             c_log << "Graph created!" << '\n';
         }
@@ -201,13 +215,16 @@ class DirectedGraph{
         Id createNode(const T& value, int category = -1);
 
         // Adds a directed edge (from->to). Updates outNeighbors(from) and inNeighbors(to)
-        bool addEdge(const Id from, const Id to);
+        bool addEdge(const Id from, const Id to, optional<bool> noLock = nullopt);
 
         // Remove edge
-        bool removeEdge(const Id from, const Id to);
+        bool removeEdge(const Id from, const Id to, optional<bool> noLock = nullopt);
 
         // Clears all neighbors for a specific node
         bool clearNeighbors(const Id id);
+
+        // Adds all nodes in the batch vector to as outgoing neighbors from specific node
+        bool addBatchNeigbors(const Id from, vector<Id> batch);
 
         // Clears all edges in the graph
         bool clearEdges(void);
@@ -261,7 +278,7 @@ class DirectedGraph{
         bool filteredVamanaAlgorithm(int L, int R, float a, float t); // + t = threshold.
 
         // Performs the stitched vamana algorithm to create the filtered index
-        bool stitchedVamanaAlgorithm(int Lstitched, int Rstitched, int Lsmall, int Rsmall, float a);
+        bool stitchedVamanaAlgorithm(int L, int Rstitched, int Rsmall, float a);
 
         // Stores the current state of a graph into the specified file.
         // IMPORTANT: makes use of overloaded << operator to store the graph into a file.
