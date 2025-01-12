@@ -36,9 +36,18 @@ const unordered_map<int, Id> DirectedGraph<T>::_filtered_medoid(float threshold)
             remaining.erase(sample);
         }
 
-        this->filteredMedoids[cpair.first] = this->medoid(Rf);
+        this->filteredMedoids[cpair.first] = this->medoid(Rf, false);
     }
     c_log << "MEDOIDS FOUND" << "\n";
+
+    // calculate medoid from medoids if not already calculated
+    if (this->_medoid == -1){
+        vector<Node<T>> other_medoids;
+        for (pair<int, Id> cpair : this->filteredMedoids){
+            other_medoids.push_back(this->nodes[cpair.second]);
+        }
+        this->_medoid = this->medoid(other_medoids, true);
+    }
     
     return this->filteredMedoids;
 }
@@ -469,6 +478,15 @@ bool DirectedGraph<T>::stitchedVamanaAlgorithm(int L, int Rstitched, int Rsmall,
         : this->_parallel_stitchedVamana(L, Rstitched, Rsmall, a);
     
     if (!rv) { return false; }
+
+    // calculate medoid from medoids if not already calculated
+    if (this->_medoid == -1){
+        vector<Node<T>> other_medoids;
+        for (pair<int, Id> cpair : this->filteredMedoids){
+            other_medoids.push_back(this->nodes[cpair.second]);
+        }
+        this->_medoid = this->medoid(other_medoids, true);
+    }
 
     args.extraRandomEdges = extraRandomEdges;
     if (args.extraRandomEdges > 0) rv = this->Rgraph(args.extraRandomEdges); // adds additional random edges (only in the completed stitched graph, not subgraphs)

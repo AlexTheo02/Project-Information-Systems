@@ -9,8 +9,8 @@ Number of extra random edges: 15
 Unfiltered
 Using priority queue
 Not using rgraph initialization
-Time to create the index: 00:00:05.545'863
-Number of edges: 254414
+Time to create the index: 00:00:04.273'635
+Number of edges: 244977
 --UNF_QUERIES--
 1
 1
@@ -244,6 +244,7 @@ Number of edges: 254414
 1
 1
 1
+0.953488
 1
 1
 1
@@ -570,6 +571,7 @@ Number of edges: 254414
 1
 1
 1
+0.865385
 1
 1
 1
@@ -644,6 +646,7 @@ Number of edges: 254414
 1
 1
 1
+0.877551
 1
 1
 1
@@ -1142,6 +1145,7 @@ Number of edges: 254414
 1
 1
 1
+0.943396
 1
 1
 1
@@ -1268,6 +1272,7 @@ Number of edges: 254414
 1
 1
 1
+0.869565
 1
 1
 1
@@ -1275,6 +1280,7 @@ Number of edges: 254414
 1
 1
 1
+0.954545
 1
 1
 1
@@ -1361,6 +1367,7 @@ Number of edges: 254414
 1
 1
 1
+0.978723
 1
 1
 1
@@ -1441,6 +1448,7 @@ Number of edges: 254414
 1
 1
 1
+0.90566
 1
 1
 1
@@ -1448,7 +1456,6 @@ Number of edges: 254414
 1
 1
 1
-0.931818
 1
 1
 1
@@ -1512,6 +1519,7 @@ Number of edges: 254414
 1
 1
 1
+0.891304
 1
 1
 1
@@ -2013,6 +2021,7 @@ Number of edges: 254414
 1
 1
 1
+0.906977
 1
 1
 1
@@ -2343,6 +2352,7 @@ Number of edges: 254414
 1
 1
 1
+0.957447
 1
 1
 1
@@ -2459,17 +2469,7 @@ Number of edges: 254414
 1
 1
 1
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1
-1
+0.851064
 1
 1
 1
@@ -2531,5 +2531,5 @@ Number of edges: 254414
 --UNF_QUERIES_END--
 --F_QUERIES--
 --F_QUERIES_END--
-Time to query the index (unfiltered): 00:00:00.419'966
-Average recall score for unfiltered queries: 0.999973
+Time to query the index (unfiltered): 00:00:00.287'781
+Average recall score for unfiltered queries: 0.999585

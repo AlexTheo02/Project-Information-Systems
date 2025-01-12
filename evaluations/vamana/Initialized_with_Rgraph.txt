@@ -8,8 +8,8 @@ a: 1
 Number of extra random edges: 15
 Unfiltered
 Using priority queue
-Time to create the index: 00:00:06.212'113
-Number of edges: 257739
+Time to create the index: 00:00:05.809'321
+Number of edges: 257093
 --UNF_QUERIES--
 1
 1
@@ -55,6 +55,7 @@ Number of edges: 257739
 1
 1
 1
+0.916667
 1
 1
 1
@@ -598,6 +599,7 @@ Number of edges: 257739
 1
 1
 1
+0.916667
 1
 1
 1
@@ -668,7 +670,6 @@ Number of edges: 257739
 1
 1
 1
-0.891304
 1
 1
 1
@@ -1291,6 +1292,7 @@ Number of edges: 257739
 1
 1
 1
+0.977273
 1
 1
 1
@@ -1618,6 +1620,7 @@ Number of edges: 257739
 1
 1
 1
+0.94
 1
 1
 1
@@ -2298,9 +2301,6 @@ Number of edges: 257739
 1
 1
 1
-1
-1
-0.979592
 1
 1
 1
@@ -2530,5 +2530,5 @@ Number of edges: 257739
 --UNF_QUERIES_END--
 --F_QUERIES--
 --F_QUERIES_END--
-Time to query the index (unfiltered): 00:00:00.425'605
-Average recall score for unfiltered queries: 0.999949
+Time to query the index (unfiltered): 00:00:00.282'078
+Average recall score for unfiltered queries: 0.999901

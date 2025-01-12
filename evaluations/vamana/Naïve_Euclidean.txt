@@ -9,8 +9,8 @@ Number of extra random edges: 15
 Unfiltered
 Using priority queue
 Not using rgraph initialization
-Time to create the index: 00:00:14.783'420
-Number of edges: 255467
+Time to create the index: 00:00:09.267'474
+Number of edges: 245135
 --UNF_QUERIES--
 1
 1
@@ -201,7 +201,6 @@ Number of edges: 255467
 1
 1
 1
-0.933333
 1
 1
 1
@@ -384,6 +383,7 @@ Number of edges: 255467
 1
 1
 1
+0.93617
 1
 1
 1
@@ -1917,6 +1917,7 @@ Number of edges: 255467
 1
 1
 1
+0.981818
 1
 1
 1
@@ -2178,6 +2179,7 @@ Number of edges: 255467
 1
 1
 1
+0.979592
 1
 1
 1
@@ -2299,6 +2301,7 @@ Number of edges: 255467
 1
 1
 1
+0.866667
 1
 1
 1
@@ -2349,6 +2352,7 @@ Number of edges: 255467
 1
 1
 1
+0.958333
 1
 1
 1
@@ -2412,11 +2416,7 @@ Number of edges: 255467
 1
 1
 1
-1
-1
-1
-1
-1
+0.869565
 1
 1
 1
@@ -2531,5 +2531,5 @@ Number of edges: 255467
 --UNF_QUERIES_END--
 --F_QUERIES--
 --F_QUERIES_END--
-Time to query the index (unfiltered): 00:00:00.775'363
-Average recall score for unfiltered queries: 0.999974
+Time to query the index (unfiltered): 00:00:00.639'539
+Average recall score for unfiltered queries: 0.999838

@@ -190,7 +190,28 @@ const Id DirectedGraph<T>::medoid(optional<vector<Node<T>>> nodes_arg, optional<
     c_log << "Medoid\n";
 
     // unrwapping from the "optional" template with appropriate values
-    vector<Node<T>>& nodes = (nodes_arg == nullopt) ? this->nodes : nodes_arg.value();
+    vector<Node<T>> nodes;
+    if (nodes_arg == nullopt){
+
+        // avoid recalculation: (if nodes argument is the this->nodes vector)
+        if (this->_medoid != -1){
+            c_log << "Medoid already exists, returning.\n";
+            return this->_medoid;
+        }
+
+        unordered_set<Id> remaining;
+        for (int i = 0; i < this->n_nodes; i++){
+            remaining.insert((Id) i);
+        }
+
+        while (!remaining.empty() && nodes.size() < (ceil(args.threshold * this->n_nodes))){
+            int sample = sampleFromContainer(remaining);
+            nodes.push_back(this->nodes[sample]);
+            remaining.erase(sample);
+        }
+    }
+    else
+        nodes = nodes_arg.value();
     bool to_store;
 
     if (update_stored != nullopt)
@@ -208,11 +229,7 @@ const Id DirectedGraph<T>::medoid(optional<vector<Node<T>>> nodes_arg, optional<
     // Invalid args.n_threads
     if (args.n_threads <= 0) throw invalid_argument("args.n_threads constant is invalid. Value must be args.n_threads >= 1.\n");
 
-    // avoid recalculation: (if nodes argument is the this->nodes vector)
-    if (nodes == this->nodes && this->_medoid != -1){
-        c_log << "Medoid already exists, returning.\n";
-        return this->_medoid;
-    }
+    
 
     // store if asked to (or if default state)
     if (to_store){
@@ -1012,7 +1029,7 @@ void DirectedGraph<T>::init(){
     this->categories.clear();
     this->Nout.clear();
 
-    this->_active_W = 0;
+    this->_active_W = false;
     this->_active_GS = 0;
 
     c_log << "Graph Successfully initialized to default values apart from function arguments.\n";

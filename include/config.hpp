@@ -152,7 +152,7 @@ struct Args{
         if (this->R == -1)          this->R = 14;
         if (this->a == -1)          this->a = 1.0f;
         if (this->n_threads == -1)  this->n_threads = 1;
-        if (this->threshold == -1)  this->threshold = 0.5f;
+        if (this->threshold == -1)  this->threshold = (this->index_type == VAMANA) ? 0.1 : 0.5f;
         if (this->Rsmall == -1)     this->Rsmall = 14;
 
         if (this->graph_load_path == "" && this->no_create) {
